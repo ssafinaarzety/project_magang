@@ -56,7 +56,7 @@ let currentPage = 1;
 let selectedUploadFile = null;
 let selectedEditFile = null;
 let activeEditItem = null;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const ACCEPTED_FILE_EXTENSIONS = ["xlsx", "csv", "pdf"];
 
 function isValidSpreadsheetLink(link) {
@@ -825,6 +825,12 @@ async function loadActivityLogs() {
 
         snapshot.forEach(docSnap => {
             const log = docSnap.data();
+            
+            // Filter: hanya tampilkan logs admin yang memiliki userEmail dan action
+            if (!log.userEmail || !log.action) {
+                return;
+            }
+            
             const date = log.timestamp?.toDate();
 
             const row = document.createElement("tr");

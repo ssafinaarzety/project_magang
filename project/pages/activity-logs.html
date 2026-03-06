@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Logs - AUTORA</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 font-sans min-h-screen p-10">
+
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow border">
+
+        <!-- HEADER -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 border-b">
+
+            <div class="flex items-center gap-4">
+
+                <button onclick="goBack()"
+                    class="flex items-center gap-1 px-3 py-2 border rounded-lg text-sm hover:bg-gray-100 transition">
+
+                    <span class="material-icons-outlined text-sm">
+                        arrow_back
+                    </span>
+
+                    Back
+                </button>
+
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <span class="material-icons-outlined text-blue-600">
+                            history
+                        </span>
+                        Activity Logs
+                    </h2>
+
+                    <p class="text-sm text-gray-500">
+                        Recent user actions and system events
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+
+                <input
+                    id="logSearch"
+                    type="text"
+                    placeholder="Search logs..."
+                    class="border rounded-lg px-3 py-2 text-sm w-40"
+                />
+
+                <select id="logFilter"
+                    class="border rounded-lg px-3 py-2 text-sm">
+
+                    <option value="all">All</option>
+                    <option value="upload">Upload</option>
+                    <option value="edit">Edit</option>
+                    <option value="delete">Delete</option>
+
+                </select>
+
+                <button onclick="exportLogs()"
+                    class="flex items-center gap-1 border px-3 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
+
+                    <span class="material-icons-outlined text-sm">
+                        download
+                    </span>
+
+                    Export
+                </button>
+
+                <button onclick="refreshLogs()"
+                    class="flex items-center gap-1 border px-3 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
+
+                    <span class="material-icons-outlined text-sm">
+                        refresh
+                    </span>
+
+                    Refresh
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- INFO BAR -->
+        <div class="flex items-center justify-between px-6 py-3 bg-gray-50 border-b text-sm text-gray-500">
+
+            <p id="logCount">
+                Loading logs...
+            </p>
+
+            <p>
+                Latest system activity
+            </p>
+
+        </div>
+
+
+        <!-- TABLE -->
+        <div class="overflow-x-auto">
+
+            <table class="w-full text-sm text-left">
+
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+
+                        <th class="px-6 py-3 font-semibold text-gray-600">
+                            Timestamp
+                        </th>
+
+                        <th class="px-6 py-3 font-semibold text-gray-600">
+                            User
+                        </th>
+
+                        <th class="px-6 py-3 font-semibold text-gray-600">
+                            Action
+                        </th>
+
+                        <th class="px-6 py-3 font-semibold text-gray-600">
+                            File
+                        </th>
+
+                        <th class="px-6 py-3 font-semibold text-gray-600 text-right">
+                            Status
+                        </th>
+
+                    </tr>
+                </thead>
+
+
+                <tbody id="activityLogTable" class="divide-y">
+
+                    <tr>
+                        <td colspan="5" class="text-center py-6 text-gray-400">
+                            Loading activity logs...
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <p class="text-center text-gray-400 mt-6 text-sm">
+        AUTORA Access System
+    </p>
+
+
+    <script>
+
+        function goBack() {
+            window.location.href = "dashboard-admin.html";
+        }
+
+        function refreshLogs() {
+            location.reload();
+        }
+
+    </script>
+
+    <script type="module" src="../assets/js/activity-logs.js"></script>
+
+</body>
+</html>

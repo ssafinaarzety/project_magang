@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Logged Out - AUTORA</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#137fec',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50 h-screen flex flex-col items-center justify-center font-sans">
+    <div class="bg-white p-8 rounded-xl shadow-lg text-center max-w-sm w-full mx-4 border border-gray-100">
+        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="material-icons-outlined text-3xl">check_circle</span>
+        </div>
+
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Logged Out</h1>
+        <p class="text-gray-500 mb-8">You have successfully logged out of the system. See you again next time!</p>
+
+        <a href="../index.html"
+            class="block w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200">
+            Return to Login
+        </a>
+    </div>
+
+    <p class="mt-8 text-gray-400 text-sm">AUTORA Access System</p>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtoTMSa_0i1L6u-YWCwOZGCyotbLAn3uI",
+            authDomain: "e-arsip-binamarga.firebaseapp.com",
+            databaseURL: "https://e-arsip-binamarga-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "e-arsip-binamarga",
+            storageBucket: "e-arsip-binamarga.firebasestorage.app",
+            messagingSenderId: "639377403785",
+            appId: "1:639377403785:web:cde2c9dfbf1f17edeefb58",
+            measurementId: "G-Q5GQ17CHGJ"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+    <script src="../assets/js/script.js"></script>
+    <script>
+        // Ensure session determines if they land here directly
+        localStorage.removeItem('autora_isLoggedIn');
+
+        // Also sign out from Firebase if SDK is loaded
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            firebase.auth().signOut().catch(err => console.error(err));
+        }
+    </script>
+</body>
+
+</html>

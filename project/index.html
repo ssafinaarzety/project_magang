@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Login - AUTORA</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Updated to a nice sky blue
+                        "primary-hover": "#2563eb",
+                        "sky-glow-light": "#e0f2fe",
+                        "sky-glow-mid": "#bae6fd",
+                        "sky-glow-dark": "#7dd3fc",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    animation: {
+                        'twinkle': 'twinkle 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        twinkle: {
+                            '0%, 100%': { opacity: 0.2 },
+                            '50%': { opacity: 0.8 },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .starry-bg {
+            background-color: #f0f9ff;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(203, 89%, 96%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(204, 94%, 90%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(200, 94%, 94%, 1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(199, 89%, 92%, 1) 0, transparent 50%);
+        }
+
+        .stars {
+            background-image:
+                radial-gradient(1px 1px at 20px 30px, #7dd3fc, rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 40px 70px, #bae6fd, rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 50px 160px, #7dd3fc, rgba(0, 0, 0, 0)),
+                radial-gradient(1.5px 1.5px at 90px 40px, #bae6fd, rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 130px 80px, #7dd3fc, rgba(0, 0, 0, 0)),
+                radial-gradient(1.5px 1.5px at 160px 120px, #38bdf8, rgba(0, 0, 0, 0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body class="font-display text-slate-800 min-h-screen flex flex-col antialiased relative starry-bg overflow-hidden">
+    <div class="fixed inset-0 z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sky-200/30 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-100/40 rounded-full blur-[100px]"></div>
+        <div class="absolute top-[20%] right-[20%] w-[30%] h-[30%] bg-white/60 rounded-full blur-[80px]"></div>
+        <div class="absolute inset-0 stars"></div>
+    </div>
+    <div class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10">
+        <div
+            class="w-full max-w-md bg-white/80 backdrop-blur-md rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 relative overflow-hidden transition-all duration-300">
+            <div class="h-1 w-full bg-gradient-to-r from-sky-300 via-blue-400 to-sky-300"></div>
+            <div class="p-8 sm:p-10">
+                <div class="text-center mb-10">
+                    <div
+                        class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-sky-50 to-blue-50 border border-sky-100 mb-4 text-primary shadow-sm">
+                        <span class="material-icons text-4xl text-sky-500">inventory_2</span>
+                    </div>
+                    <h1 class="text-3xl font-bold text-slate-800 tracking-tight">AUTORA</h1>
+                    <p class="text-sky-600 font-semibold text-[10px] mt-2 uppercase tracking-[0.2em]">Authorization
+                        &amp; Role Access Database</p>
+                    <p class="text-slate-500 mt-4 text-sm">Masuk untuk mengakses dokumen</p>
+                </div>
+                <form onsubmit="handleLogin(event)" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-700" for="email">Username / Email</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span
+                                    class="material-icons text-slate-400 group-focus-within:text-sky-500 transition-colors text-xl">person_outline</span>
+                            </div>
+                            <input
+                                class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 bg-white/50 backdrop-blur-sm transition-all sm:text-sm shadow-sm"
+                                id="email" name="email" placeholder="admin or pegawai" required="" type="text" />
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-sm font-medium text-slate-700" for="password">Password</label>
+                            <a class="text-xs font-medium text-sky-600 hover:text-sky-700 transition-colors"
+                                href="#">Lupa password?</a>
+                        </div>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span
+                                    class="material-icons text-slate-400 group-focus-within:text-sky-500 transition-colors text-xl">lock_outline</span>
+                            </div>
+                            <input
+                                class="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 bg-white/50 backdrop-blur-sm transition-all sm:text-sm shadow-sm"
+                                id="password" name="password" placeholder="••••••••" required="" type="password" />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <button type="button"
+                                    class="text-slate-400 hover:text-sky-500 focus:outline-none transition-colors">
+                                    <span class="material-icons text-xl">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <input class="h-4 w-4 text-sky-500 focus:ring-sky-400 border-slate-300 rounded" id="remember-me"
+                            name="remember-me" type="checkbox" />
+                        <label class="ml-2 block text-sm text-slate-600" for="remember-me">
+                            Ingat saya
+                        </label>
+                    </div>
+                    <button 
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md shadow-sky-200 text-sm font-medium text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all duration-200 transform hover:-translate-y-0.5"
+                        type="submit">
+                        Masuk
+                    </button>
+                    <!-- Error container placeholder -->
+                    <div id="login-error" class="hidden text-red-500 text-sm text-center mt-2"></div>
+                </form>
+                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                    <p class="text-xs text-slate-500">
+                        Butuh bantuan akses?
+                        <a class="font-medium text-sky-600 hover:text-sky-700 hover:underline" href="#">Hubungi
+                            Administrator</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

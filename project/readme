@@ -1,0 +1,68 @@
+# AUTORA
+Authorization & Role Access Database
+
+AUTORA adalah sistem manajemen arsip digital berbasis Role Based Access Control (RBAC).
+
+## Fitur Utama
+
+### Admin
+- Upload Arsip
+- Edit Arsip
+- Hapus Arsip
+- Manajemen Akses User
+- Backup Data
+- Activity Log
+- Statistik Dashboard
+
+### Pegawai
+- Melihat Arsip yang diizinkan
+- Filter Arsip
+- Search Arsip
+- Membuka File
+- Activity Log pribadi
+
+## Teknologi
+
+Frontend
+- HTML
+- TailwindCSS
+- JavaScript
+
+Backend
+- Firebase Authentication
+- Firebase Firestore
+
+Storage
+- Google Drive
+
+## Struktur Sistem
+
+Admin memiliki akses penuh terhadap pengelolaan arsip.
+
+Pegawai hanya dapat melihat arsip yang diizinkan melalui field `allowedUsers`.
+
+## Struktur Database
+
+Collection: files
+
+Field:
+- Judul
+- kategori
+- tanggal
+- driveFileId
+- allowedUsers
+- createdBy
+
+Collection: activity_logs
+
+Field:
+- userUID
+- action
+- fileName
+- timestamp
+
+## Instalasi
+
+1. Clone repository
+2. Tambahkan firebase-config.js
+3. Jalankan menggunakan Live Server

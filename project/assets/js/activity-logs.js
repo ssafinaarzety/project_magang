@@ -4,7 +4,8 @@ import {
     collection,
     getDocs,
     query,
-    orderBy
+    orderBy,
+    limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
@@ -38,7 +39,8 @@ async function loadAllLogs() {
 
         const q = query(
             collection(db, "activityLogs"),
-            orderBy("timestamp", "desc")
+            orderBy("timestamp", "desc"),
+            limit(10)
         );
 
         const snapshot = await getDocs(q);
@@ -46,7 +48,12 @@ async function loadAllLogs() {
         allLogs = [];
 
         snapshot.forEach(docSnap => {
-            allLogs.push(docSnap.data());
+            const log = docSnap.data();
+            
+            // Filter: hanya simpan logs admin yang memiliki userEmail dan action
+            if (log.userEmail && log.action) {
+                allLogs.push(log);
+            }
         });
 
         renderLogs(allLogs);

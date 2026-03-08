@@ -71,7 +71,7 @@ let lastAccessedArchive = null;  // archive yang terakhir diakses
 let currentUserUID = null;
 
 let currentPage = 1;
-const rowsPerPage = 8;
+const rowsPerPage = 10;
 
 // ===============================
 // AUTH CHECK

@@ -600,38 +600,6 @@ console.error("Access counter error:",err);
     }
 }
 
-async function logLogin(){
-
-try{
-
-const user = auth.currentUser;
-
-await addDoc(collection(db,"activityLogs"),{
-
-uid: user.uid,
-userEmail: user.email,
-
-action: "login",
-
-fileId: "-",
-fileName: "-",
-
-status: "success",
-
-timestamp: serverTimestamp()
-
-});
-
-console.log("Login logged");
-
-}catch(err){
-
-console.error("Login log error:",err);
-
-}
-
-}
-
 async function increaseFileAccessCount(fileId){
 
 try{

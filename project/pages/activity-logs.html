@@ -61,6 +61,8 @@
                     <option value="upload">Upload</option>
                     <option value="edit">Edit</option>
                     <option value="delete">Delete</option>
+                    <option value="access">Access</option>
+                    <option value="login">Login</option>
 
                 </select>
 
@@ -149,6 +151,44 @@
 
         </div>
 
+        <!-- PAGINATION CONTROLS -->
+        <div class="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
+
+            <p id="pageInfo" class="text-sm text-gray-600">
+                Halaman 1
+            </p>
+
+            <div class="flex items-center gap-2">
+
+                <button 
+                    id="prevPageBtn"
+                    onclick="loadPrevPage()"
+                    disabled
+                    class="flex items-center gap-1 px-4 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    
+                    <span class="material-icons-outlined text-sm">
+                        chevron_left
+                    </span>
+                    
+                    Previous
+                </button>
+
+                <button 
+                    id="nextPageBtn"
+                    onclick="loadNextPage()"
+                    class="flex items-center gap-1 px-4 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    
+                    Next
+                    
+                    <span class="material-icons-outlined text-sm">
+                        chevron_right
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+
     </div>
 
 
@@ -160,6 +200,12 @@
     <script>
 
         function goBack() {
+            const view = new URLSearchParams(window.location.search).get("view");
+            if (view === "pegawai") {
+                window.location.href = "dashboard-pegawai.html";
+                return;
+            }
+
             window.location.href = "dashboard-admin.html";
         }
 

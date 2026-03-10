@@ -103,8 +103,10 @@ onAuthStateChanged(auth, async (user) => {
 
         currentUserUID = user.uid;
 
-        await logLogin();
+        // Record login event to activity logs
+        await logLogin(user.uid, user.email);
 
+        // Load profile ke sidebar
         loadUserProfile(userData);
         setupProfileRedirect();
         loadArchives();
@@ -114,6 +116,30 @@ onAuthStateChanged(auth, async (user) => {
     }
 
 });
+
+
+// ===============================
+// LOG LOGIN EVENT
+// ===============================
+async function logLogin(uid, email) {
+    try {
+        const loginEntry = {
+            uid: uid,
+            userEmail: email,
+            action: "login",
+            fileName: "-",
+            fileId: "-",
+            status: "success",
+            timestamp: serverTimestamp()
+        };
+
+        await addDoc(collection(db, "activityLogs"), loginEntry);
+        console.log("Login event recorded successfully");
+
+    } catch (error) {
+        console.error("Error recording login event:", error);
+    }
+}
 
 
 // ===============================
@@ -537,23 +563,27 @@ console.error("Access counter error:",err);
 }
 
     try {
+        // Get user email from users collection
+        const userRef = doc(db, "users", currentUserUID);
+        const userSnap = await getDoc(userRef);
+        const userEmail = userSnap.exists() ? userSnap.data().email : "unknown";
+
+        // Standardized activity log entry
         const logEntry = {
-            userId: currentUserUID,
-            fileId: fileId,
+            uid: currentUserUID,
+            userEmail: userEmail,
+            action: "access",
             fileName: fileName,
-            accessTime: Timestamp.now(),
-            timestamp: Timestamp.now()
+            fileId: fileId,
+            status: "success",
+            timestamp: serverTimestamp()
         };
 
         await addDoc(collection(db, "activityLogs"), logEntry);
         console.log("Access logged successfully");
 
-        // Update last accessed di Firestore untuk file user ini
-        const userRef = doc(db, "users", currentUserUID);
-        const userSnap = await getDoc(userRef);
-        
+        // Update last accessed info
         if (userSnap.exists()) {
-            const userData = userSnap.data();
             const lastAccessedData = {
                 fileId: fileId,
                 fileName: fileName,
@@ -657,20 +687,20 @@ async function loadActivityLogs() {
         const logsBody = document.getElementById("activityLogsBody");
         if (!logsBody) return;
 
-        // Query activity logs untuk user saat ini
+        // Query activity logs terbaru untuk user saat ini
         const q = query(
             collection(db, "activityLogs"),
-            orderBy("accessTime", "desc"),
-            limit(20)
+            orderBy("timestamp", "desc"),
+            limit(50)
         );
 
         const snapshot = await getDocs(q);
 
-        // Filter hanya logs milik user saat ini
+        // Filter hanya logs milik user saat ini (hanya akses mereka sendiri)
         const userLogs = [];
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            if (data.userId === currentUserUID) {
+            if (data.uid === currentUserUID) {
                 userLogs.push(data);
             }
         });
@@ -686,11 +716,14 @@ async function loadActivityLogs() {
             return;
         }
 
+        // Limit to 10 most recent logs
+        const displayLogs = userLogs.slice(0, 10);
+        
         logsBody.innerHTML = "";
 
-        userLogs.forEach((log, index) => {
-            const accessDate = log.accessTime?.toDate ? new Date(log.accessTime.toDate()) : new Date(log.accessTime);
-            const dateString = accessDate.toLocaleString('id-ID', {
+        displayLogs.forEach((log) => {
+            const date = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
+            const dateString = date.toLocaleString('id-ID', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -708,7 +741,7 @@ async function loadActivityLogs() {
                     ${log.fileName || "-"}
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-500">
-                    File accessed from Dashboard
+                    ${log.action === "login" ? "User login to Dashboard" : "File accessed from Dashboard"}
                 </td>
             </tr>
             `;

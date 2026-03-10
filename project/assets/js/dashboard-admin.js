@@ -141,6 +141,7 @@ async function deleteStorageFile(filePath) {
 }
 
 async function downloadArchiveToLocal(item) {
+
     const url = item?.fileUrl;
 
     if (!url) {
@@ -149,24 +150,22 @@ async function downloadArchiveToLocal(item) {
     }
 
     try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("File tidak bisa diunduh");
 
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        const fallbackName = `${(item.nama || "arsip").replace(/\s+/g, "_")}.${item.fileType || "xlsx"}`;
 
-        a.href = objectUrl;
-        a.download = item.fileName || fallbackName;
+        a.href = url;
+        a.target = "_blank";
+        a.download = item.fileName || "arsip";
+
         document.body.appendChild(a);
         a.click();
         a.remove();
-        URL.revokeObjectURL(objectUrl);
 
     } catch (error) {
+
         console.error("Download error:", error);
-        alert("Gagal mengunduh file arsip");
+        alert("Gagal membuka file arsip");
+
     }
 }
 
@@ -362,12 +361,22 @@ onAuthStateChanged(auth, async (user) => {
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists()) {
-            window.location.href = "../index.html";
-            return;
-        }
+if (!userSnap.exists()) {
+    window.location.href = "../index.html";
+    return;
+}
 
-        const role = userSnap.data().role?.toLowerCase();
+const data = userSnap.data();
+const role = data.role?.toLowerCase();
+
+// tampilkan profil admin
+document.getElementById("adminName").innerText = data.name || "Administrator";
+document.getElementById("adminEmail").innerText = data.email || user.email;
+
+if (role !== "admin") {
+    window.location.href = "../index.html";
+    return;
+}
 
         if (role !== "admin") {
             window.location.href = "../index.html";
@@ -791,7 +800,7 @@ function setupUpload() {
 
     } catch (err) {
         console.error("Upload error:", err);
-        alert("Upload gagal");
+        showErrorModal("Upload arsip gagal. Silakan coba lagi.");
     } finally {
         if (progressBox) progressBox.classList.add("hidden");
     }
@@ -1424,3 +1433,96 @@ setTimeout(() => {
         loader.classList.add("hidden");
     }
 }, 4000);
+
+// ===============================
+// IMPORT CSV MASSAL
+// ===============================
+
+async function importCSV(file){
+
+        try{
+
+        const text = await file.text();
+
+        const rows = text.split("\n");
+
+        for(let i = 1; i < rows.length; i++){
+
+        const cols = rows[i].split(",");
+
+        if(cols.length < 4) continue;
+
+        const judul = cols[0]?.trim();
+        const tahun = cols[1]?.trim();
+        const kategori = cols[2]?.trim().toLowerCase();
+        const link = cols[3]?.trim();
+
+        if(!judul || !tahun || !kategori || !link) continue;
+
+        const payload = {
+
+        nama: judul,
+        kategori: kategori,
+        tanggal: tahun + "-01-01",
+        createdBy: auth.currentUser.uid,
+        allowedUsers: [auth.currentUser.uid],
+        createdAt: serverTimestamp(),
+        spreadsheetLink: link,
+        driveFileId: link,
+        sourceType: "link",
+        fileUrl: "",
+        filePath: "",
+        fileName: "",
+        fileType: ""
+
+        };
+
+await addDoc(collection(db,"files"), payload);
+
+}
+
+alert("Import CSV berhasil");
+
+await loadArchiveData();
+await loadDashboardStats();
+
+}catch(err){
+
+console.error("Import CSV error:", err);
+
+alert("Import CSV gagal");
+
+}
+
+}
+
+// ===============================
+// EVENT IMPORT CSV
+// ===============================
+
+const importInput = document.getElementById("importCSVInput");
+
+    if(importInput){
+
+    importInput.addEventListener("change", async(e)=>{
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    await importCSV(file);
+
+});
+
+}
+
+function showErrorModal(message){
+
+    const modal = document.getElementById("errorModal");
+    const text = document.getElementById("errorModalMessage");
+
+    text.innerText = message;
+
+    modal.classList.remove("hidden");
+
+}

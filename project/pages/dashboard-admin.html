@@ -168,6 +168,16 @@
                     <span class="material-icons-outlined mr-2 text-lg">add</span>
                     Tambah Arsip
                 </button>
+                <input type="file" id="importCSVInput" accept=".csv" class="hidden">
+
+                <button
+                id="importCSVBtn"
+                class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center shadow-md shadow-primary/20 transition-all">
+
+                <span class="material-icons-outlined mr-2 text-lg">upload_file</span>
+                Import CSV
+
+                </button>
             </div>
         </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -770,8 +780,52 @@
         </div>
     </div>
     
+    <div id="errorModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto">
+
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+
+                <div class="flex min-h-full items-center justify-center p-4">
+
+                <div class="bg-white dark:bg-[#1a2634] rounded-xl shadow-xl max-w-md w-full p-6 text-center">
+
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 mb-4">
+                <span class="material-icons-outlined text-red-600 text-2xl">error</span>
+                </div>
+
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                Upload Gagal
+                </h3>
+
+                <p id="errorModalMessage"
+                class="text-sm text-slate-500 mt-2">
+                Terjadi kesalahan saat upload
+                </p>
+
+                <button
+                onclick="document.getElementById('errorModal').classList.add('hidden')"
+                class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg">
+
+                OK
+
+                </button>
+
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="../assets/js/dashboard-admin.js"></script>
     <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-3"></div>
+
+    <script>
+
+    document.getElementById("importCSVBtn").addEventListener("click", () => {
+
+    document.getElementById("importCSVInput").click();
+
+    });
+
+</script>
     
 </body>
 </html>

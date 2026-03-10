@@ -11,6 +11,7 @@ getDoc,
 collection,
 getDocs,
 addDoc,
+updateDoc,
 Timestamp,
 query,
 orderBy,
@@ -89,27 +90,27 @@ onAuthStateChanged(auth, async (user) => {
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-            window.location.href = "../index.html";
+            console.log("User data not found");
             return;
         }
 
         const userData = userSnap.data();
-        const role = userData.role?.toLowerCase();
 
-        if (role !== "pegawai") {
-            window.location.href = "../index.html";
+        if (userData.role !== "pegawai") {
+            console.log("Not pegawai");
             return;
         }
 
         currentUserUID = user.uid;
 
-        // Load profile ke sidebar
+        await logLogin();
+
         loadUserProfile(userData);
+        setupProfileRedirect();
         loadArchives();
 
     } catch (error) {
-        console.error("Error loading user:", error);
-        window.location.href = "../index.html";
+        console.error("Auth error:", error);
     }
 
 });
@@ -118,77 +119,86 @@ onAuthStateChanged(auth, async (user) => {
 // ===============================
 // LOAD USER PROFILE
 // ===============================
-function loadUserProfile(userData) {
+function loadUserProfile(userData){
 
-    const nameEl = document.getElementById("pegawaiName");
-    const roleEl = document.getElementById("pegawaiRole");
-    const avatarEl = document.getElementById("pegawaiAvatar");
+const nameEl = document.getElementById("pegawaiName");
+const roleEl = document.getElementById("pegawaiRole");
+const avatarEl = document.getElementById("pegawaiAvatar");
 
-    if (nameEl) {
-        nameEl.textContent = userData.name || "Pegawai";
-    }
+const email = userData.email || auth.currentUser?.email || "user@email.com";
 
-    if (roleEl) {
-        roleEl.textContent = userData.role || "Pegawai";
-    }
+if(nameEl) nameEl.textContent = email;
 
-    // Avatar initial (huruf depan nama)
-    if (avatarEl && userData.name) {
-        const initial = userData.name.charAt(0).toUpperCase();
-        avatarEl.textContent = initial;
-    }
+if(roleEl) roleEl.textContent = "Pegawai";
+
+if(avatarEl){
+
+const initial = email.charAt(0).toUpperCase();
+avatarEl.textContent = initial;
+
+}
 
 }
 
 // ===============================
 // LOAD ARSIP
 // ===============================
-
 async function loadArchives() {
 
-    const tableBody = document.getElementById("pegawaiTableBody");
-    if (!tableBody) return;
+showLoading();
 
-    const snapshot = await getDocs(collection(db, "files"));
+try{
 
-    console.log("LOGIN UID:", currentUserUID);
-    console.log("TOTAL FILES:", snapshot.size);
+const snapshot = await getDocs(collection(db,"files"));
 
-    allArchives = [];
+allArchives = [];
 
-    snapshot.forEach(doc => {
+snapshot.forEach(docSnap => {
 
-        const data = doc.data();
+const data = docSnap.data();
+const allowed = data.allowedUsers || [];
 
-        console.log("FILE DATA:", data);
+if(allowed.includes(currentUserUID)){
 
-        const allowed = data.allowedUsers || [];
+allArchives.push({
+id: docSnap.id,
+...data
+});
 
-        console.log("ALLOWED USERS:", allowed);
+}
 
-        console.log("IS USER ALLOWED:", allowed.includes(currentUserUID));
+});
 
-        // hanya tampilkan arsip yang diizinkan
-        if (allowed.includes(currentUserUID)) {
+filteredArchives = [...allArchives];
 
-            allArchives.push({
-                id: doc.id,
-                ...data
-            });
+populateFilters(allArchives);
 
-        }
+renderTable();
+renderPagination();
 
-    });
+await calculateStatistics();
+await loadActivityLogs();
 
-    // simpan ke filtered
-    filteredArchives = [...allArchives];
+}catch(err){
 
-    populateFilters(allArchives);
+console.error("Load archive error:",err);
 
-    renderTable();
-    renderPagination();
-    await calculateStatistics();
-    await loadActivityLogs();
+const tableBody = document.getElementById("pegawaiTableBody");
+
+if(tableBody){
+tableBody.innerHTML = `
+<tr>
+<td colspan="5" class="px-6 py-6 text-center text-red-500">
+Gagal memuat data arsip
+</td>
+</tr>
+`;
+}
+
+}
+
+hideLoading();
+
 }
 
 // ===============================
@@ -226,7 +236,7 @@ function renderTable() {
             <td class="px-6 py-4">${start + index + 1}</td>
 
             <td class="px-6 py-4 font-medium text-slate-800 dark:text-white">
-            ${item.nama || "-"}
+            ${item.nama || item.name || "Untitled File"}
             </td>
 
             <td class="px-6 py-4 text-slate-500">
@@ -359,13 +369,17 @@ function applyFilters() {
 // FILTER EVENTS
 // ===============================
 
+document.addEventListener("DOMContentLoaded",()=>{
+
 const searchInput = document.getElementById("searchInput");
 const yearSelect = document.getElementById("yearSelect");
 const categorySelect = document.getElementById("categorySelect");
 
-if (searchInput) searchInput.addEventListener("input", applyFilters);
-if (yearSelect) yearSelect.addEventListener("change", applyFilters);
-if (categorySelect) categorySelect.addEventListener("change", applyFilters);;
+if(searchInput) searchInput.addEventListener("input",applyFilters);
+if(yearSelect) yearSelect.addEventListener("change",applyFilters);
+if(categorySelect) categorySelect.addEventListener("change",applyFilters);
+
+});
 
 // ===============================
 // PAGINATION
@@ -493,6 +507,35 @@ async function calculateStatistics() {
 // ===============================
 
 async function logAccess(fileId, fileName) {
+
+    async function increaseFileAccessCount(fileId){
+
+try{
+
+const fileRef = doc(db,"files",fileId);
+
+const fileSnap = await getDoc(fileRef);
+
+if(fileSnap.exists()){
+
+const data = fileSnap.data();
+
+const count = data.accessCount || 0;
+
+await updateDoc(fileRef,{
+accessCount: count + 1
+});
+
+}
+
+}catch(err){
+
+console.error("Access counter error:",err);
+
+}
+
+}
+
     try {
         const logEntry = {
             userId: currentUserUID,
@@ -525,6 +568,84 @@ async function logAccess(fileId, fileName) {
     } catch (error) {
         console.error("Error logging access:", error);
     }
+}
+
+async function logLogin(){
+
+try{
+
+const user = auth.currentUser;
+
+await addDoc(collection(db,"activityLogs"),{
+
+uid: user.uid,
+userEmail: user.email,
+
+action: "login",
+
+fileId: "-",
+fileName: "-",
+
+status: "success",
+
+timestamp: serverTimestamp()
+
+});
+
+console.log("Login logged");
+
+}catch(err){
+
+console.error("Login log error:",err);
+
+}
+
+}
+
+async function increaseFileAccessCount(fileId){
+
+try{
+
+const fileRef = doc(db,"files",fileId);
+const fileSnap = await getDoc(fileRef);
+
+if(fileSnap.exists()){
+
+const data = fileSnap.data();
+const currentCount = data.accessCount || 0;
+
+await updateDoc(fileRef,{
+accessCount: currentCount + 1
+});
+
+}
+
+}catch(err){
+
+console.error("Access count error:",err);
+
+}
+
+}
+
+async function updateLastActive(){
+
+try{
+
+const user = auth.currentUser;
+
+await updateDoc(doc(db,"users",user.uid),{
+
+lastActive: serverTimestamp()
+
+});
+
+}catch(err){
+
+console.error("Last active update error:",err);
+
+}
+
 }
 
 // ===============================
@@ -607,6 +728,8 @@ async function loadActivityLogs() {
 async function handleArchiveAccess(fileId, fileName) {
     // Log the access and wait for it to complete
     await logAccess(fileId, fileName);
+    await increaseFileAccessCount(fileId);
+    await updateLastActive();
     
     // Refresh activity logs after access is logged
     await loadActivityLogs();
@@ -661,5 +784,39 @@ if (logoutBtn) {
         }
 
     });
+
+}
+
+// ===============================
+// PROFILE BUTTON
+// ===============================
+
+function setupProfileRedirect() {
+
+const profileBtn = document.getElementById("profileBtn");
+
+if(!profileBtn) return;
+
+profileBtn.addEventListener("click",()=>{
+
+window.location.href = "profile-pegawai.html";
+
+});
+
+}
+
+// ===============================
+// PROFILE CARD CLICK
+// ===============================
+
+const profileCard = document.getElementById("profileCard");
+
+if(profileCard){
+
+profileCard.addEventListener("click",()=>{
+
+window.location.href = "profile-pegawai.html";
+
+});
 
 }

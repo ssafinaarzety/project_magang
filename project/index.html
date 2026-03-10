@@ -108,19 +108,30 @@
                                 href="#">Lupa password?</a>
                         </div>
                         <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span
-                                    class="material-icons text-slate-400 group-focus-within:text-sky-500 transition-colors text-xl">lock_outline</span>
-                            </div>
-                            <input
+
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="material-icons text-slate-400 text-xl">lock_outline</span>
+                                </div>
+
+                                <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="••••••••"
+                                required
                                 class="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 bg-white/50 backdrop-blur-sm transition-all sm:text-sm shadow-sm"
-                                id="password" name="password" placeholder="••••••••" required="" type="password" />
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                <button type="button"
-                                    class="text-slate-400 hover:text-sky-500 focus:outline-none transition-colors">
-                                    <span class="material-icons text-xl">visibility</span>
-                                </button>
-                            </div>
+                                />
+
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+
+                                <span
+                                id="togglePassword"
+                                class="material-icons cursor-pointer text-slate-400 hover:text-sky-500">
+                                visibility
+                                </span>
+
+                                </div>
+
                         </div>
                     </div>
                     <div class="flex items-center">
@@ -148,6 +159,31 @@
             </div>
         </div>
     </div>
+
     <script type="module" src="assets/js/main.js"></script>
+
+    <script>
+
+    const toggle = document.getElementById("togglePassword");
+    const password = document.getElementById("password");
+
+    toggle.addEventListener("click", () => {
+
+    if(password.type === "password"){
+
+    password.type = "text";
+    toggle.innerText = "visibility_off";
+
+    }else{
+
+    password.type = "password";
+    toggle.innerText = "visibility";
+
+    }
+
+    });
+
+</script>
+
 </body>
 </html>

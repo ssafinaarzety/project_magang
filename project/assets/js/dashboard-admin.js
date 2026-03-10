@@ -791,7 +791,20 @@ function setupUpload() {
 
     } catch (err) {
         console.error("Upload error:", err);
-        alert("Upload gagal");
+        console.error("Error code:", err.code);
+        console.error("Error message:", err.message);
+        
+        let errorMsg = "Upload gagal. Periksa kembali data dan coba lagi.";
+        
+        if (err.code === "permission-denied") {
+            errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan create file.";
+        } else if (err.code === "unauthenticated") {
+            errorMsg = "Anda tidak authenticated. Silakan login kembali.";
+        } else if (err.message?.includes("storage")) {
+            errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
+        }
+        
+        alert(errorMsg);
     } finally {
         if (progressBox) progressBox.classList.add("hidden");
     }
@@ -809,28 +822,55 @@ async function loadActivityLogs() {
     try {
         tableBody.innerHTML = "";
 
-        const q = query(
-            collection(db, "activityLogs"),
-            orderBy("timestamp", "desc"),
-            limit(5) // tampilkan hanya 5 terbaru
-        );
+        const validLogs = [];
+        let cursorDoc = null;
+        const FETCH_SIZE = 25;
 
-        const snapshot = await getDocs(q);
+        // Keep fetching in chunks until we have 10 valid rows or data is exhausted.
+        while (validLogs.length < 10) {
+            const constraints = [
+                orderBy("timestamp", "desc"),
+                limit(FETCH_SIZE)
+            ];
 
-        if (snapshot.empty) {
+            if (cursorDoc) {
+                constraints.push(startAfter(cursorDoc));
+            }
+
+            const q = query(collection(db, "activityLogs"), ...constraints);
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                break;
+            }
+
+            snapshot.forEach(docSnap => {
+                if (validLogs.length >= 10) return;
+
+                const log = docSnap.data();
+
+                // Samakan filter dengan halaman full log.
+                if (!log.userEmail || !log.action) {
+                    return;
+                }
+
+                validLogs.push(log);
+            });
+
+            cursorDoc = snapshot.docs[snapshot.docs.length - 1] || null;
+
+            if (snapshot.size < FETCH_SIZE) {
+                break;
+            }
+        }
+
+        if (validLogs.length === 0) {
             tableBody.innerHTML =
                 "<tr><td colspan='5' class='px-6 py-4 text-center text-slate-400'>Belum ada aktivitas</td></tr>";
             return;
         }
 
-        snapshot.forEach(docSnap => {
-            const log = docSnap.data();
-            
-            // Filter: hanya tampilkan logs admin yang memiliki userEmail dan action
-            if (!log.userEmail || !log.action) {
-                return;
-            }
-            
+        validLogs.forEach(log => {
             const date = log.timestamp?.toDate();
 
             const row = document.createElement("tr");
@@ -915,15 +955,61 @@ function setupAccessSave() {
 
     btn.addEventListener("click", async () => {
 
-        if (!selectedFileId) return;
+        if (!selectedFileId) {
+            alert("No file selected");
+            return;
+        }
 
-        await updateDoc(doc(db, "files", selectedFileId), {
-            allowedUsers: selectedAccessUsers
-        });
+        try {
+            // Validasi data sebelum update
+            if (!Array.isArray(selectedAccessUsers)) {
+                console.error("Invalid selectedAccessUsers:", selectedAccessUsers);
+                alert("Error: Invalid access users data. Please try again.");
+                return;
+            }
 
-        document.getElementById("accessModal").classList.add("hidden");
-        showSuccessModal("Hak akses berhasil diperbarui");
-        await loadArchiveData(currentFilters, true);
+            console.log("Updating file permissions:", {
+                fileId: selectedFileId,
+                allowedUsers: selectedAccessUsers,
+                currentUser: auth.currentUser?.uid
+            });
+
+            // Update document dengan error handling lebih baik
+            const fileRef = doc(db, "files", selectedFileId);
+            
+            // Cek apakah document ada sebelum update
+            const fileSnap = await getDoc(fileRef);
+            if (!fileSnap.exists()) {
+                alert("File not found");
+                return;
+            }
+
+            // Update dengan explicit field
+            await updateDoc(fileRef, {
+                allowedUsers: selectedAccessUsers,
+                updatedAt: serverTimestamp(),
+                updatedBy: auth.currentUser.uid
+            });
+
+            document.getElementById("accessModal").classList.add("hidden");
+            showSuccessModal("Hak akses berhasil diperbarui");
+            await loadArchiveData(currentFilters, true);
+
+        } catch (error) {
+            console.error("Access save error:", error);
+            console.error("Error code:", error.code);
+            console.error("Error message:", error.message);
+            
+            let errorMsg = "Gagal mengupdate hak akses";
+            
+            if (error.code === "permission-denied") {
+                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan operasi ini.";
+            } else if (error.code === "not-found") {
+                errorMsg = "File tidak ditemukan";
+            }
+            
+            alert(errorMsg);
+        }
     });
 }
 
@@ -1026,7 +1112,20 @@ function setupEditModalSave() {
 
         } catch (err) {
             console.error("Edit error:", err);
-            alert("Gagal mengedit arsip");
+            console.error("Error code:", err.code);
+            console.error("Error message:", err.message);
+            
+            let errorMsg = "Gagal mengedit arsip. Periksa kembali data dan coba lagi.";
+            
+            if (err.code === "permission-denied") {
+                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan update file.";
+            } else if (err.code === "not-found") {
+                errorMsg = "File tidak ditemukan";
+            } else if (err.message?.includes("storage")) {
+                errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
+            }
+            
+            alert(errorMsg);
         }
     });
 }
@@ -1067,7 +1166,18 @@ function setupDeleteModal() {
 
         } catch (err) {
             console.error("Delete error:", err);
-            alert("Gagal menghapus arsip");
+            console.error("Error code:", err.code);
+            console.error("Error message:", err.message);
+            
+            let errorMsg = "Gagal menghapus arsip. Periksa kembali dan coba lagi.";
+            
+            if (err.code === "permission-denied") {
+                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan delete file.";
+            } else if (err.code === "not-found") {
+                errorMsg = "File tidak ditemukan";
+            }
+            
+            alert(errorMsg);
         }
     });
 }

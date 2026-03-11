@@ -361,22 +361,34 @@ onAuthStateChanged(auth, async (user) => {
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
-if (!userSnap.exists()) {
-    window.location.href = "../index.html";
-    return;
-}
+        if (!userSnap.exists()) {
+            window.location.href = "../index.html";
+            return;
+        }
 
-const data = userSnap.data();
-const role = data.role?.toLowerCase();
+        const data = userSnap.data();
+        const role = data.role?.toLowerCase();
 
-// tampilkan profil admin
-document.getElementById("adminName").innerText = data.name || "Administrator";
-document.getElementById("adminEmail").innerText = data.email || user.email;
+        // ===============================
+        // RECORD LOGIN ACTIVITY (ADMIN)
+        // ===============================
+        if (!sessionStorage.getItem("loginRecorded")) {
 
-if (role !== "admin") {
-    window.location.href = "../index.html";
-    return;
-}
+            await addDoc(collection(db, "activityLogs"), {
+                uid: user.uid,
+                userEmail: user.email,
+                action: "login_admin",
+                fileName: "-",
+                status: "success",
+                timestamp: serverTimestamp()
+            });
+
+            sessionStorage.setItem("loginRecorded", "true");
+        }
+
+        // tampilkan profil admin
+        document.getElementById("adminName").innerText = data.name || "Administrator";
+        document.getElementById("adminEmail").innerText = data.email || user.email;
 
         if (role !== "admin") {
             window.location.href = "../index.html";
@@ -880,7 +892,9 @@ async function loadActivityLogs() {
         }
 
         validLogs.forEach(log => {
-            const date = log.timestamp?.toDate();
+            const date = log.timestamp?.toDate
+                ? log.timestamp.toDate()
+                : null;
 
             const row = document.createElement("tr");
 
@@ -952,8 +966,10 @@ function toggleUserAccess(uid) {
     if (selectedAccessUsers.includes(uid)) {
         selectedAccessUsers =
             selectedAccessUsers.filter(id => id !== uid);
+            console.log("Access removed:", uid);
     } else {
         selectedAccessUsers.push(uid);
+        console.log("Access added:", uid);
     }
 }
 
@@ -998,6 +1014,20 @@ function setupAccessSave() {
                 allowedUsers: selectedAccessUsers,
                 updatedAt: serverTimestamp(),
                 updatedBy: auth.currentUser.uid
+            });
+
+            // ambil nama file
+            const fileData = fileSnap.data();
+
+            // buat log activity
+            await addDoc(collection(db, "activityLogs"), {
+                uid: auth.currentUser.uid,
+                userEmail: auth.currentUser.email,
+                action: "manage_access",
+                fileName: fileData.nama || "-",
+                fileId: selectedFileId,
+                status: "success",
+                timestamp: serverTimestamp()
             });
 
             document.getElementById("accessModal").classList.add("hidden");
@@ -1219,7 +1249,12 @@ function setupLogout() {
 
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
+
+            // reset login session
+            sessionStorage.removeItem("loginRecorded");
+
             await signOut(auth);
+
             window.location.href = "../index.html";
         });
     }
@@ -1589,6 +1624,15 @@ async function importCSV(file){
 
 await addDoc(collection(db,"files"), payload);
 
+await addDoc(collection(db,"activityLogs"), {
+    uid: auth.currentUser.uid,
+    userEmail: auth.currentUser.email,
+    action: "import_csv",
+    fileName: judul,
+    status: "success",
+    timestamp: serverTimestamp()
+});
+
 }
 
 alert("Import CSV berhasil");
@@ -1636,3 +1680,41 @@ function showErrorModal(message){
     modal.classList.remove("hidden");
 
 }
+
+// ===============================
+// SESSION TIMEOUT (15 MENIT)
+// ===============================
+
+let idleTimer;
+
+// 15 menit
+const IDLE_LIMIT = 15 * 60 * 1000;
+
+function resetIdleTimer(){
+
+clearTimeout(idleTimer);
+
+idleTimer = setTimeout(async () => {
+
+alert("Session berakhir karena tidak ada aktivitas selama 15 menit.");
+
+// reset login session
+sessionStorage.removeItem("loginRecorded");
+
+await signOut(auth);
+
+window.location.href = "../index.html";
+
+}, IDLE_LIMIT);
+
+}
+
+// aktivitas user yang dianggap aktif
+["click","mousemove","keypress","scroll","touchstart"].forEach(event => {
+
+document.addEventListener(event, resetIdleTimer);
+
+});
+
+// mulai timer saat halaman dibuka
+resetIdleTimer();

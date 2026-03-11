@@ -316,22 +316,73 @@ Archive List
                 </div>
 
 <!-- CHART + LOGS GRID -->
-<div class="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
+<div class="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-6 pb-8 auto-rows-fr">
 
-<!-- ACTIVITY CHART -->
+<!-- ACTIVITY ANALYTICS -->
 <div class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
 
-<h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+        <span class="material-icons-outlined text-slate-500">analytics</span>
+        Activity Analytics
+    </h2>
 
-<span class="material-icons-outlined text-slate-500">analytics</span>
-Activity Chart
+    <p class="text-xs text-slate-500 mb-4">
+        Activity in the last 7 days
+    </p>
 
-</h2>
+    <!-- CHART -->
+    <div class="mb-6">
+        <canvas id="activityChart" class="w-full h-80"></canvas>
+    </div>
 
-<canvas id="activityChart" class="w-fullh-64"></canvas>
+    <!-- SUMMARY STATS -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+
+        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
+            <p class="text-xs text-slate-500">
+                Today Activity
+            </p>
+            <p id="todayActivity" class="text-xl font-bold text-primary">
+                0
+            </p>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
+            <p class="text-xs text-slate-500">
+                Total Logs
+            </p>
+            <p id="totalLogs" class="text-xl font-bold text-primary">
+                0
+            </p>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
+            <p class="text-xs text-slate-500">
+                Most Active Day
+            </p>
+            <p id="mostActiveDay" class="text-xl font-bold text-primary">
+                -
+            </p>
+        </div>
+
+    </div>
+
+    <!-- TOP FILES -->
+    <div>
+
+        <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-3">
+            Top Accessed Files
+        </h3>
+
+        <ul id="topFilesList" class="space-y-2 text-sm">
+            <li class="text-slate-500">
+                Loading...
+            </li>
+        </ul>
+
+    </div>
 
 </div>
-
 
 <!-- ACTIVITY LOGS -->
 <div class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
@@ -341,6 +392,19 @@ Activity Chart
                     <span class="material-icons-outlined text-slate-500">history</span>
                     Activity Logs
                     </h2>
+                    </div>
+
+                    <div class="px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
+                        <p class="text-sm text-gray-600 dark:text-slate-400">
+                            Your activity logs (latest 10 entries)
+                        </p>
+                        <a href="activity-logs.html?view=pegawai"
+                            class="flex items-center gap-1 px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition">
+                            <span class="material-icons-outlined text-sm">
+                                arrow_outward
+                            </span>
+                            View Full Logs
+                        </a>
                     </div>
 
 <div class="overflow-x-auto">

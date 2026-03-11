@@ -14,6 +14,7 @@ addDoc,
 updateDoc,
 Timestamp,
 query,
+where,
 orderBy,
 limit,
 serverTimestamp
@@ -103,8 +104,19 @@ onAuthStateChanged(auth, async (user) => {
 
         currentUserUID = user.uid;
 
-        // Record login event to activity logs
-        await logLogin(user.uid, user.email);
+        // ===============================
+        // LOGIN SESSION CONTROL
+        // ===============================
+
+        const loginSession = sessionStorage.getItem("loginRecorded");
+
+        if (!loginSession) {
+
+            await logLogin(user.uid, user.email);
+
+            sessionStorage.setItem("loginRecorded", "true");
+
+        }
 
         // Load profile ke sidebar
         loadUserProfile(userData);
@@ -126,7 +138,7 @@ async function logLogin(uid, email) {
         const loginEntry = {
             uid: uid,
             userEmail: email,
-            action: "login",
+            action: "login_pegawai",
             fileName: "-",
             fileId: "-",
             status: "success",
@@ -171,27 +183,27 @@ avatarEl.textContent = initial;
 // ===============================
 async function loadArchives() {
 
-showLoading();
+    showLoading();
 
-try{
+        try{
 
-const snapshot = await getDocs(collection(db,"files"));
+        const q = query(
+        collection(db,"files"),
+        where("allowedUsers","array-contains",currentUserUID)
+        );
 
-allArchives = [];
+        const snapshot = await getDocs(q);
 
-snapshot.forEach(docSnap => {
+        allArchives = [];
 
-const data = docSnap.data();
-const allowed = data.allowedUsers || [];
+        snapshot.forEach(docSnap => {
 
-if(allowed.includes(currentUserUID)){
+        const data = docSnap.data();
 
-allArchives.push({
-id: docSnap.id,
-...data
-});
-
-}
+        allArchives.push({
+        id: docSnap.id,
+        ...data
+        });
 
 });
 
@@ -204,6 +216,9 @@ renderPagination();
 
 await calculateStatistics();
 await loadActivityLogs();
+await loadActivityChart();
+await loadTopAccessedFiles();
+await loadActivitySummary();
 
 }catch(err){
 
@@ -709,7 +724,7 @@ async function loadActivityLogs() {
                     ${log.fileName || "-"}
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-500">
-                    ${log.action === "login" ? "User login to Dashboard" : "File accessed from Dashboard"}
+                    ${log.action === "login_pegawai" ? "User login to Dashboard" : "File accessed from Dashboard"}
                 </td>
             </tr>
             `;
@@ -759,6 +774,279 @@ function openLastAccessedArchive() {
 }
 
 // ===============================
+// LOAD ACTIVITY CHART
+// ===============================
+
+async function loadActivityChart(){
+
+try{
+
+const q = query(
+collection(db,"activityLogs"),
+where("uid","==",currentUserUID),
+orderBy("timestamp","desc"),
+limit(200)
+);
+
+const snapshot = await getDocs(q);
+
+const activityPerDay = {};
+
+// buat 7 hari terakhir
+for(let i=6;i>=0;i--){
+
+const d = new Date();
+d.setDate(d.getDate()-i);
+
+const key = d.toISOString().split("T")[0];
+
+activityPerDay[key] = 0;
+
+}
+
+snapshot.forEach(docSnap=>{
+
+const data = docSnap.data();
+
+if(!data.timestamp) return;
+
+const date = data.timestamp.toDate();
+
+const key = date.toISOString().split("T")[0];
+
+if(activityPerDay[key] !== undefined){
+
+activityPerDay[key]++;
+
+}
+
+});
+
+const labels = Object.keys(activityPerDay).map(d=>{
+
+const date = new Date(d);
+
+return date.toLocaleDateString("id-ID",{
+day:"numeric",
+month:"short"
+});
+
+});
+
+const values = Object.values(activityPerDay);
+
+renderActivityChart(labels,values);
+
+}catch(err){
+
+console.error("Activity chart error:",err);
+
+}
+
+}
+
+// ===============================
+// RENDER ACTIVITY CHART
+// ===============================
+
+function renderActivityChart(labels,data){
+
+const canvas = document.getElementById("activityChart");
+
+if(!canvas) return;
+
+const ctx = canvas.getContext("2d");
+
+const gradient = ctx.createLinearGradient(0,0,0,300);
+
+gradient.addColorStop(0,"rgba(59,130,246,0.4)");
+gradient.addColorStop(1,"rgba(59,130,246,0)");
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"Aktivitas",
+
+data:data,
+
+borderColor:"#3b82f6",
+
+backgroundColor:gradient,
+
+borderWidth:3,
+
+tension:0.4,
+
+fill:true,
+
+pointBackgroundColor:"#3b82f6",
+
+pointRadius:4,
+
+pointHoverRadius:6
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+plugins:{
+legend:{display:false}
+},
+
+scales:{
+
+y:{
+beginAtZero:true,
+ticks:{stepSize:1}
+},
+
+x:{
+grid:{display:false}
+}
+
+}
+
+}
+
+});
+
+}
+
+// ===============================
+// LOAD TOP ACCESSED FILES
+// ===============================
+
+async function loadTopAccessedFiles(){
+
+try{
+
+const q = query(
+collection(db,"files"),
+where("allowedUsers","array-contains",currentUserUID)
+);
+
+const snapshot = await getDocs(q);
+
+const files = [];
+
+snapshot.forEach(docSnap=>{
+files.push({
+id:docSnap.id,
+...docSnap.data()
+});
+});
+
+files.sort((a,b)=>(b.accessCount || 0)-(a.accessCount || 0));
+
+const topFiles = files.slice(0,5);
+
+const list = document.getElementById("topFilesList");
+
+if(!list) return;
+
+list.innerHTML="";
+
+topFiles.forEach(file=>{
+
+const li = document.createElement("li");
+
+li.className="flex justify-between border-b pb-2";
+
+li.innerHTML=`
+<span>${file.nama || "Untitled"}</span>
+<span class="text-primary font-semibold">${file.accessCount || 0}</span>
+`;
+
+list.appendChild(li);
+
+});
+
+}catch(err){
+
+console.error("Top files error:",err);
+
+}
+
+}
+
+// ===============================
+// LOAD ACTIVITY SUMMARY
+// ===============================
+
+async function loadActivitySummary(){
+
+try{
+
+const q = query(
+collection(db,"activityLogs"),
+where("uid","==",currentUserUID)
+);
+
+const snapshot = await getDocs(q);
+
+let todayCount = 0;
+let totalLogs = 0;
+
+const dayCounter = {};
+
+const today = new Date().toISOString().split("T")[0];
+
+snapshot.forEach(docSnap=>{
+
+const data = docSnap.data();
+
+if(!data.timestamp) return;
+
+const date = data.timestamp.toDate();
+
+const key = date.toISOString().split("T")[0];
+
+totalLogs++;
+
+if(key === today) todayCount++;
+
+dayCounter[key] = (dayCounter[key] || 0)+1;
+
+});
+
+let mostActiveDay = "-";
+let max = 0;
+
+for(const day in dayCounter){
+
+if(dayCounter[day] > max){
+
+max = dayCounter[day];
+mostActiveDay = day;
+
+}
+
+}
+
+document.getElementById("todayActivity").textContent = todayCount;
+document.getElementById("totalLogs").textContent = totalLogs;
+document.getElementById("mostActiveDay").textContent = mostActiveDay;
+
+}catch(err){
+
+console.error("Summary error:",err);
+
+}
+
+}
+
+// ===============================
 // LOGOUT
 // ===============================
 
@@ -773,6 +1061,9 @@ if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
 
         try {
+
+            // reset login session
+            sessionStorage.removeItem("loginRecorded");
 
             await signOut(auth);
 
@@ -821,3 +1112,42 @@ window.location.href = "profile-pegawai.html";
 });
 
 }
+ 
+// ===============================
+// SESSION TIMEOUT (15 MENIT)
+// ===============================
+
+let idleTimer;
+
+// 15 menit
+const IDLE_LIMIT = 15 * 60 * 1000;
+
+function resetIdleTimer(){
+
+clearTimeout(idleTimer);
+
+idleTimer = setTimeout(async () => {
+
+alert("Session berakhir karena tidak ada aktivitas selama 15 menit.");
+
+// reset login session
+sessionStorage.removeItem("loginRecorded");
+
+await signOut(auth);
+
+window.location.href = "../index.html";
+
+}, IDLE_LIMIT);
+
+}
+
+// aktivitas yang dianggap sebagai aktivitas user
+["click","mousemove","keypress","scroll","touchstart"].forEach(event => {
+
+document.addEventListener(event, resetIdleTimer);
+
+});
+
+// mulai timer saat halaman dibuka
+resetIdleTimer();
+

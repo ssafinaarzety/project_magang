@@ -1716,24 +1716,71 @@ function showErrorModal(message){
 // ===============================
 
 let idleTimer;
+let isSessionTimeoutShown = false;
 
 // 15 menit
 const IDLE_LIMIT = 15 * 60 * 1000;
 
+function ensureSessionTimeoutModal() {
+    const existing = document.getElementById("sessionTimeoutModal");
+    if (existing) return existing;
+
+    const modal = document.createElement("div");
+    modal.id = "sessionTimeoutModal";
+    modal.className = "hidden fixed inset-0 z-50 flex items-center justify-center";
+    modal.innerHTML = `
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+    <div class="relative z-10 w-full max-w-sm mx-4 overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] shadow-2xl ring-1 ring-slate-900/5 transition-all border border-slate-200 dark:border-slate-700">
+        <div class="p-6">
+            <div class="flex flex-col items-center text-center">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 mb-4">
+                    <span class="material-icons-outlined text-amber-600 dark:text-amber-400 text-2xl">schedule</span>
+                </div>
+                <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white mb-2">Session Timeout</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Sesi berakhir karena tidak ada aktivitas selama 15 menit.</p>
+                <button
+                    id="sessionTimeoutConfirmBtn"
+                    class="inline-flex w-full justify-center rounded-lg bg-red-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-colors"
+                    type="button">
+                    Login Ulang
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const confirmBtn = document.getElementById("sessionTimeoutConfirmBtn");
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", async () => {
+            try {
+                sessionStorage.removeItem("loginRecorded");
+                await signOut(auth);
+            } finally {
+                window.location.href = "../index.html";
+            }
+        });
+    }
+
+    return modal;
+}
+
+function showSessionTimeoutModal() {
+    const modal = ensureSessionTimeoutModal();
+    isSessionTimeoutShown = true;
+    modal.classList.remove("hidden");
+}
+
 function resetIdleTimer(){
+
+if (isSessionTimeoutShown) return;
 
 clearTimeout(idleTimer);
 
 idleTimer = setTimeout(async () => {
 
-alert("Session berakhir karena tidak ada aktivitas selama 15 menit.");
-
-// reset login session
-sessionStorage.removeItem("loginRecorded");
-
-await signOut(auth);
-
-window.location.href = "../index.html";
+showSessionTimeoutModal();
 
 }, IDLE_LIMIT);
 

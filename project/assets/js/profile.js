@@ -12,8 +12,8 @@ function setText(id, value) {
     }
 }
 
-function getInitial(name = "User") {
-    return name.trim().charAt(0).toUpperCase() || "U";
+function getInitial(name = "Pegawai") {
+    return name.trim().charAt(0).toUpperCase() || "P";
 }
 
 function setAvatar(name) {
@@ -91,7 +91,7 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        const displayName = userData.name || user.displayName || "User";
+        const displayName = userData.name || user.displayName || "Pegawai";
         const displayEmail = userData.email || user.email || "-";
         const roleLabel = getRoleLabel(role);
         const joinedAt = user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString("id-ID") : "-";

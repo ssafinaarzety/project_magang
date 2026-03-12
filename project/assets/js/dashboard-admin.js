@@ -1,5 +1,22 @@
 import { auth, db } from "./firebase-config.js";
 
+// ===============================
+// AMBIL FOLDER GOOGLE DRIVE DARI FIRESTORE
+// ===============================
+async function getDriveFolderId(kategori){
+
+const folderRef = doc(db,"driveFolders",kategori);
+
+const folderSnap = await getDoc(folderRef);
+
+if(!folderSnap.exists()){
+throw new Error("Folder mapping tidak ditemukan");
+}
+
+return folderSnap.data().folderId;
+
+}
+
 import {
     onAuthStateChanged,
     signOut
@@ -99,9 +116,9 @@ function getArchiveOpenUrl(item) {
     return item.spreadsheetLink || item.driveFileId || "";
 }
 
-async function uploadArchiveFile(file, uid) {
+async function uploadArchiveFile(file, uid, kategori) {
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwW9kx-sCS3YKVIujB6MGFYQc7Dt7yuuh_2QCB9QktCk8En0Ie7rhTn1POBWeNzmak/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8PpYyHesgJodYGnROOa3uf_qdKPuZxJilsWDjdgKJgzXDWY23gIkMi1UaXhhIm8Dj/exec";
 
 const reader = new FileReader();
 
@@ -113,13 +130,18 @@ try {
 
 const base64 = reader.result.split(",")[1];
 
-const response = await fetch(APPS_SCRIPT_URL,{
-method:"POST",
-body:JSON.stringify({
-fileName:file.name,
-mimeType:file.type,
-fileData:base64
-})
+const folderId = await getDriveFolderId(kategori);
+
+const formData = new FormData();
+
+formData.append("fileName", file.name);
+formData.append("mimeType", file.type);
+formData.append("fileData", base64);
+formData.append("folderId", folderId);
+
+const response = await fetch(APPS_SCRIPT_URL, {
+method: "POST",
+body: formData
 });
 
 const result = await response.json();
@@ -142,7 +164,6 @@ reject(err);
 reader.readAsDataURL(file);
 
 });
-
 }
 
 async function downloadArchiveToLocal(item) {
@@ -742,6 +763,7 @@ function renderAccessUsers(allowedUsers) {
     </span>`;
 }
 
+
 // ===============================
 // UPLOAD FILE METADATA
 // ===============================
@@ -798,7 +820,7 @@ function setupUpload() {
 
         for (const file of selectedUploadFiles) {
 
-        const filePayload = await uploadArchiveFile(file, user.uid);
+        const filePayload = await uploadArchiveFile(file, user.uid, kategori);
 
         const newArchivePayload = {
         nama: file.name,
@@ -1143,7 +1165,7 @@ function setupEditModalSave() {
 
                 const file = selectedEditFiles[0];
 
-                const uploadedFile = await uploadArchiveFile(file, auth.currentUser.uid);
+                const uploadedFile = await uploadArchiveFile(file, auth.currentUser.uid, kategori);
 
                 updatePayload.sourceType = "file";
                 updatePayload.fileUrl = uploadedFile.fileUrl;
@@ -1718,8 +1740,8 @@ function showErrorModal(message){
 let idleTimer;
 let isSessionTimeoutShown = false;
 
-// 15 menit
-const IDLE_LIMIT = 15 * 60 * 1000;
+// 10 menit
+const IDLE_LIMIT = 10 * 60 * 1000;
 
 function ensureSessionTimeoutModal() {
     const existing = document.getElementById("sessionTimeoutModal");

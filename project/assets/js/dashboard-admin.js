@@ -1,22 +1,5 @@
 import { auth, db } from "./firebase-config.js";
 
-// ===============================
-// AMBIL FOLDER GOOGLE DRIVE DARI FIRESTORE
-// ===============================
-async function getDriveFolderId(kategori){
-
-const folderRef = doc(db,"driveFolders",kategori);
-
-const folderSnap = await getDoc(folderRef);
-
-if(!folderSnap.exists()){
-throw new Error("Folder mapping tidak ditemukan");
-}
-
-return folderSnap.data().folderId;
-
-}
-
 import {
     onAuthStateChanged,
     signOut
@@ -69,6 +52,32 @@ let activeEditItem = null;
 const PAGE_SIZE = 10;
 const ACCEPTED_FILE_EXTENSIONS = ["xlsx", "csv", "pdf"];
 
+// ===============================
+// AMBIL FOLDER GOOGLE DRIVE DARI FIRESTORE
+// ===============================
+async function getDriveFolderId(kategori){
+
+    kategori = kategori.trim().toLowerCase(); 
+
+const folderRef = doc(db, "driveFolders", kategori);
+const folderSnap = await getDoc(folderRef);
+
+if(!folderSnap.exists()){
+throw new Error("Folder mapping tidak ditemukan: " + kategori);
+}
+
+const data = folderSnap.data();
+
+console.log("Data Firestore:", data);
+
+const folderId = data.folderId;   // ambil dari Firestore
+
+console.log("FolderId:", folderId);
+
+return folderId;                  // kembalikan nilai
+
+}
+
 function isValidSpreadsheetLink(link) {
     if (!link) return false;
 
@@ -116,54 +125,57 @@ function getArchiveOpenUrl(item) {
     return item.spreadsheetLink || item.driveFileId || "";
 }
 
-async function uploadArchiveFile(file, uid, kategori) {
+async function uploadArchiveFile(file, kategori){
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8PpYyHesgJodYGnROOa3uf_qdKPuZxJilsWDjdgKJgzXDWY23gIkMi1UaXhhIm8Dj/exec";
+  // 1. Ambil folderId dulu
+  const folderId = await getDriveFolderId(kategori);
 
-const reader = new FileReader();
+    console.log("Kategori:", kategori);
+    console.log("FolderId:", folderId);
 
-return new Promise((resolve, reject) => {
 
-reader.onload = async function () {
+  // 2. Baru proses file
+  const reader = new FileReader();
 
-try {
+  return new Promise((resolve,reject)=>{
 
-const base64 = reader.result.split(",")[1];
+    reader.onload = async function(){
 
-const folderId = await getDriveFolderId(kategori);
+      try{
 
-const formData = new FormData();
+        const base64 = reader.result.split(",")[1];
 
-formData.append("fileName", file.name);
-formData.append("mimeType", file.type);
-formData.append("fileData", base64);
-formData.append("folderId", folderId);
+        console.log("FolderId yang dikirim:", folderId);
 
-const response = await fetch(APPS_SCRIPT_URL, {
-method: "POST",
-body: formData
-});
+        // 3. Baru kirim ke Apps Script
+        const response = await fetch(
+          "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",
+        {
+          method:"POST",
+          body: JSON.stringify({
+            folderId: folderId,
+            fileName: file.name,
+            mimeType: file.type,
+            fileData: base64
+          })
+        });
 
-const result = await response.json();
+        const result = await response.json();
 
-resolve({
-fileUrl: result.url,
-filePath: result.fileId,
-fileName: file.name,
-fileType: getFileExtension(file.name)
-});
+        console.log("Apps Script result:", result);
 
-}catch(err){
+        resolve(result);
 
-reject(err);
+      }catch(err){
+        reject(err);
+      }
 
-}
+    };
 
-};
+    reader.readAsDataURL(file);
 
-reader.readAsDataURL(file);
+  });
 
-});
 }
 
 async function downloadArchiveToLocal(item) {
@@ -788,7 +800,8 @@ function setupUpload() {
         }
 
         const judul = document.getElementById("judul").value.trim();
-        const kategori = document.getElementById("kategori").value.trim().toLowerCase();
+        const kategori = document.getElementById("kategori").value;
+        console.log("Kategori yang dikirim:", kategori);
         const tahun = document.getElementById("tahun").value;
         const link = document.getElementById("link").value.trim();
         const hasLink = !!link;
@@ -820,22 +833,24 @@ function setupUpload() {
 
         for (const file of selectedUploadFiles) {
 
-        const filePayload = await uploadArchiveFile(file, user.uid, kategori);
+        const filePayload = await uploadArchiveFile(file, kategori);
 
         const newArchivePayload = {
-        nama: file.name,
-        kategori: kategori,
-        tanggal: tahun + "-01-01",
-        createdBy: user.uid,
-        allowedUsers: [user.uid],
-        createdAt: serverTimestamp(),
-        spreadsheetLink: "",
-        driveFileId: "",
-        sourceType: "file",
-        fileUrl: filePayload.fileUrl,
-        filePath: filePayload.filePath,
-        fileName: filePayload.fileName,
-        fileType: filePayload.fileType
+            nama: judul,
+            kategori: kategori,
+            tanggal: new Date().toISOString().split("T")[0],
+            createdBy: user.uid,
+            allowedUsers: [user.uid],
+            createdAt: serverTimestamp(),
+
+            spreadsheetLink: "",
+            driveFileId: filePayload.fileId || "",
+            sourceType: "file",
+
+            fileUrl: filePayload.url || "",
+            filePath: filePayload.fileId || "",
+            fileName: file.name,
+            fileType: file.type
         };
 
         const newDoc = await addDoc(collection(db,"files"), newArchivePayload);
@@ -1163,9 +1178,23 @@ function setupEditModalSave() {
 
             if (hasNewFile) {
 
+
+                // hapus file lama di drive
+                if(activeEditItem?.filePath){
+
+                    await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",{
+                        method:"POST",
+                        body: JSON.stringify({
+                            action:"delete",
+                            fileId: activeEditItem.filePath
+                        })
+                    });
+
+                }
+
                 const file = selectedEditFiles[0];
 
-                const uploadedFile = await uploadArchiveFile(file, auth.currentUser.uid, kategori);
+                const uploadedFile = await uploadArchiveFile(file, kategori);
 
                 updatePayload.sourceType = "file";
                 updatePayload.fileUrl = uploadedFile.fileUrl;
@@ -1236,6 +1265,15 @@ function setupDeleteModal() {
         const filePath = document.getElementById("deleteFilePath").value;
 
         try {
+
+            await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",{
+                method:"POST",
+                body: JSON.stringify({
+                action:"delete",
+                fileId:filePath
+                })
+                });
+
             await deleteDoc(doc(db, "files", fileId));
 
             await addDoc(collection(db, "activityLogs"), {
@@ -1490,7 +1528,7 @@ async function loadDashboardStats() {
 
         data.forEach(item => {
             if (item.tanggal) {
-                const d = new Date(item.tanggal);
+                const d = new Date(item.tanggal + "T00:00:00");
 
                 if (d.getMonth() === month && d.getFullYear() === year) {
                     monthlyCount++;

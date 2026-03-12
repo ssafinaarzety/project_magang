@@ -430,13 +430,13 @@
                                             for="kategori">Kategori</label>
                                         <select
                                             class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
-                                            id="kategori" name="kategori">
-                                            <option>Keuangan</option>
-                                            <option>HRD</option>
-                                            <option>Logistik</option>
-                                            <option>Legal</option>
-                                            <option>Marketing</option>
-                                        </select>
+                                             id="kategori">
+                                            <option value="keuangan">Keuangan</option>
+                                            <option value="hrd">HRD</option>
+                                            <option value="logistik">Logistik</option>
+                                            <option value="legal">Legal</option>
+                                            <option value="marketing">Marketing</option>
+                                            </select>
                                     </div>
                                 </div>
                                 <div>
@@ -815,6 +815,7 @@
     </div>
 
     <script type="module" src="../assets/js/dashboard-admin.js"></script>
+    
     <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-3"></div>
 
     <script>
@@ -826,6 +827,5 @@
     });
 
 </script>
-    
 </body>
 </html>

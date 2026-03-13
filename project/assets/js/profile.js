@@ -91,16 +91,22 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        const displayName = userData.name || user.displayName || "Pegawai";
+        const displayName = userData.role || user.displayName || "-";
         const displayEmail = userData.email || user.email || "-";
         const roleLabel = getRoleLabel(role);
         const joinedAt = user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString("id-ID") : "-";
         const lastLogin = user.metadata?.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleString("id-ID") : "-";
 
-        setText("profileName", displayName);
+        if (displayName === "admin") {
+            setText("profileName", "Administrator");
+            setText("profileNameSidebar", "Administrator");
+        } else if (displayName === "pegawai") {
+            setText("profileName", "Pegawai");
+            setText("profileNameSidebar", "Pegawai");
+        }
+
         setText("profileEmailHero", displayEmail);
         setText("profileEmail", displayEmail);
-        setText("profileNameSidebar", displayName);
         setText("profileEmailSidebar", displayEmail);
         setText("profileRole", roleLabel);
         setText("profileUid", user.uid);

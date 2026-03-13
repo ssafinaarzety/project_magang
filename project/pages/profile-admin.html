@@ -7,7 +7,8 @@
     <title>Admin Profile - AUTORA</title>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
@@ -30,25 +31,31 @@
     </script>
 </head>
 
-<body data-required-role="admin" class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display min-h-screen flex overflow-hidden">
-    <aside class="w-64 bg-white dark:bg-[#1a2634] border-r border-slate-200 dark:border-slate-700 flex flex-col h-screen fixed left-0 top-0 z-20 transition-transform duration-300">
+<body data-required-role="admin"
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display min-h-screen flex overflow-hidden">
+    <aside
+        class="w-64 bg-white dark:bg-[#1a2634] border-r border-slate-200 dark:border-slate-700 flex flex-col h-screen fixed left-0 top-0 z-20 transition-transform duration-300">
         <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
             <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white mr-3">
                 <span class="material-icons-outlined text-xl">admin_panel_settings</span>
             </div>
-            <h1 class="font-bold text-lg text-slate-800 dark:text-white tracking-tight">AUTORA <span class="text-primary">Admin</span></h1>
+            <h1 class="font-bold text-lg text-slate-800 dark:text-white tracking-tight">AUTORA <span
+                    class="text-primary">Admin</span></h1>
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <a href="dashboard-admin.html" class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors">
+            <a href="dashboard-admin.html"
+                class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors">
                 <span class="material-icons-outlined mr-3">table_view</span>
                 Daftar Arsip
             </a>
-            <a href="dashboard-admin.html" class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors">
+            <a href="dashboard-admin.html"
+                class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors">
                 <span class="material-icons-outlined mr-3">cloud_upload</span>
                 Upload Arsip
             </a>
-            <a href="dashboard-admin.html" class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors">
+            <a href="dashboard-admin.html"
+                class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors">
                 <span class="material-icons-outlined mr-3">backup</span>
                 Backup Data
             </a>
@@ -56,16 +63,20 @@
 
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
             <div class="flex items-center gap-3 px-2 mb-4">
-                <div id="profileAvatarSidebar" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
+                <div id="profileAvatarSidebar"
+                    class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
                     <img id="profileAvatarSidebarImg" alt="Admin profile picture" class="object-cover w-full h-full"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfvnIeyQegZfjwTdo6zrAHBMfKN5ARSgM9wEUc62fPVxXGPeRBybf6CSi-827Febn7JSIJqiXnRHyWiNbUMPYeveZ7UfpaEcr-kT1b2k8DaGxY8RK6ygpmXFmoRvzTAcbiiV4zDxHVEDsNLZS_c09aUEyd5QRjKacZuUzKGBrawwXPEx9EcQ0eJjKEIkQyDwv-qB1DfLdY6-OCJ_IOGp5MOUJgjaaJECF6TxVGkDrMsXDjyyHuPvlDoJVH2aeWAwmIoUfz-cv5_Q" />
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p id="profileNameSidebar" class="text-sm font-medium text-slate-900 dark:text-white truncate">Administrator</p>
-                    <p id="profileEmailSidebar" class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@autora.sys</p>
+                    <p id="profileNameSidebar" class="text-sm font-medium text-slate-900 dark:text-white truncate">
+                        Administrator</p>
+                    <p id="profileEmailSidebar" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        admin@autora.sys</p>
                 </div>
             </div>
-            <button id="logoutBtn" class="w-full flex items-center justify-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors">
+            <button id="logoutBtn"
+                class="w-full flex items-center justify-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors">
                 <span class="material-icons-outlined mr-2 text-lg">logout</span>
                 Logout
             </button>
@@ -83,11 +94,14 @@
                 <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-1">
                         <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 text-center">
-                            <div id="profileAvatar" class="w-20 h-20 mx-auto rounded-full bg-slate-200 overflow-hidden relative">
-                                <img id="profileAvatarImg" alt="Admin profile picture" class="object-cover w-full h-full"
+                            <div id="profileAvatar"
+                                class="w-20 h-20 mx-auto rounded-full bg-slate-200 overflow-hidden relative">
+                                <img id="profileAvatarImg" alt="Admin profile picture"
+                                    class="object-cover w-full h-full"
                                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfvnIeyQegZfjwTdo6zrAHBMfKN5ARSgM9wEUc62fPVxXGPeRBybf6CSi-827Febn7JSIJqiXnRHyWiNbUMPYeveZ7UfpaEcr-kT1b2k8DaGxY8RK6ygpmXFmoRvzTAcbiiV4zDxHVEDsNLZS_c09aUEyd5QRjKacZuUzKGBrawwXPEx9EcQ0eJjKEIkQyDwv-qB1DfLdY6-OCJ_IOGp5MOUJgjaaJECF6TxVGkDrMsXDjyyHuPvlDoJVH2aeWAwmIoUfz-cv5_Q" />
                             </div>
-                            <h2 id="profileEmailHero" class="mt-4 text-base font-semibold text-slate-800 break-all">admin@autora.sys</h2>
+                            <h2 id="profileEmailHero" class="mt-4 text-base font-semibold text-slate-800 break-all">
+                                admin@autora.sys</h2>
                             <p id="profileRole" class="text-sm text-slate-500">Admin</p>
                         </div>
                     </div>
@@ -123,7 +137,8 @@
                 </div>
 
                 <div class="px-8 py-5 border-t border-slate-200 bg-slate-50 flex flex-wrap gap-3 justify-end">
-                    <button id="backToDashboardBtn" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition">
+                    <button id="backToDashboardBtn"
+                        class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition">
                         Kembali ke Dashboard
                     </button>
                 </div>

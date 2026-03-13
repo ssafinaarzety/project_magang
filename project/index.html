@@ -109,28 +109,21 @@
                         </div>
                         <div class="relative group">
 
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="material-icons text-slate-400 text-xl">lock_outline</span>
-                                </div>
+                            </div>
 
-                                <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                placeholder="••••••••"
-                                required
-                                class="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 bg-white/50 backdrop-blur-sm transition-all sm:text-sm shadow-sm"
-                                />
+                            <input id="password" name="password" type="password" placeholder="••••••••" required
+                                class="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 bg-white/50 backdrop-blur-sm transition-all sm:text-sm shadow-sm" />
 
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
 
-                                <span
-                                id="togglePassword"
-                                class="material-icons cursor-pointer text-slate-400 hover:text-sky-500">
-                                visibility
+                                <span id="togglePassword"
+                                    class="material-icons cursor-pointer text-slate-400 hover:text-sky-500">
+                                    visibility
                                 </span>
 
-                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -141,7 +134,7 @@
                             Ingat saya
                         </label>
                     </div>
-                    <button 
+                    <button
                         class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md shadow-sky-200 text-sm font-medium text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all duration-200 transform hover:-translate-y-0.5"
                         type="submit">
                         Masuk
@@ -164,26 +157,27 @@
 
     <script>
 
-    const toggle = document.getElementById("togglePassword");
-    const password = document.getElementById("password");
+        const toggle = document.getElementById("togglePassword");
+        const password = document.getElementById("password");
 
-    toggle.addEventListener("click", () => {
+        toggle.addEventListener("click", () => {
 
-    if(password.type === "password"){
+            if (password.type === "password") {
 
-    password.type = "text";
-    toggle.innerText = "visibility_off";
+                password.type = "text";
+                toggle.innerText = "visibility_off";
 
-    }else{
+            } else {
 
-    password.type = "password";
-    toggle.innerText = "visibility";
+                password.type = "password";
+                toggle.innerText = "visibility";
 
-    }
+            }
 
-    });
+        });
 
-</script>
+    </script>
 
 </body>
+
 </html>

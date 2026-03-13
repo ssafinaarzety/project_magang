@@ -55,26 +55,26 @@ const ACCEPTED_FILE_EXTENSIONS = ["xlsx", "csv", "pdf"];
 // ===============================
 // AMBIL FOLDER GOOGLE DRIVE DARI FIRESTORE
 // ===============================
-async function getDriveFolderId(kategori){
+async function getDriveFolderId(kategori) {
 
-    kategori = kategori.trim().toLowerCase(); 
+    kategori = kategori.trim().toLowerCase();
 
-const folderRef = doc(db, "driveFolders", kategori);
-const folderSnap = await getDoc(folderRef);
+    const folderRef = doc(db, "driveFolders", kategori);
+    const folderSnap = await getDoc(folderRef);
 
-if(!folderSnap.exists()){
-throw new Error("Folder mapping tidak ditemukan: " + kategori);
-}
+    if (!folderSnap.exists()) {
+        throw new Error("Folder mapping tidak ditemukan: " + kategori);
+    }
 
-const data = folderSnap.data();
+    const data = folderSnap.data();
 
-console.log("Data Firestore:", data);
+    console.log("Data Firestore:", data);
 
-const folderId = data.folderId;   // ambil dari Firestore
+    const folderId = data.folderId;   // ambil dari Firestore
 
-console.log("FolderId:", folderId);
+    console.log("FolderId:", folderId);
 
-return folderId;                  // kembalikan nilai
+    return folderId;                  // kembalikan nilai
 
 }
 
@@ -125,56 +125,56 @@ function getArchiveOpenUrl(item) {
     return item.spreadsheetLink || item.driveFileId || "";
 }
 
-async function uploadArchiveFile(file, kategori){
+async function uploadArchiveFile(file, kategori) {
 
-  // 1. Ambil folderId dulu
-  const folderId = await getDriveFolderId(kategori);
+    // 1. Ambil folderId dulu
+    const folderId = await getDriveFolderId(kategori);
 
     console.log("Kategori:", kategori);
     console.log("FolderId:", folderId);
 
 
-  // 2. Baru proses file
-  const reader = new FileReader();
+    // 2. Baru proses file
+    const reader = new FileReader();
 
-  return new Promise((resolve,reject)=>{
+    return new Promise((resolve, reject) => {
 
-    reader.onload = async function(){
+        reader.onload = async function () {
 
-      try{
+            try {
 
-        const base64 = reader.result.split(",")[1];
+                const base64 = reader.result.split(",")[1];
 
-        console.log("FolderId yang dikirim:", folderId);
+                console.log("FolderId yang dikirim:", folderId);
 
-        // 3. Baru kirim ke Apps Script
-        const response = await fetch(
-          "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",
-        {
-          method:"POST",
-          body: JSON.stringify({
-            folderId: folderId,
-            fileName: file.name,
-            mimeType: file.type,
-            fileData: base64
-          })
-        });
+                // 3. Baru kirim ke Apps Script
+                const response = await fetch(
+                    "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            folderId: folderId,
+                            fileName: file.name,
+                            mimeType: file.type,
+                            fileData: base64
+                        })
+                    });
 
-        const result = await response.json();
+                const result = await response.json();
 
-        console.log("Apps Script result:", result);
+                console.log("Apps Script result:", result);
 
-        resolve(result);
+                resolve(result);
 
-      }catch(err){
-        reject(err);
-      }
+            } catch (err) {
+                reject(err);
+            }
 
-    };
+        };
 
-    reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
 
-  });
+    });
 
 }
 
@@ -336,7 +336,7 @@ function bindFileDropzone({ dropzoneId, inputId, infoId, clearId, onFileSelected
         updateFileFieldInfo(infoId, file);
     };
 
-        input.addEventListener("change", (event) => {
+    input.addEventListener("change", (event) => {
 
         const files = [...event.target.files];
 
@@ -346,7 +346,7 @@ function bindFileDropzone({ dropzoneId, inputId, infoId, clearId, onFileSelected
 
         updateFileFieldInfo(infoId, files[0]);
 
-        });
+    });
 
     dropzone.addEventListener("dragover", (event) => {
         event.preventDefault();
@@ -440,8 +440,10 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // tampilkan profil admin
-        document.getElementById("adminName").innerText = data.name || "Administrator";
-        document.getElementById("adminEmail").innerText = data.email || user.email;
+        const nameEl = document.getElementById("adminName");
+        if (nameEl) nameEl.innerText = data.name || "Administrator";
+        const emailEl = document.getElementById("adminEmail");
+        if (emailEl) emailEl.innerText = data.email || user.email;
 
         if (role !== "admin") {
             window.location.href = "../index.html";
@@ -635,8 +637,8 @@ function renderTable(data, reset = true) {
             tahun = item.year;
         }
 
-const row = document.createElement("tr");
-row.className = "fade-row hover:bg-slate-50 transition";
+        const row = document.createElement("tr");
+        row.className = "fade-row hover:bg-slate-50 transition";
         row.innerHTML = `
             <td class="px-6 py-4">${no}</td>
             <td class="px-6 py-4 font-medium">${item.nama || item.name || item.Judul || "-"}</td>
@@ -705,7 +707,7 @@ row.className = "fade-row hover:bg-slate-50 transition";
             activeEditItem = item;
             document.getElementById("editFileId").value = item.id;
             document.getElementById("editJudul").value = item.nama || item.name || item.Judul || "";
-            
+
             let tahun = "-";
             if (item.tanggal) {
                 tahun = item.tanggal.split("-")[0];
@@ -713,8 +715,8 @@ row.className = "fade-row hover:bg-slate-50 transition";
                 tahun = item.year;
             }
             document.getElementById("editTahun").value = tahun;
-            
-            const kategoriValue = toTitleCaseCategory(item.kategori);
+
+            const kategoriValue = toTitleCaseCategory(item.kategori || "");
             document.getElementById("editKategori").value = kategoriValue;
             document.getElementById("editLink").value = item.spreadsheetLink || item.driveFileId || "";
 
@@ -728,32 +730,32 @@ row.className = "fade-row hover:bg-slate-50 transition";
             }
 
             evaluateEditFormState();
-            
+
             document.getElementById("editModal").classList.remove("hidden");
         });
 
-row.querySelector(".open-btn")?.addEventListener("click", async () => {
+        row.querySelector(".open-btn")?.addEventListener("click", async () => {
 
-const openUrl = getArchiveOpenUrl(item);
-if (!openUrl) return;
+            const openUrl = getArchiveOpenUrl(item);
+            if (!openUrl) return;
 
-await addDoc(collection(db,"activityLogs"),{
-uid: auth.currentUser.uid,
-userEmail: auth.currentUser.email,
-action: "open_file",
-fileName: item.nama,
-status: "success",
-timestamp: serverTimestamp()
-});
+            await addDoc(collection(db, "activityLogs"), {
+                uid: auth.currentUser.uid,
+                userEmail: auth.currentUser.email,
+                action: "open_file",
+                fileName: item.nama || item.name || item.Judul || "-",
+                status: "success",
+                timestamp: serverTimestamp()
+            });
 
-if (isFileArchive(item)) {
-await downloadArchiveToLocal(item);
-return;
-}
+            if (isFileArchive(item)) {
+                await downloadArchiveToLocal(item);
+                return;
+            }
 
-window.open(openUrl,"_blank");
+            window.open(openUrl, "_blank");
 
-});
+        });
 
         no++;
 
@@ -789,120 +791,120 @@ function setupUpload() {
 
     newSaveBtn.addEventListener("click", async () => {
 
-    const progressBox = document.getElementById("uploadProgressBox");
-    if (progressBox) progressBox.classList.remove("hidden");
+        const progressBox = document.getElementById("uploadProgressBox");
+        if (progressBox) progressBox.classList.remove("hidden");
 
-    try {
+        try {
 
-        if (!evaluateUploadFormState()) {
-            alert("Data belum valid. Periksa kembali link/file dan field wajib.");
-            return;
+            if (!evaluateUploadFormState()) {
+                alert("Data belum valid. Periksa kembali link/file dan field wajib.");
+                return;
+            }
+
+            const judul = document.getElementById("judul").value.trim();
+            const kategori = document.getElementById("kategori").value.toLowerCase();
+            console.log("Kategori yang dikirim:", kategori);
+            const tahun = document.getElementById("tahun").value;
+            const link = document.getElementById("link").value.trim();
+            const hasLink = !!link;
+            const hasFile = selectedUploadFiles.length > 0;
+
+            if (!judul || !kategori || !tahun) {
+                alert("Semua field wajib diisi");
+                return;
+            }
+
+            if (!hasLink && !hasFile) {
+                alert("Isi link spreadsheet atau upload file (.xlsx, .csv, atau .pdf)");
+                return;
+            }
+
+            if (hasLink && !isValidSpreadsheetLink(link)) {
+                alert("Link spreadsheet tidak valid. Gunakan format Google Sheets yang benar.");
+                return;
+            }
+
+            if (tahun < 1900 || tahun > 2100) {
+                alert("Tahun tidak valid");
+                return;
+            }
+
+            const user = auth.currentUser;
+
+            if (selectedUploadFiles.length > 0) {
+
+                for (const file of selectedUploadFiles) {
+
+                    const filePayload = await uploadArchiveFile(file, kategori);
+
+                    const newArchivePayload = {
+                        nama: judul,
+                        kategori: kategori,
+                        tanggal: new Date().toISOString().split("T")[0],
+                        createdBy: user.uid,
+                        allowedUsers: [user.uid],
+                        createdAt: serverTimestamp(),
+
+                        spreadsheetLink: "",
+                        driveFileId: filePayload.fileId || "",
+                        sourceType: "file",
+
+                        fileUrl: filePayload.url || "",
+                        filePath: filePayload.fileId || "",
+                        fileName: file.name,
+                        fileType: file.type
+                    };
+
+                    const newDoc = await addDoc(collection(db, "files"), newArchivePayload);
+
+                    await addDoc(collection(db, "activityLogs"), {
+                        uid: user.uid,
+                        userEmail: user.email,
+                        action: "upload",
+                        fileName: file.name,
+                        status: "success",
+                        fileId: newDoc.id,
+                        timestamp: serverTimestamp()
+                    });
+
+                }
+
+            }
+
+            await loadArchiveData(currentFilters, true);
+            await loadDashboardStats();
+
+            document.getElementById("uploadModal").classList.add("hidden");
+            document.getElementById("judul").value = "";
+            document.getElementById("kategori").value = "";
+            document.getElementById("tahun").value = "";
+            document.getElementById("link").value = "";
+            const uploadInput = document.getElementById("uploadFileInput");
+            if (uploadInput) uploadInput.value = "";
+            selectedUploadFiles = [];
+            updateFileFieldInfo("uploadFileInfo", null);
+            showToast("Upload berhasil");
+
+        } catch (err) {
+            console.error("Upload error:", err);
+            console.error("Error code:", err.code);
+            console.error("Error message:", err.message);
+
+            let errorMsg = "Upload gagal. Periksa kembali data dan coba lagi.";
+
+            if (err.code === "permission-denied") {
+                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan create file.";
+            } else if (err.code === "unauthenticated") {
+                errorMsg = "Anda tidak authenticated. Silakan login kembali.";
+            } else if (err.message?.includes("storage")) {
+                errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
+            }
+
+            alert(errorMsg);
+        } finally {
+            if (progressBox) progressBox.classList.add("hidden");
         }
-
-        const judul = document.getElementById("judul").value.trim();
-        const kategori = document.getElementById("kategori").value;
-        console.log("Kategori yang dikirim:", kategori);
-        const tahun = document.getElementById("tahun").value;
-        const link = document.getElementById("link").value.trim();
-        const hasLink = !!link;
-        const hasFile = selectedUploadFiles.length > 0;
-
-    if (!judul || !kategori || !tahun) {
-        alert("Semua field wajib diisi");
-        return;
-    }
-
-    if (!hasLink && !hasFile) {
-        alert("Isi link spreadsheet atau upload file .xlsx/.csv");
-        return;
-    }
-
-    if (hasLink && !isValidSpreadsheetLink(link)) {
-        alert("Link spreadsheet tidak valid. Gunakan format Google Sheets yang benar.");
-        return;
-    }
-
-    if (tahun < 1900 || tahun > 2100) {
-        alert("Tahun tidak valid");
-        return;
-    }
-
-        const user = auth.currentUser;
-
-        if (selectedUploadFiles.length > 0) {
-
-        for (const file of selectedUploadFiles) {
-
-        const filePayload = await uploadArchiveFile(file, kategori);
-
-        const newArchivePayload = {
-            nama: judul,
-            kategori: kategori,
-            tanggal: new Date().toISOString().split("T")[0],
-            createdBy: user.uid,
-            allowedUsers: [user.uid],
-            createdAt: serverTimestamp(),
-
-            spreadsheetLink: "",
-            driveFileId: filePayload.fileId || "",
-            sourceType: "file",
-
-            fileUrl: filePayload.url || "",
-            filePath: filePayload.fileId || "",
-            fileName: file.name,
-            fileType: file.type
-        };
-
-        const newDoc = await addDoc(collection(db,"files"), newArchivePayload);
-
-        await addDoc(collection(db,"activityLogs"),{
-        uid:user.uid,
-        userEmail:user.email,
-        action:"upload",
-        fileName:file.name,
-        status:"success",
-        fileId:newDoc.id,
-        timestamp:serverTimestamp()
-        });
-
-        }
-
-        }
-
-        await loadArchiveData(currentFilters, true);
-        await loadDashboardStats();
-
-        document.getElementById("uploadModal").classList.add("hidden");
-        document.getElementById("judul").value = "";
-        document.getElementById("kategori").value = "";
-        document.getElementById("tahun").value = "";
-        document.getElementById("link").value = "";
-        const uploadInput = document.getElementById("uploadFileInput");
-        if (uploadInput) uploadInput.value = "";
-        selectedUploadFiles = [];
-        updateFileFieldInfo("uploadFileInfo", null);
-        showToast("Upload berhasil");
-
-    } catch (err) {
-        console.error("Upload error:", err);
-        console.error("Error code:", err.code);
-        console.error("Error message:", err.message);
-        
-        let errorMsg = "Upload gagal. Periksa kembali data dan coba lagi.";
-        
-        if (err.code === "permission-denied") {
-            errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan create file.";
-        } else if (err.code === "unauthenticated") {
-            errorMsg = "Anda tidak authenticated. Silakan login kembali.";
-        } else if (err.message?.includes("storage")) {
-            errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
-        }
-        
-        alert(errorMsg);
-    } finally {
-        if (progressBox) progressBox.classList.add("hidden");
-    }
-});
+    });
 
 }
 
@@ -1010,7 +1012,7 @@ async function openAccessModal() {
 
         const div = document.createElement("div");
         div.className =
-        "flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition";
+            "flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition";
 
         div.innerHTML = `
         <div>
@@ -1019,8 +1021,8 @@ async function openAccessModal() {
         </div>
 
         ${isActive
-        ? `<span class="text-green-600 text-sm font-semibold">✔</span>`
-        : `<span class="text-slate-400 text-sm">+</span>`}
+                ? `<span class="text-green-600 text-sm font-semibold">✔</span>`
+                : `<span class="text-slate-400 text-sm">+</span>`}
         `;
 
         div.addEventListener("click", () => {
@@ -1039,7 +1041,7 @@ function toggleUserAccess(uid) {
     if (selectedAccessUsers.includes(uid)) {
         selectedAccessUsers =
             selectedAccessUsers.filter(id => id !== uid);
-            console.log("Access removed:", uid);
+        console.log("Access removed:", uid);
     } else {
         selectedAccessUsers.push(uid);
         console.log("Access added:", uid);
@@ -1074,7 +1076,7 @@ function setupAccessSave() {
 
             // Update document dengan error handling lebih baik
             const fileRef = doc(db, "files", selectedFileId);
-            
+
             // Cek apakah document ada sebelum update
             const fileSnap = await getDoc(fileRef);
             if (!fileSnap.exists()) {
@@ -1111,15 +1113,15 @@ function setupAccessSave() {
             console.error("Access save error:", error);
             console.error("Error code:", error.code);
             console.error("Error message:", error.message);
-            
+
             let errorMsg = "Gagal mengupdate hak akses";
-            
+
             if (error.code === "permission-denied") {
                 errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan operasi ini.";
             } else if (error.code === "not-found") {
                 errorMsg = "File tidak ditemukan";
             }
-            
+
             alert(errorMsg);
         }
     });
@@ -1158,7 +1160,7 @@ function setupEditModalSave() {
 
         const currentIsFile = isFileArchive(activeEditItem);
         if (!hasLink && !hasNewFile && !currentIsFile) {
-            alert("Isi link spreadsheet atau upload file .xlsx/.csv");
+            alert("Isi link spreadsheet atau upload file .xlsx, .csv, atau .pdf");
             return;
         }
 
@@ -1180,12 +1182,12 @@ function setupEditModalSave() {
 
 
                 // hapus file lama di drive
-                if(activeEditItem?.filePath){
+                if (activeEditItem?.filePath) {
 
-                    await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",{
-                        method:"POST",
+                    await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
+                        method: "POST",
                         body: JSON.stringify({
-                            action:"delete",
+                            action: "delete",
                             fileId: activeEditItem.filePath
                         })
                     });
@@ -1196,11 +1198,11 @@ function setupEditModalSave() {
 
                 const uploadedFile = await uploadArchiveFile(file, kategori);
 
-                updatePayload.sourceType = "file";
-                updatePayload.fileUrl = uploadedFile.fileUrl;
-                updatePayload.filePath = uploadedFile.filePath;
-                updatePayload.fileName = uploadedFile.fileName;
-                updatePayload.fileType = uploadedFile.fileType;
+                updatePayload.fileUrl = uploadedFile.fileUrl || uploadedFile.url || "";
+                updatePayload.filePath = uploadedFile.filePath || uploadedFile.fileId || "";
+                updatePayload.fileName = uploadedFile.fileName || file.name;
+                updatePayload.fileType = uploadedFile.fileType || file.type;
+
             } else if (hasLink) {
 
                 updatePayload.sourceType = "link";
@@ -1236,9 +1238,9 @@ function setupEditModalSave() {
             console.error("Edit error:", err);
             console.error("Error code:", err.code);
             console.error("Error message:", err.message);
-            
+
             let errorMsg = "Gagal mengedit arsip. Periksa kembali data dan coba lagi.";
-            
+
             if (err.code === "permission-denied") {
                 errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan update file.";
             } else if (err.code === "not-found") {
@@ -1246,7 +1248,7 @@ function setupEditModalSave() {
             } else if (err.message?.includes("storage")) {
                 errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
             }
-            
+
             alert(errorMsg);
         }
     });
@@ -1266,13 +1268,13 @@ function setupDeleteModal() {
 
         try {
 
-            await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",{
-                method:"POST",
+            await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
+                method: "POST",
                 body: JSON.stringify({
-                action:"delete",
-                fileId:filePath
+                    action: "delete",
+                    fileId: filePath
                 })
-                });
+            });
 
             await deleteDoc(doc(db, "files", fileId));
 
@@ -1295,15 +1297,15 @@ function setupDeleteModal() {
             console.error("Delete error:", err);
             console.error("Error code:", err.code);
             console.error("Error message:", err.message);
-            
+
             let errorMsg = "Gagal menghapus arsip. Periksa kembali dan coba lagi.";
-            
+
             if (err.code === "permission-denied") {
                 errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan delete file.";
             } else if (err.code === "not-found") {
                 errorMsg = "File tidak ditemukan";
             }
-            
+
             alert(errorMsg);
         }
     });
@@ -1391,15 +1393,15 @@ function setupFilters() {
 
                 const filtered = currentPageData.filter(item => {
 
-                const title =
-                    (item.nama ||
-                    item.name ||
-                    item.Judul ||
-                    "").toLowerCase();
+                    const title =
+                        (item.nama ||
+                            item.name ||
+                            item.Judul ||
+                            "").toLowerCase();
 
-                return title.includes(keyword);
+                    return title.includes(keyword);
 
-            });
+                });
 
                 renderTable(filtered, true);
 
@@ -1447,7 +1449,7 @@ function setupAddUserButton() {
 async function generateFilterOptions() {
     try {
         const snapshot = await getDocs(
-            query(collection(db, "files"), limit(500))
+            query(collection(db, "files"), limit(100))
         );
 
         const yearSet = new Set();
@@ -1488,36 +1490,34 @@ async function generateFilterOptions() {
 
 function showToast(message) {
 
-        const toast = document.createElement("div");
+    const toast = document.createElement("div");
 
-        toast.className =
-            "fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow z-50";
+    toast.className =
+        "fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow z-50";
 
-        toast.innerText = message;
+    toast.innerText = message;
 
-        const container = document.getElementById("toastContainer");
+    const container = document.getElementById("toastContainer");
 
-        if (container) {
-            container.appendChild(toast);
-        } else {
-            document.body.appendChild(toast);
-        }
+    if (container) {
+        container.appendChild(toast);
+    } else {
+        document.body.appendChild(toast);
+    }
 
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 
-} 
+}
 
 async function loadDashboardStats() {
     try {
-        const snapshot = await getDocs(collection(db, "files"));
+        const countSnapshot = await getCountFromServer(
+            query(collection(db, "files"))
+        );
 
-        const data = [];
-
-        snapshot.forEach(doc => {
-            data.push(doc.data());
-        });
+        const totalFiles = countSnapshot.data().count;
 
         const now = new Date();
         const month = now.getMonth();
@@ -1525,6 +1525,16 @@ async function loadDashboardStats() {
 
         let monthlyCount = 0;
         const categoryMap = {};
+
+        const snapshot = await getDocs(
+            query(collection(db, "files"), limit(500))
+        );
+
+        const data = [];
+
+        snapshot.forEach(doc => {
+            data.push(doc.data());
+        });
 
         data.forEach(item => {
             if (item.tanggal) {
@@ -1568,7 +1578,7 @@ async function loadDashboardStats() {
 
 async function backupData() {
 
-    const snapshot = await getDocs(collection(db,"files"));
+    const snapshot = await getDocs(collection(db, "files"));
 
     const data = [];
 
@@ -1579,8 +1589,8 @@ async function backupData() {
         });
     });
 
-    const blob = new Blob([JSON.stringify(data,null,2)],{
-        type:"application/json"
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json"
     });
 
     const url = URL.createObjectURL(blob);
@@ -1588,36 +1598,38 @@ async function backupData() {
     const a = document.createElement("a");
 
     a.href = url;
-    a.download = `backup_arsip_${new Date().toISOString().slice(0,10)}.json`;
+    a.download = `backup_arsip_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
 
 }
 
-async function exportLogs(){
+async function exportLogs() {
 
-const snapshot = await getDocs(
-query(collection(db,"activityLogs"),orderBy("timestamp","desc"))
-);
+    const snapshot = await getDocs(
+        query(collection(db, "activityLogs"), orderBy("timestamp", "desc"))
+    );
 
-let csv = "Timestamp,User,Action,File,Status\n";
+    let csv = "Timestamp,User,Action,File,Status\n";
 
-snapshot.forEach(doc=>{
+    snapshot.forEach(doc => {
 
-const log = doc.data();
-const date = log.timestamp?.toDate();
+        const log = doc.data();
+        const date = log.timestamp?.toDate
+            ? log.timestamp.toDate()
+            : null;
 
-csv += `"${date?.toLocaleString("id-ID")}","${log.userEmail}","${log.action}","${log.fileName}","${log.status}"\n`;
+        csv += `"${date?.toLocaleString("id-ID")}","${log.userEmail}","${log.action}","${log.fileName}","${log.status}"\n`;
 
-});
+    });
 
-const blob = new Blob([csv],{type:"text/csv"});
+    const blob = new Blob([csv], { type: "text/csv" });
 
-const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
 
-const a = document.createElement("a");
-a.href = url;
-a.download = "activity_logs.csv";
-a.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "activity_logs.csv";
+    a.click();
 
 }
 
@@ -1671,72 +1683,72 @@ setTimeout(() => {
 // IMPORT CSV MASSAL
 // ===============================
 
-async function importCSV(file){
+async function importCSV(file) {
 
-try{
+    try {
 
-const text = await file.text();
-const rows = text.trim().split(/\r?\n/);
+        const text = await file.text();
+        const rows = text.trim().split(/\r?\n/);
 
-for(let i = 1; i < rows.length; i++){
+        for (let i = 1; i < rows.length; i++) {
 
-const cols = rows[i].split(",");
+            const cols = rows[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
 
-if(cols.length < 4) continue;
+            if (!cols || cols.length < 4) continue;
 
-const judul = cols[0]?.trim();
-const tahun = cols[1]?.trim();
-const kategori = cols[2]?.trim().toLowerCase();
-const link = cols[3]?.trim();
+            const judul = cols[0]?.replace(/"/g, "").trim();
+            const tahun = cols[1]?.replace(/"/g, "").trim();
+            const kategori = cols[2]?.replace(/"/g, "").trim().toLowerCase();
+            const link = cols[3]?.replace(/"/g, "").trim();
 
-if(!judul || !tahun || !kategori || !link) continue;
+            if (!judul || !tahun || !kategori || !link) continue;
 
-const payload = {
+            const payload = {
 
-nama: judul,
-kategori: kategori,
-tanggal: tahun + "-01-01",
-createdBy: auth.currentUser.uid,
-allowedUsers: [auth.currentUser.uid],
-createdAt: serverTimestamp(),
+                nama: judul,
+                kategori: kategori,
+                tanggal: tahun + "-01-01",
+                createdBy: auth.currentUser.uid,
+                allowedUsers: [auth.currentUser.uid],
+                createdAt: serverTimestamp(),
 
-spreadsheetLink: link,
-driveFileId: link,
-sourceType: "link",
+                spreadsheetLink: link,
+                driveFileId: link,
+                sourceType: "link",
 
-fileUrl: "",
-filePath: "",
-fileName: "",
-fileType: ""
+                fileUrl: "",
+                filePath: "",
+                fileName: "",
+                fileType: ""
 
-};
+            };
 
-await addDoc(collection(db,"files"),payload);
+            await addDoc(collection(db, "files"), payload);
 
-await addDoc(collection(db,"activityLogs"),{
+            await addDoc(collection(db, "activityLogs"), {
 
-uid: auth.currentUser.uid,
-userEmail: auth.currentUser.email,
-action: "import_csv",
-fileName: judul,
-status: "success",
-timestamp: serverTimestamp()
+                uid: auth.currentUser.uid,
+                userEmail: auth.currentUser.email,
+                action: "import_csv",
+                fileName: judul,
+                status: "success",
+                timestamp: serverTimestamp()
 
-});
+            });
 
-}
+        }
 
-alert("Import CSV berhasil");
+        alert("Import CSV berhasil");
 
-await loadArchiveData();
-await loadDashboardStats();
+        await loadArchiveData();
+        await loadDashboardStats();
 
-}catch(err){
+    } catch (err) {
 
-console.error("Import CSV error:",err);
-alert("Import CSV gagal");
+        console.error("Import CSV error:", err);
+        alert("Import CSV gagal");
 
-}
+    }
 
 }
 
@@ -1746,21 +1758,21 @@ alert("Import CSV gagal");
 
 const importInput = document.getElementById("importCSVInput");
 
-    if(importInput){
+if (importInput) {
 
-    importInput.addEventListener("change", async(e)=>{
+    importInput.addEventListener("change", async (e) => {
 
-    const file = e.target.files[0];
+        const file = e.target.files[0];
 
-    if(!file) return;
+        if (!file) return;
 
-    await importCSV(file);
+        await importCSV(file);
 
-});
+    });
 
 }
 
-function showErrorModal(message){
+function showErrorModal(message) {
 
     const modal = document.getElementById("errorModal");
     const text = document.getElementById("errorModalMessage");
@@ -1832,24 +1844,24 @@ function showSessionTimeoutModal() {
     modal.classList.remove("hidden");
 }
 
-function resetIdleTimer(){
+function resetIdleTimer() {
 
-if (isSessionTimeoutShown) return;
+    if (isSessionTimeoutShown) return;
 
-clearTimeout(idleTimer);
+    clearTimeout(idleTimer);
 
-idleTimer = setTimeout(async () => {
+    idleTimer = setTimeout(async () => {
 
-showSessionTimeoutModal();
+        showSessionTimeoutModal();
 
-}, IDLE_LIMIT);
+    }, IDLE_LIMIT);
 
 }
 
 // aktivitas user yang dianggap aktif
-["click","mousemove","keypress","scroll","touchstart"].forEach(event => {
+["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
 
-document.addEventListener(event, resetIdleTimer);
+    document.addEventListener(event, resetIdleTimer);
 
 });
 

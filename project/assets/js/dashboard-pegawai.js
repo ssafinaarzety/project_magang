@@ -1,23 +1,23 @@
 import { auth, db } from "./firebase-config.js";
 
-import { 
-onAuthStateChanged, 
-signOut 
+import {
+    onAuthStateChanged,
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import { 
-doc, 
-getDoc,
-collection,
-getDocs,
-addDoc,
-updateDoc,
-Timestamp,
-query,
-where,
-orderBy,
-limit,
-serverTimestamp
+import {
+    doc,
+    getDoc,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    Timestamp,
+    query,
+    where,
+    orderBy,
+    limit,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ===============================
@@ -157,24 +157,24 @@ async function logLogin(uid, email) {
 // ===============================
 // LOAD USER PROFILE
 // ===============================
-function loadUserProfile(userData){
+function loadUserProfile(userData) {
 
-const nameEl = document.getElementById("pegawaiName");
-const roleEl = document.getElementById("pegawaiRole");
-const avatarEl = document.getElementById("pegawaiAvatar");
+    const nameEl = document.getElementById("pegawaiName");
+    const roleEl = document.getElementById("pegawaiRole");
+    const avatarEl = document.getElementById("pegawaiAvatar");
 
-const email = userData.email || auth.currentUser?.email || "user@email.com";
+    const email = userData.email || auth.currentUser?.email || "user@email.com";
 
-if(nameEl) nameEl.textContent = email;
+    if (nameEl) nameEl.textContent = email;
 
-if(roleEl) roleEl.textContent = "Pegawai";
+    if (roleEl) roleEl.textContent = "Pegawai";
 
-if(avatarEl){
+    if (avatarEl) {
 
-const initial = email.charAt(0).toUpperCase();
-avatarEl.textContent = initial;
+        const initial = email.charAt(0).toUpperCase();
+        avatarEl.textContent = initial;
 
-}
+    }
 
 }
 
@@ -185,11 +185,11 @@ async function loadArchives() {
 
     showLoading();
 
-        try{
+    try {
 
         const q = query(
-        collection(db,"files"),
-        where("allowedUsers","array-contains",currentUserUID)
+            collection(db, "files"),
+            where("allowedUsers", "array-contains", currentUserUID)
         );
 
         const snapshot = await getDocs(q);
@@ -198,47 +198,48 @@ async function loadArchives() {
 
         snapshot.forEach(docSnap => {
 
-        const data = docSnap.data();
+            const data = docSnap.data();
 
-        allArchives.push({
-        id: docSnap.id,
-        ...data
+            allArchives.push({
+                id: docSnap.id,
+                ...data
+            });
+
         });
 
-});
+        filteredArchives = [...allArchives];
 
-filteredArchives = [...allArchives];
+        populateFilters(allArchives);
 
-populateFilters(allArchives);
+        renderTable();
+        renderPagination();
 
-renderTable();
-renderPagination();
+        await Promise.all([
+            calculateStatistics(),
+            loadActivityLogs(),
+            loadActivityChart(),
+            loadActivitySummary()
+        ]);
 
-await calculateStatistics();
-await loadActivityLogs();
-await loadActivityChart();
-await loadTopAccessedFiles();
-await loadActivitySummary();
+    } catch (err) {
 
-}catch(err){
+        console.error("Load archive error:", err);
 
-console.error("Load archive error:",err);
+        const tableBody = document.getElementById("pegawaiTableBody");
 
-const tableBody = document.getElementById("pegawaiTableBody");
-
-if(tableBody){
-tableBody.innerHTML = `
+        if (tableBody) {
+            tableBody.innerHTML = `
 <tr>
 <td colspan="5" class="px-6 py-6 text-center text-red-500">
 Gagal memuat data arsip
 </td>
 </tr>
 `;
-}
+        }
 
-}
+    }
 
-hideLoading();
+    hideLoading();
 
 }
 
@@ -267,11 +268,11 @@ function renderTable() {
     const end = start + rowsPerPage;
 
     const pageData = filteredArchives.slice(start, end);
-        let rows = "";
+    let rows = "";
 
-        pageData.forEach((item, index) => {
+    pageData.forEach((item, index) => {
 
-            rows += `
+        rows += `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
 
             <td class="px-6 py-4">${start + index + 1}</td>
@@ -306,12 +307,12 @@ function renderTable() {
             </tr>
             `;
 
-        });
+    });
 
-        tableBody.innerHTML = rows;
+    tableBody.innerHTML = rows;
 
 
-    }
+}
 
 
 // ===============================
@@ -346,7 +347,7 @@ function populateFilters(archives) {
     categorySelect.innerHTML = `<option value="all">Semua Kategori</option>`;
 
     // isi tahun
-    [...years].sort((a,b)=>b-a).forEach(year => {
+    [...years].sort((a, b) => b - a).forEach(year => {
 
         const option = document.createElement("option");
 
@@ -383,26 +384,26 @@ function applyFilters() {
 
     filteredArchives = allArchives.filter(item => {
 
-    const matchSearch =
-        (item.nama || "").toLowerCase().includes(search);
+        const matchSearch =
+            (item.nama || item.name || "").toLowerCase().includes(search);
 
-    const fileYear = item.tanggal ? item.tanggal.split("-")[0] : null;
+        const fileYear = item.tanggal ? item.tanggal.split("-")[0] : null;
 
-    const matchYear =
-    year === "all" || fileYear == year;
+        const matchYear =
+            year === "all" || fileYear == year;
 
-    const matchCategory =
-    category === "all" ||
-        (item.kategori || "").toLowerCase() === category.toLowerCase();
+        const matchCategory =
+            category === "all" ||
+            (item.kategori || "").toLowerCase() === category.toLowerCase();
 
         return matchSearch && matchYear && matchCategory;
 
-        });
+    });
 
-        currentPage = 1;
+    currentPage = 1;
 
-        renderTable();
-        renderPagination();
+    renderTable();
+    renderPagination();
 
 }
 
@@ -410,15 +411,15 @@ function applyFilters() {
 // FILTER EVENTS
 // ===============================
 
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
 
-const searchInput = document.getElementById("searchInput");
-const yearSelect = document.getElementById("yearSelect");
-const categorySelect = document.getElementById("categorySelect");
+    const searchInput = document.getElementById("searchInput");
+    const yearSelect = document.getElementById("yearSelect");
+    const categorySelect = document.getElementById("categorySelect");
 
-if(searchInput) searchInput.addEventListener("input",applyFilters);
-if(yearSelect) yearSelect.addEventListener("change",applyFilters);
-if(categorySelect) categorySelect.addEventListener("change",applyFilters);
+    if (searchInput) searchInput.addEventListener("input", applyFilters);
+    if (yearSelect) yearSelect.addEventListener("change", applyFilters);
+    if (categorySelect) categorySelect.addEventListener("change", applyFilters);
 
 });
 
@@ -433,7 +434,7 @@ function renderPagination() {
 
     container.innerHTML = "";
 
-    const totalPages = Math.ceil(filteredArchives.length / rowsPerPage);
+    const totalPages = Math.max(1, Math.ceil(filteredArchives.length / rowsPerPage));
 
     for (let i = 1; i <= totalPages; i++) {
 
@@ -489,7 +490,7 @@ async function calculateStatistics() {
     try {
         const q = query(
             collection(db, "activityLogs"),
-            orderBy("accessTime", "desc"),
+            orderBy("timestamp", "desc"),
             limit(100)
         );
 
@@ -498,7 +499,7 @@ async function calculateStatistics() {
 
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            if (data.userId === currentUserUID) {
+            if (data.uid === currentUserUID) {
                 userLogs.push(data);
             }
         });
@@ -508,7 +509,7 @@ async function calculateStatistics() {
             lastAccessedArchive = {
                 fileId: lastLog.fileId,
                 nama: lastLog.fileName,
-                lastAccessTime: lastLog.accessTime
+                lastAccessTime: lastLog.timestamp
             };
         }
     } catch (error) {
@@ -518,19 +519,19 @@ async function calculateStatistics() {
     // Update UI untuk last accessed
     const lastAccessedEl = document.getElementById("lastAccessedStat");
     const lastAccessedTimeEl = document.getElementById("lastAccessedTime");
-    
+
     if (lastAccessedArchive) {
         if (lastAccessedEl) {
             lastAccessedEl.textContent = lastAccessedArchive.nama || "-";
         }
-        
+
         if (lastAccessedTimeEl && lastAccessedArchive.lastAccessTime) {
-            const date = lastAccessedArchive.lastAccessTime?.toDate ? 
-                new Date(lastAccessedArchive.lastAccessTime.toDate()) : 
+            const date = lastAccessedArchive.lastAccessTime?.toDate ?
+                new Date(lastAccessedArchive.lastAccessTime.toDate()) :
                 new Date(lastAccessedArchive.lastAccessTime);
-            const timeString = date.toLocaleString('id-ID', { 
-                year: 'numeric', 
-                month: 'short', 
+            const timeString = date.toLocaleString('id-ID', {
+                year: 'numeric',
+                month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
@@ -549,41 +550,12 @@ async function calculateStatistics() {
 
 async function logAccess(fileId, fileName) {
 
-    async function increaseFileAccessCount(fileId){
-
-try{
-
-const fileRef = doc(db,"files",fileId);
-
-const fileSnap = await getDoc(fileRef);
-
-if(fileSnap.exists()){
-
-const data = fileSnap.data();
-
-const count = data.accessCount || 0;
-
-await updateDoc(fileRef,{
-accessCount: count + 1
-});
-
-}
-
-}catch(err){
-
-console.error("Access counter error:",err);
-
-}
-
-}
-
     try {
-        // Get user email from users collection
+
         const userRef = doc(db, "users", currentUserUID);
         const userSnap = await getDoc(userRef);
         const userEmail = userSnap.exists() ? userSnap.data().email : "unknown";
 
-        // Standardized activity log entry
         const logEntry = {
             uid: currentUserUID,
             userEmail: userEmail,
@@ -595,69 +567,74 @@ console.error("Access counter error:",err);
         };
 
         await addDoc(collection(db, "activityLogs"), logEntry);
+
         console.log("Access logged successfully");
 
-        // Update last accessed info
         if (userSnap.exists()) {
+
             const lastAccessedData = {
                 fileId: fileId,
                 fileName: fileName,
                 lastAccessTime: Timestamp.now()
             };
-            
-            // Update user document dengan last accessed info
+
             lastAccessedArchive = lastAccessedData;
+
             await calculateStatistics();
+
         }
 
     } catch (error) {
+
         console.error("Error logging access:", error);
+
     }
-}
-
-async function increaseFileAccessCount(fileId){
-
-try{
-
-const fileRef = doc(db,"files",fileId);
-const fileSnap = await getDoc(fileRef);
-
-if(fileSnap.exists()){
-
-const data = fileSnap.data();
-const currentCount = data.accessCount || 0;
-
-await updateDoc(fileRef,{
-accessCount: currentCount + 1
-});
 
 }
 
-}catch(err){
+async function increaseFileAccessCount(fileId) {
 
-console.error("Access count error:",err);
+    try {
+
+        const fileRef = doc(db, "files", fileId);
+        const fileSnap = await getDoc(fileRef);
+
+        if (fileSnap.exists()) {
+
+            const data = fileSnap.data();
+            const currentCount = data.accessCount || 0;
+
+            await updateDoc(fileRef, {
+                accessCount: currentCount + 1
+            });
+
+        }
+
+    } catch (err) {
+
+        console.error("Access count error:", err);
+
+    }
 
 }
 
-}
+async function updateLastActive() {
 
-async function updateLastActive(){
+    try {
 
-try{
+        const user = auth.currentUser;
 
-const user = auth.currentUser;
+        if (!user) return;
 
-await updateDoc(doc(db,"users",user.uid),{
+        await updateDoc(doc(db, "users", user.uid), {
+            lastActive: serverTimestamp()
+        });
 
-lastActive: serverTimestamp()
+    } catch (err) {
 
-});
+        console.error("Last active update error:", err);
 
-}catch(err){
-
-console.error("Last active update error:",err);
-
-}
+    }
 
 }
 
@@ -701,7 +678,7 @@ async function loadActivityLogs() {
 
         // Limit to 10 most recent logs
         const displayLogs = userLogs.slice(0, 10);
-        
+
         logsBody.innerHTML = "";
 
         displayLogs.forEach((log) => {
@@ -744,16 +721,15 @@ async function loadActivityLogs() {
 async function handleArchiveAccess(fileId, fileName) {
     // Log the access and wait for it to complete
     await logAccess(fileId, fileName);
-    await increaseFileAccessCount(fileId);
     await updateLastActive();
-    
+
     // Refresh activity logs after access is logged
     await loadActivityLogs();
 
     // Find the archive and open it
     const archive = allArchives.find(a => a.id === fileId);
-    if (archive && archive.driveFileId) {
-        window.open(archive.driveFileId, '_blank');
+    if (archive && archive.fileUrl) {
+        window.open(archive.fileUrl, '_blank');
     }
 }
 
@@ -768,8 +744,8 @@ function openLastAccessedArchive() {
     }
 
     const archive = allArchives.find(a => a.id === lastAccessedArchive.fileId);
-    if (archive && archive.driveFileId) {
-        window.open(archive.driveFileId, '_blank');
+    if (archive && archive.fileUrl) {
+        window.open(archive.fileUrl, '_blank');
     }
 }
 
@@ -777,71 +753,71 @@ function openLastAccessedArchive() {
 // LOAD ACTIVITY CHART
 // ===============================
 
-async function loadActivityChart(){
+async function loadActivityChart() {
 
-try{
+    try {
 
-const q = query(
-collection(db,"activityLogs"),
-where("uid","==",currentUserUID),
-orderBy("timestamp","desc"),
-limit(200)
-);
+        const q = query(
+            collection(db, "activityLogs"),
+            where("uid", "==", currentUserUID),
+            orderBy("timestamp", "desc"),
+            limit(30)
+        );
 
-const snapshot = await getDocs(q);
+        const snapshot = await getDocs(q);
 
-const activityPerDay = {};
+        const activityPerDay = {};
 
-// buat 7 hari terakhir
-for(let i=6;i>=0;i--){
+        // buat 7 hari terakhir
+        for (let i = 6; i >= 0; i--) {
 
-const d = new Date();
-d.setDate(d.getDate()-i);
+            const d = new Date();
+            d.setDate(d.getDate() - i);
 
-const key = d.toISOString().split("T")[0];
+            const key = d.toISOString().split("T")[0];
 
-activityPerDay[key] = 0;
+            activityPerDay[key] = 0;
 
-}
+        }
 
-snapshot.forEach(docSnap=>{
+        snapshot.forEach(docSnap => {
 
-const data = docSnap.data();
+            const data = docSnap.data();
 
-if(!data.timestamp) return;
+            if (!data.timestamp) return;
 
-const date = data.timestamp.toDate();
+            const date = data.timestamp.toDate();
 
-const key = date.toISOString().split("T")[0];
+            const key = date.toISOString().split("T")[0];
 
-if(activityPerDay[key] !== undefined){
+            if (activityPerDay[key] !== undefined) {
 
-activityPerDay[key]++;
+                activityPerDay[key]++;
 
-}
+            }
 
-});
+        });
 
-const labels = Object.keys(activityPerDay).map(d=>{
+        const labels = Object.keys(activityPerDay).map(d => {
 
-const date = new Date(d);
+            const date = new Date(d);
 
-return date.toLocaleDateString("id-ID",{
-day:"numeric",
-month:"short"
-});
+            return date.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short"
+            });
 
-});
+        });
 
-const values = Object.values(activityPerDay);
+        const values = Object.values(activityPerDay);
 
-renderActivityChart(labels,values);
+        renderActivityChart(labels, values);
 
-}catch(err){
+    } catch (err) {
 
-console.error("Activity chart error:",err);
+        console.error("Activity chart error:", err);
 
-}
+    }
 
 }
 
@@ -849,134 +825,77 @@ console.error("Activity chart error:",err);
 // RENDER ACTIVITY CHART
 // ===============================
 
-function renderActivityChart(labels,data){
+function renderActivityChart(labels, data) {
 
-const canvas = document.getElementById("activityChart");
+    const canvas = document.getElementById("activityChart");
 
-if(!canvas) return;
+    if (!canvas) return;
 
-const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
-const gradient = ctx.createLinearGradient(0,0,0,300);
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
 
-gradient.addColorStop(0,"rgba(59,130,246,0.4)");
-gradient.addColorStop(1,"rgba(59,130,246,0)");
+    gradient.addColorStop(0, "rgba(59,130,246,0.4)");
+    gradient.addColorStop(1, "rgba(59,130,246,0)");
 
-new Chart(ctx,{
+    new Chart(ctx, {
 
-type:"line",
+        type: "line",
 
-data:{
+        data: {
 
-labels:labels,
+            labels: labels,
 
-datasets:[{
+            datasets: [{
 
-label:"Aktivitas",
+                label: "Aktivitas",
 
-data:data,
+                data: data,
 
-borderColor:"#3b82f6",
+                borderColor: "#3b82f6",
 
-backgroundColor:gradient,
+                backgroundColor: gradient,
 
-borderWidth:3,
+                borderWidth: 3,
 
-tension:0.4,
+                tension: 0.4,
 
-fill:true,
+                fill: true,
 
-pointBackgroundColor:"#3b82f6",
+                pointBackgroundColor: "#3b82f6",
 
-pointRadius:4,
+                pointRadius: 4,
 
-pointHoverRadius:6
+                pointHoverRadius: 6
 
-}]
+            }]
 
-},
+        },
 
-options:{
+        options: {
 
-responsive:true,
+            responsive: true,
 
-plugins:{
-legend:{display:false}
-},
+            plugins: {
+                legend: { display: false }
+            },
 
-scales:{
+            scales: {
 
-y:{
-beginAtZero:true,
-ticks:{stepSize:1}
-},
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                },
 
-x:{
-grid:{display:false}
-}
+                x: {
+                    grid: { display: false }
+                }
 
-}
+            }
 
-}
+        }
 
-});
-
-}
-
-// ===============================
-// LOAD TOP ACCESSED FILES
-// ===============================
-
-async function loadTopAccessedFiles(){
-
-try{
-
-const q = query(
-collection(db,"files"),
-where("allowedUsers","array-contains",currentUserUID)
-);
-
-const snapshot = await getDocs(q);
-
-const files = [];
-
-snapshot.forEach(docSnap=>{
-files.push({
-id:docSnap.id,
-...docSnap.data()
-});
-});
-
-files.sort((a,b)=>(b.accessCount || 0)-(a.accessCount || 0));
-
-const topFiles = files.slice(0,5);
-
-const list = document.getElementById("topFilesList");
-
-if(!list) return;
-
-list.innerHTML="";
-
-topFiles.forEach(file=>{
-
-const li = document.createElement("li");
-
-li.className="flex justify-between border-b pb-2";
-
-li.innerHTML=`
-<span>${file.nama || "Untitled"}</span>
-<span class="text-primary font-semibold">${file.accessCount || 0}</span>
-`;
-
-list.appendChild(li);
-
-});
-
-}catch(err){
-
-console.error("Top files error:",err);
-
-}
+    });
 
 }
 
@@ -984,65 +903,65 @@ console.error("Top files error:",err);
 // LOAD ACTIVITY SUMMARY
 // ===============================
 
-async function loadActivitySummary(){
+async function loadActivitySummary() {
 
-try{
+    try {
 
-const q = query(
-collection(db,"activityLogs"),
-where("uid","==",currentUserUID)
-);
+        const q = query(
+            collection(db, "activityLogs"),
+            where("uid", "==", currentUserUID)
+        );
 
-const snapshot = await getDocs(q);
+        const snapshot = await getDocs(q);
 
-let todayCount = 0;
-let totalLogs = 0;
+        let todayCount = 0;
+        let totalLogs = 0;
 
-const dayCounter = {};
+        const dayCounter = {};
 
-const today = new Date().toISOString().split("T")[0];
+        const today = new Date().toISOString().split("T")[0];
 
-snapshot.forEach(docSnap=>{
+        snapshot.forEach(docSnap => {
 
-const data = docSnap.data();
+            const data = docSnap.data();
 
-if(!data.timestamp) return;
+            if (!data.timestamp) return;
 
-const date = data.timestamp.toDate();
+            const date = data.timestamp.toDate();
 
-const key = date.toISOString().split("T")[0];
+            const key = date.toISOString().split("T")[0];
 
-totalLogs++;
+            totalLogs++;
 
-if(key === today) todayCount++;
+            if (key === today) todayCount++;
 
-dayCounter[key] = (dayCounter[key] || 0)+1;
+            dayCounter[key] = (dayCounter[key] || 0) + 1;
 
-});
+        });
 
-let mostActiveDay = "-";
-let max = 0;
+        let mostActiveDay = "-";
+        let max = 0;
 
-for(const day in dayCounter){
+        for (const day in dayCounter) {
 
-if(dayCounter[day] > max){
+            if (dayCounter[day] > max) {
 
-max = dayCounter[day];
-mostActiveDay = day;
+                max = dayCounter[day];
+                mostActiveDay = day;
 
-}
+            }
 
-}
+        }
 
-document.getElementById("todayActivity").textContent = todayCount;
-document.getElementById("totalLogs").textContent = totalLogs;
-document.getElementById("mostActiveDay").textContent = mostActiveDay;
+        document.getElementById("todayActivity").textContent = todayCount;
+        document.getElementById("totalLogs").textContent = totalLogs;
+        document.getElementById("mostActiveDay").textContent = mostActiveDay;
 
-}catch(err){
+    } catch (err) {
 
-console.error("Summary error:",err);
+        console.error("Summary error:", err);
 
-}
+    }
 
 }
 
@@ -1085,15 +1004,15 @@ if (logoutBtn) {
 
 function setupProfileRedirect() {
 
-const profileBtn = document.getElementById("profileBtn");
+    const profileBtn = document.getElementById("profileBtn");
 
-if(!profileBtn) return;
+    if (!profileBtn) return;
 
-profileBtn.addEventListener("click",()=>{
+    profileBtn.addEventListener("click", () => {
 
-window.location.href = "profile-pegawai.html";
+        window.location.href = "profile-pegawai.html";
 
-});
+    });
 
 }
 
@@ -1103,16 +1022,16 @@ window.location.href = "profile-pegawai.html";
 
 const profileCard = document.getElementById("profileCard");
 
-if(profileCard){
+if (profileCard) {
 
-profileCard.addEventListener("click",()=>{
+    profileCard.addEventListener("click", () => {
 
-window.location.href = "profile-pegawai.html";
+        window.location.href = "profile-pegawai.html";
 
-});
+    });
 
 }
- 
+
 // ===============================
 // SESSION TIMEOUT (15 MENIT)
 // ===============================
@@ -1124,13 +1043,13 @@ let isSessionTimeoutShown = false;
 const IDLE_LIMIT = 15 * 60 * 1000;
 
 function ensureSessionTimeoutModal() {
-const existing = document.getElementById("sessionTimeoutModal");
-if (existing) return existing;
+    const existing = document.getElementById("sessionTimeoutModal");
+    if (existing) return existing;
 
-const modal = document.createElement("div");
-modal.id = "sessionTimeoutModal";
-modal.className = "hidden fixed inset-0 z-50 flex items-center justify-center";
-modal.innerHTML = `
+    const modal = document.createElement("div");
+    modal.id = "sessionTimeoutModal";
+    modal.className = "hidden fixed inset-0 z-50 flex items-center justify-center";
+    modal.innerHTML = `
 <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
 <div class="relative z-10 w-full max-w-sm mx-4 overflow-hidden rounded-xl bg-white dark:bg-slate-800 shadow-2xl ring-1 ring-slate-900/5 transition-all">
     <div class="p-6">
@@ -1155,47 +1074,47 @@ modal.innerHTML = `
 </div>
 `;
 
-document.body.appendChild(modal);
+    document.body.appendChild(modal);
 
-const confirmBtn = document.getElementById("sessionTimeoutConfirmBtn");
-if (confirmBtn) {
-confirmBtn.addEventListener("click", async () => {
-try {
-sessionStorage.removeItem("loginRecorded");
-await signOut(auth);
-} finally {
-window.location.href = "../index.html";
-}
-});
-}
+    const confirmBtn = document.getElementById("sessionTimeoutConfirmBtn");
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", async () => {
+            try {
+                sessionStorage.removeItem("loginRecorded");
+                await signOut(auth);
+            } finally {
+                window.location.href = "../index.html";
+            }
+        });
+    }
 
-return modal;
+    return modal;
 }
 
 function showSessionTimeoutModal() {
-const modal = ensureSessionTimeoutModal();
-isSessionTimeoutShown = true;
-modal.classList.remove("hidden");
+    const modal = ensureSessionTimeoutModal();
+    isSessionTimeoutShown = true;
+    modal.classList.remove("hidden");
 }
 
-function resetIdleTimer(){
+function resetIdleTimer() {
 
-if (isSessionTimeoutShown) return;
+    if (isSessionTimeoutShown) return;
 
-clearTimeout(idleTimer);
+    clearTimeout(idleTimer);
 
-idleTimer = setTimeout(async () => {
+    idleTimer = setTimeout(async () => {
 
-showSessionTimeoutModal();
+        showSessionTimeoutModal();
 
-}, IDLE_LIMIT);
+    }, IDLE_LIMIT);
 
 }
 
 // aktivitas yang dianggap sebagai aktivitas user
-["click","mousemove","keypress","scroll","touchstart"].forEach(event => {
+["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
 
-document.addEventListener(event, resetIdleTimer);
+    document.addEventListener(event, resetIdleTimer);
 
 });
 

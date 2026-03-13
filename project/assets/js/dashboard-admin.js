@@ -1016,8 +1016,12 @@ async function openAccessModal() {
 
         div.innerHTML = `
         <div>
-        <p class="text-sm font-medium">${user.name}</p>
-        <p class="text-xs text-slate-500">${user.email}</p>
+        <p class="text-sm font-medium">
+        ${user.name || user.email?.split("@")[0] || "User"}
+        </p>
+        <p class="text-xs text-slate-500">
+        ${user.email || "-"}
+        </p>
         </div>
 
         ${isActive
@@ -1027,7 +1031,16 @@ async function openAccessModal() {
 
         div.addEventListener("click", () => {
             toggleUserAccess(uid);
-            openAccessModal();
+
+            const icon = div.querySelector("span");
+
+            if (selectedAccessUsers.includes(uid)) {
+                icon.textContent = "✔";
+                icon.className = "text-green-600 text-sm font-semibold";
+            } else {
+                icon.textContent = "+";
+                icon.className = "text-slate-400 text-sm";
+            }
         });
 
         listContainer.appendChild(div);
@@ -1099,7 +1112,7 @@ function setupAccessSave() {
                 uid: auth.currentUser.uid,
                 userEmail: auth.currentUser.email,
                 action: "manage_access",
-                fileName: fileData.nama || "-",
+                fileName: fileData.nama || fileData.name || fileData.Judul || "-",
                 fileId: selectedFileId,
                 status: "success",
                 timestamp: serverTimestamp()
@@ -1198,7 +1211,7 @@ function setupEditModalSave() {
 
                 const uploadedFile = await uploadArchiveFile(file, kategori);
 
-                updatePayload.fileUrl = uploadedFile.fileUrl || uploadedFile.url || "";
+                updatePayload.fileUrl = uploadedFile.url || "";
                 updatePayload.filePath = uploadedFile.filePath || uploadedFile.fileId || "";
                 updatePayload.fileName = uploadedFile.fileName || file.name;
                 updatePayload.fileType = uploadedFile.fileType || file.type;
@@ -1268,13 +1281,15 @@ function setupDeleteModal() {
 
         try {
 
-            await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "delete",
-                    fileId: filePath
-                })
-            });
+            if (filePath) {
+                await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "delete",
+                        fileId: filePath
+                    })
+                });
+            }
 
             await deleteDoc(doc(db, "files", fileId));
 
@@ -1512,68 +1527,89 @@ function showToast(message) {
 }
 
 async function loadDashboardStats() {
+
     try {
+
+        // ===============================
+        // TOTAL FILES
+        // ===============================
         const countSnapshot = await getCountFromServer(
             query(collection(db, "files"))
         );
 
         const totalFiles = countSnapshot.data().count;
 
+        const totalEl = document.getElementById("totalArsip");
+        if (totalEl) totalEl.innerText = totalFiles;
+
+
+        // ===============================
+        // BULAN INI
+        // ===============================
         const now = new Date();
-        const month = now.getMonth();
-        const year = now.getFullYear();
+        const startMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 
-        let monthlyCount = 0;
-        const categoryMap = {};
+        const endMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-31`;
 
-        const snapshot = await getDocs(
-            query(collection(db, "files"), limit(500))
+        const monthlySnapshot = await getCountFromServer(
+            query(
+                collection(db, "files"),
+                where("tanggal", ">=", startMonth),
+                where("tanggal", "<=", endMonth)
+            )
         );
 
-        const data = [];
+        const monthlyEl = document.getElementById("monthlyCount");
+        if (monthlyEl) monthlyEl.innerText = monthlySnapshot.data().count;
+
+
+        // ===============================
+        // TOP CATEGORY
+        // ===============================
+        const snapshot = await getDocs(
+            query(collection(db, "files"), limit(200))
+        );
+
+        const categoryMap = {};
 
         snapshot.forEach(doc => {
-            data.push(doc.data());
-        });
 
-        data.forEach(item => {
-            if (item.tanggal) {
-                const d = new Date(item.tanggal + "T00:00:00");
+            const data = doc.data();
 
-                if (d.getMonth() === month && d.getFullYear() === year) {
-                    monthlyCount++;
-                }
+            if (data.kategori) {
+                categoryMap[data.kategori] =
+                    (categoryMap[data.kategori] || 0) + 1;
             }
 
-            if (item.kategori) {
-                categoryMap[item.kategori] =
-                    (categoryMap[item.kategori] || 0) + 1;
-            }
         });
-
-        const monthlyEl = document.getElementById("monthlyCount");
-        if (monthlyEl) monthlyEl.innerText = monthlyCount;
 
         let topCategory = "-";
         let max = 0;
 
         for (const cat in categoryMap) {
+
             if (categoryMap[cat] > max) {
                 max = categoryMap[cat];
                 topCategory = cat;
             }
+
         }
 
         const topCatEl = document.getElementById("topCategory");
         if (topCatEl) topCatEl.innerText = topCategory;
 
     } catch (error) {
+
         console.error("Dashboard stats error:", error);
+
         const monthlyEl = document.getElementById("monthlyCount");
         if (monthlyEl) monthlyEl.innerText = "0";
+
         const topCatEl = document.getElementById("topCategory");
         if (topCatEl) topCatEl.innerText = "-";
+
     }
+
 }
 
 async function backupData() {

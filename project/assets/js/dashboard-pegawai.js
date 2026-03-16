@@ -75,6 +75,14 @@ let currentUserUID = null;
 let currentPage = 1;
 const rowsPerPage = 10;
 
+
+function getPreviewUrl(filePath) {
+
+    return "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
+        + filePath;
+
+}
+
 // ===============================
 // AUTH CHECK
 // ===============================
@@ -218,7 +226,8 @@ async function loadArchives() {
             calculateStatistics(),
             loadActivityLogs(),
             loadActivityChart(),
-            loadActivitySummary()
+            loadActivitySummary(),
+            loadTopAccessedFiles()
         ]);
 
     } catch (err) {
@@ -490,27 +499,23 @@ async function calculateStatistics() {
     try {
         const q = query(
             collection(db, "activityLogs"),
+            where("uid", "==", currentUserUID),
             orderBy("timestamp", "desc"),
-            limit(100)
+            limit(1)
         );
 
         const snapshot = await getDocs(q);
-        const userLogs = [];
 
-        snapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            if (data.uid === currentUserUID) {
-                userLogs.push(data);
-            }
-        });
+        if (!snapshot.empty) {
 
-        if (userLogs.length > 0) {
-            const lastLog = userLogs[0];
+            const lastLog = snapshot.docs[0].data();
+
             lastAccessedArchive = {
                 fileId: lastLog.fileId,
                 nama: lastLog.fileName,
                 lastAccessTime: lastLog.timestamp
             };
+
         }
     } catch (error) {
         console.error("Error fetching last accessed archive:", error);
@@ -618,6 +623,93 @@ async function increaseFileAccessCount(fileId) {
 
 }
 
+// ===============================
+// LOAD TOP ACCESSED FILES
+// ===============================
+
+async function loadTopAccessedFiles() {
+
+    try {
+
+        const q = query(
+            collection(db, "files"),
+            where("allowedUsers", "array-contains", currentUserUID)
+        );
+
+        const snapshot = await getDocs(q);
+
+        const container = document.getElementById("topAccessedFiles");
+
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        if (snapshot.empty) {
+
+            container.innerHTML = `
+            <p class="text-sm text-slate-500">
+                No accessed files yet
+            </p>
+            `;
+
+            return;
+
+        }
+
+        let files = [];
+
+        snapshot.forEach(docSnap => {
+
+            const data = docSnap.data();
+
+            files.push({
+                id: docSnap.id,
+                ...data
+            });
+
+        });
+
+        // sort berdasarkan accessCount
+        files.sort((a, b) => (b.accessCount || 0) - (a.accessCount || 0));
+
+        const topFiles = files.slice(0, 5);
+
+        topFiles.forEach(data => {
+
+            const row = `
+            <div class="flex justify-between items-center py-2 border-b">
+
+                <div class="flex items-center gap-2">
+
+                    <span class="material-icons-outlined text-slate-500">
+                        description
+                    </span>
+
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
+                        ${data.nama || "Untitled"}
+                    </span>
+
+                </div>
+
+                <span class="text-xs text-slate-500">
+                    ${data.accessCount || 0}x
+                </span>
+
+            </div>
+            `;
+
+            container.innerHTML += row;
+
+        });
+
+    } catch (err) {
+
+        console.error("Top accessed error:", err);
+
+    }
+
+}
+
 async function updateLastActive() {
 
     try {
@@ -650,6 +742,7 @@ async function loadActivityLogs() {
         // Query activity logs terbaru untuk user saat ini
         const q = query(
             collection(db, "activityLogs"),
+            where("uid", "==", currentUserUID),
             orderBy("timestamp", "desc"),
             limit(50)
         );
@@ -660,10 +753,10 @@ async function loadActivityLogs() {
         const userLogs = [];
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            if (data.uid === currentUserUID) {
-                userLogs.push(data);
-            }
+            userLogs.push(data);
         });
+
+        renderRecentActivity(userLogs);
 
         if (userLogs.length === 0) {
             logsBody.innerHTML = `
@@ -677,7 +770,7 @@ async function loadActivityLogs() {
         }
 
         // Limit to 10 most recent logs
-        const displayLogs = userLogs.slice(0, 10);
+        const displayLogs = userLogs.slice(0, 4);
 
         logsBody.innerHTML = "";
 
@@ -714,6 +807,38 @@ async function loadActivityLogs() {
     }
 }
 
+function renderRecentActivity(userLogs) {
+
+    const container = document.getElementById("recentActivity");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const recent = userLogs.slice(0, 4);
+
+    recent.forEach(log => {
+
+        const row = `
+        <div class="flex justify-between py-2 border-b">
+
+            <span class="text-sm text-slate-700 dark:text-slate-200">
+                ${log.fileName || "Login"}
+            </span>
+
+            <span class="text-xs text-slate-500">
+                ${log.action === "login_pegawai" ? "Login" : "Open"}
+            </span>
+
+        </div>
+        `;
+
+        container.innerHTML += row;
+
+    });
+
+}
+
 // ===============================
 // HANDLE ARCHIVE ACCESS
 // ===============================
@@ -721,6 +846,7 @@ async function loadActivityLogs() {
 async function handleArchiveAccess(fileId, fileName) {
     // Log the access and wait for it to complete
     await logAccess(fileId, fileName);
+    await increaseFileAccessCount(fileId);
     await updateLastActive();
 
     // Refresh activity logs after access is logged
@@ -728,9 +854,36 @@ async function handleArchiveAccess(fileId, fileName) {
 
     // Find the archive and open it
     const archive = allArchives.find(a => a.id === fileId);
-    if (archive && archive.fileUrl) {
-        window.open(archive.fileUrl, '_blank');
+
+    if (!archive) return;
+
+    // ===============================
+    // FILE GOOGLE DRIVE
+    // ===============================
+    if (archive.filePath) {
+
+        const previewUrl =
+            `https://drive.google.com/file/d/${archive.filePath}/preview`;
+
+        openPreview(previewUrl);
+
+        return;
+
     }
+
+    // ===============================
+    // GOOGLE SPREADSHEET
+    // ===============================
+    if (archive.spreadsheetLink) {
+
+        const previewUrl = archive.spreadsheetLink.replace("/edit", "/preview");
+
+        openPreview(previewUrl);
+
+        return;
+
+    }
+
 }
 
 // ===============================
@@ -744,8 +897,20 @@ function openLastAccessedArchive() {
     }
 
     const archive = allArchives.find(a => a.id === lastAccessedArchive.fileId);
-    if (archive && archive.fileUrl) {
-        window.open(archive.fileUrl, '_blank');
+    if (!archive) return;
+
+    if (archive.filePath) {
+
+        window.open(getPreviewUrl(archive.filePath), "_blank");
+
+        return;
+
+    }
+
+    if (archive.spreadsheetLink) {
+
+        window.open(archive.spreadsheetLink, "_blank");
+
     }
 }
 
@@ -1121,3 +1286,62 @@ function resetIdleTimer() {
 // mulai timer saat halaman dibuka
 resetIdleTimer();
 
+function openPreview(fileUrl) {
+
+    const modal = document.getElementById("previewModal");
+    const frame = document.getElementById("previewFrame");
+
+    if (!modal || !frame) return;
+
+    let previewUrl = fileUrl;
+
+    // GOOGLE SPREADSHEET
+    if (fileUrl.includes("docs.google.com/spreadsheets")) {
+
+        const match = fileUrl.match(/\/d\/(.*?)\//);
+
+        if (match) {
+            const fileId = match[1];
+            previewUrl = `https://docs.google.com/spreadsheets/d/${fileId}/preview`;
+        }
+
+    }
+
+    // GOOGLE DRIVE FILE
+    else if (fileUrl.includes("drive.google.com")) {
+
+        const match = fileUrl.match(/\/d\/(.*?)\//);
+
+        if (match) {
+            const fileId = match[1];
+            previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+        }
+
+    }
+
+    // FILE BIASA (PDF, Excel, dll)
+    else {
+
+        previewUrl =
+            `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+
+    }
+
+    frame.src = previewUrl;
+
+    modal.classList.remove("hidden");
+}
+
+function closePreview() {
+
+    const modal = document.getElementById("previewModal");
+    const frame = document.getElementById("previewFrame");
+
+    if (!modal || !frame) return;
+
+    frame.src = "";
+    modal.classList.add("hidden");
+}
+
+window.openPreview = openPreview;
+window.closePreview = closePreview;

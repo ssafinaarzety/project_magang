@@ -801,6 +801,37 @@
         </div>
     </div>
 
+    <!-- MODAL PREVIEW FILE -->
+    <div id="previewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+
+        <div class="absolute inset-0 bg-black/50"
+            onclick="document.getElementById('previewModal').classList.add('hidden')">
+        </div>
+
+        <div class="relative bg-white dark:bg-[#1a2634] w-[90%] h-[80%] rounded-xl shadow-lg overflow-hidden">
+
+            <div class="flex justify-between items-center p-3 border-b border-slate-200 dark:border-slate-700">
+
+                <h3 class="font-semibold text-slate-900 dark:text-white">
+                    Preview Arsip
+                </h3>
+
+                <button onclick="document.getElementById('previewModal').classList.add('hidden')"
+                    class="text-slate-500 hover:text-red-500">
+
+                    ✖
+
+                </button>
+
+            </div>
+
+            <iframe id="previewFrame" class="w-full h-full" src="" allow="autoplay">
+            </iframe>
+
+        </div>
+
+    </div>
+
     <script type="module" src="../assets/js/dashboard-admin.js"></script>
 
     <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-3"></div>

@@ -78,17 +78,13 @@
 
                 <div class="overflow-hidden">
 
-<p
-id="pegawaiRole"
-class="text-sm font-semibold truncate dark:text-white">
--
-</p>
+                    <p id="pegawaiRole" class="text-sm font-semibold truncate dark:text-white">
+                        -
+                    </p>
 
-<p
-id="pegawaiName"
-class="text-xs text-slate-500 truncate">
-Employee
-</p>
+                    <p id="pegawaiName" class="text-xs text-slate-500 truncate">
+                        Employee
+                    </p>
 
                 </div>
             </a>
@@ -317,11 +313,11 @@ Employee
             </div>
 
             <!-- CHART + LOGS GRID -->
-            <div class="max-w-screen-xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+            <div class="max-w-screen-xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 items-stretch">
 
                 <!-- ACTIVITY ANALYTICS -->
                 <div
-                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 flex flex-col h-full">
 
                     <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
                         <span class="material-icons-outlined text-slate-500">analytics</span>
@@ -338,7 +334,7 @@ Employee
                     </div>
 
                     <!-- SUMMARY STATS -->
-                    <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-3 gap-4 mt-auto">
 
                         <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
                             <p class="text-xs text-slate-500">
@@ -425,11 +421,44 @@ Employee
                         </table>
 
                     </div>
+                </div>
+            </div>
+
+            <!-- INSIGHT SECTION -->
+            <div class="max-w-screen-xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 items-stretch">
+
+                <!-- TOP ACCESSED FILES -->
+                <div
+                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 h-full">
+
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                        <span class="material-icons-outlined text-slate-500">description</span>
+                        Top Accessed Files
+                    </h2>
+
+                    <div id="topAccessedFiles" class="space-y-2">
+                        <p class="text-sm text-slate-500">
+                            No accessed files yet
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- RECENT ACTIVITY -->
+                <div
+                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                        <span class="material-icons-outlined text-slate-500">schedule</span>
+                        Recent Activity
+                    </h2>
+
+                    <div id="recentActivity"></div>
 
                 </div>
 
             </div>
-        </div>
+
         </div>
     </main>
     <div aria-labelledby="modal-title" aria-modal="true"
@@ -462,12 +491,37 @@ Employee
                         </button>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FILE PREVIEW MODAL -->
+    <div id="previewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
 
+        <div class="fixed inset-0 bg-black/50" onclick="closePreview()"></div>
+
+        <div class="relative w-[90%] h-[90%] bg-white rounded-xl shadow-lg overflow-hidden">
+
+            <div class="flex justify-between items-center p-3 border-b">
+
+                <h3 class="font-semibold text-sm">
+                    File Preview
+                </h3>
+
+                <button onclick="closePreview()" class="text-red-500 font-bold">
+                    ✕
+                </button>
+
+            </div>
+
+            <iframe id="previewFrame" class="w-full h-full"></iframe>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="../assets/js/dashboard-pegawai.js"></script>
 </body>
 

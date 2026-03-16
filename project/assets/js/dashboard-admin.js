@@ -113,7 +113,7 @@ function toTitleCaseCategory(value = "") {
 }
 
 function isFileArchive(item) {
-    return item?.sourceType === "file" || !!item?.fileUrl;
+    return item?.sourceType === "file" || !!item?.filePath;
 }
 
 function getArchiveOpenLabel(item) {
@@ -121,8 +121,16 @@ function getArchiveOpenLabel(item) {
 }
 
 function getArchiveOpenUrl(item) {
-    if (isFileArchive(item)) return item.fileUrl || "";
-    return item.spreadsheetLink || item.driveFileId || "";
+
+    if (isFileArchive(item)) {
+
+        return "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
+            + item.filePath;
+
+    }
+
+    return item.spreadsheetLink || "";
+
 }
 
 async function uploadArchiveFile(file, kategori) {
@@ -180,7 +188,9 @@ async function uploadArchiveFile(file, kategori) {
 
 async function downloadArchiveToLocal(item) {
 
-    const url = item?.fileUrl;
+    const url =
+        "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
+        + item.filePath;
 
     if (!url) {
         alert("File arsip tidak ditemukan");
@@ -189,15 +199,7 @@ async function downloadArchiveToLocal(item) {
 
     try {
 
-        const a = document.createElement("a");
-
-        a.href = url;
-        a.target = "_blank";
-        a.download = item.fileName || "arsip";
-
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        window.open(url, "_blank");
 
     } catch (error) {
 
@@ -649,6 +651,12 @@ function renderTable(data, reset = true) {
 
                 <div class="flex flex-wrap gap-2 justify-end">
 
+                <button class="preview-btn flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+
+                👁 Preview
+
+                </button>   
+
                 <button class="edit-btn flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition">
 
                 ✏️ Edit
@@ -668,11 +676,12 @@ function renderTable(data, reset = true) {
                 </button>
 
                 <button class="open-btn flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition ${getArchiveOpenUrl(item) ? "" : "opacity-50 cursor-not-allowed"}">
+
                 ${getArchiveOpenLabel(item)}
+
                 </button>
 
                 </div>
-            </td>
         `;
 
         tableBody.appendChild(row);
@@ -732,6 +741,33 @@ function renderTable(data, reset = true) {
             evaluateEditFormState();
 
             document.getElementById("editModal").classList.remove("hidden");
+        });
+
+
+        // ===============================
+        // PREVIEW FILE
+        // ===============================
+        row.querySelector(".preview-btn")?.addEventListener("click", () => {
+
+            if (!item.filePath) {
+                alert("Preview tidak tersedia untuk file ini");
+                return;
+            }
+
+            const previewUrl =
+                "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
+                + item.filePath;
+
+            const frame = document.getElementById("previewFrame");
+
+            if (frame) {
+                frame.src = "";
+                frame.src = previewUrl;
+            }
+
+            document.getElementById("previewModal")
+                ?.classList.remove("hidden");
+
         });
 
         row.querySelector(".open-btn")?.addEventListener("click", async () => {
@@ -837,6 +873,10 @@ function setupUpload() {
 
                     const filePayload = await uploadArchiveFile(file, kategori);
 
+                    if (!filePayload || filePayload.status !== "success") {
+                        throw new Error("Upload ke Google Drive gagal");
+                    }
+
                     const newArchivePayload = {
                         nama: judul,
                         kategori: kategori,
@@ -849,7 +889,6 @@ function setupUpload() {
                         driveFileId: filePayload.fileId || "",
                         sourceType: "file",
 
-                        fileUrl: filePayload.url || "",
                         filePath: filePayload.fileId || "",
                         fileName: file.name,
                         fileType: file.type
@@ -1211,15 +1250,13 @@ function setupEditModalSave() {
 
                 const uploadedFile = await uploadArchiveFile(file, kategori);
 
-                updatePayload.fileUrl = uploadedFile.url || "";
-                updatePayload.filePath = uploadedFile.filePath || uploadedFile.fileId || "";
-                updatePayload.fileName = uploadedFile.fileName || file.name;
-                updatePayload.fileType = uploadedFile.fileType || file.type;
+                updatePayload.filePath = uploadedFile.fileId || "";
+                updatePayload.fileName = file.name;
+                updatePayload.fileType = file.type;
 
             } else if (hasLink) {
 
                 updatePayload.sourceType = "link";
-                updatePayload.fileUrl = "";
                 updatePayload.filePath = "";
                 updatePayload.fileName = "";
                 updatePayload.fileType = "";
@@ -1567,7 +1604,7 @@ async function loadDashboardStats() {
         // TOP CATEGORY
         // ===============================
         const snapshot = await getDocs(
-            query(collection(db, "files"), limit(200))
+            query(collection(db, "files"), limit(1000))
         );
 
         const categoryMap = {};
@@ -1752,7 +1789,6 @@ async function importCSV(file) {
                 driveFileId: link,
                 sourceType: "link",
 
-                fileUrl: "",
                 filePath: "",
                 fileName: "",
                 fileType: ""

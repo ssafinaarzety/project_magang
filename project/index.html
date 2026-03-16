@@ -6,8 +6,8 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Login - AUTORA</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet">   
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
@@ -25,6 +25,7 @@
                         "sky-glow-dark": "#7dd3fc",
                     },
                     fontFamily: {
+                        sans: ["Plus Jakarta Sans", "sans-serif"],
                         "display": ["Inter", "sans-serif"]
                     },
                     borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
@@ -66,92 +67,147 @@
     </style>
 </head>
 
-<body class="font-display text-slate-800 min-h-screen flex flex-col antialiased relative starry-bg overflow-hidden">
-    <div class="fixed inset-0 z-0 pointer-events-none">
-        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sky-200/30 rounded-full blur-[100px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-100/40 rounded-full blur-[100px]"></div>
-        <div class="absolute top-[20%] right-[20%] w-[30%] h-[30%] bg-white/60 rounded-full blur-[80px]"></div>
-        <div class="absolute inset-0 stars"></div>
-    </div>
-    <div class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10">
-        <div
-            class="w-full max-w-md bg-white/80 backdrop-blur-md rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 relative overflow-hidden transition-all duration-300">
-            <div class="h-1 w-full bg-gradient-to-r from-sky-300 via-blue-400 to-sky-300"></div>
-            <div class="p-8 sm:p-10">
-                <div class="text-center mb-10">
-                    <div
-                        class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-sky-50 to-blue-50 border border-sky-100 mb-4 text-primary shadow-sm">
-                        <span class="material-icons text-4xl text-sky-500">inventory_2</span>
-                    </div>
-                    <h1 class="text-3xl font-bold text-slate-800 tracking-tight">AUTORA</h1>
-                    <p class="text-sky-600 font-semibold text-[10px] mt-2 uppercase tracking-[0.2em]">Authorization
-                        &amp; Role Access Database</p>
-                    <p class="text-slate-500 mt-4 text-sm">Masuk untuk mengakses dokumen</p>
-                </div>
-                <form onsubmit="handleLogin(event)" class="space-y-6">
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-700" for="email">Username / Email</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span
-                                    class="material-icons text-slate-400 group-focus-within:text-sky-500 transition-colors text-xl">person_outline</span>
-                            </div>
-                            <input
-                                class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 bg-white/50 backdrop-blur-sm transition-all sm:text-sm shadow-sm"
-                                id="email" name="email" placeholder="admin or pegawai" required="" type="text" />
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <label class="block text-sm font-medium text-slate-700" for="password">Password</label>
-                            <a class="text-xs font-medium text-sky-600 hover:text-sky-700 transition-colors"
-                                href="#">Lupa password?</a>
-                        </div>
-                        <div class="relative group">
+<body class="min-h-screen flex items-center justify-center font-sans ...">
 
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="material-icons text-slate-400 text-xl">lock_outline</span>
-                            </div>
+<!-- Background glow -->
+<div class="absolute w-[600px] h-[600px] bg-blue-300/30 blur-[120px] rounded-full -top-40 -left-40"></div>
+<div class="absolute w-[500px] h-[500px] bg-indigo-300/30 blur-[120px] rounded-full bottom-0 right-0"></div>
 
-                            <input id="password" name="password" type="password" placeholder="••••••••" required
-                                class="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400 bg-white/50 backdrop-blur-sm transition-all sm:text-sm shadow-sm" />
+<div class="w-full max-w-6xl bg-white/70 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden grid md:grid-cols-2 border border-white/40">
 
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+    <!-- LEFT PANEL -->
+    <div class="p-12 bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex flex-col justify-between">
 
-                                <span id="togglePassword"
-                                    class="material-icons cursor-pointer text-slate-400 hover:text-sky-500">
-                                    visibility
-                                </span>
+        <div>
 
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <input class="h-4 w-4 text-sky-500 focus:ring-sky-400 border-slate-300 rounded" id="remember-me"
-                            name="remember-me" type="checkbox" />
-                        <label class="ml-2 block text-sm text-slate-600" for="remember-me">
-                            Ingat saya
-                        </label>
-                    </div>
-                    <button
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md shadow-sky-200 text-sm font-medium text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all duration-200 transform hover:-translate-y-0.5"
-                        type="submit">
-                        Masuk
-                    </button>
-                    <!-- Error container placeholder -->
-                    <div id="login-error" class="hidden text-red-500 text-sm text-center mt-2"></div>
-                </form>
-                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <p class="text-xs text-slate-500">
-                        Butuh bantuan akses?
-                        <a class="font-medium text-sky-600 hover:text-sky-700 hover:underline" href="#">Hubungi
-                            Administrator</a>
-                    </p>
-                </div>
+            <div class="flex items-center gap-2 mb-10">
+                <span class="material-icons text-3xl">inventory_2</span>
+                <span class="text-xl font-display font-bold tracking-wider">AUTORA</span>
             </div>
+
+            <h1 class="text-4xl font-display font-bold leading-tight mb-6 tracking-tight">
+                Authorization & <br>
+                Role Access Database
+            </h1>
+
+            <p class="text-sm opacity-90 leading-relaxed max-w-sm">
+                Sistem manajemen database Bina Marga DPUPR
+            </p>
+
         </div>
+
+        <div class="text-xs opacity-70">
+            © 2026 AUTORA System
+        </div>
+
     </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="p-12 flex flex-col justify-center">
+
+        <h2 class="text-3xl font-display font-bold text-slate-800 mb-2 tracking-tight">
+            Login
+        </h2>
+
+        <p class="text-sm text-slate-500 mb-8">
+            Masuk untuk mengakses sistem AUTORA
+        </p>
+
+        <form onsubmit="handleLogin(event)" class="space-y-6">
+
+            <!-- EMAIL -->
+            <div>
+
+                <label class="text-sm text-slate-600">
+                    Username / Email
+                </label>
+
+                <div class="relative mt-2">
+
+                    <span class="material-icons absolute left-3 top-3 text-slate-400 text-lg">
+                        person_outline
+                    </span>
+
+                    <input
+                        id="email"
+                        name="email"
+                        type="text"
+                        placeholder="admin atau pegawai"
+                        required
+                        class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-300 focus:border-sky-400 outline-none text-sm transition"
+                    >
+
+                </div>
+
+            </div>
+
+            <!-- PASSWORD -->
+            <div>
+
+                <div class="flex justify-between text-sm">
+                    <label class="text-slate-600">Password</label>
+                    <a href="#" class="text-sky-600 hover:underline">
+                        Lupa password?
+                    </a>
+                </div>
+
+                <div class="relative mt-2">
+
+                    <span class="material-icons absolute left-3 top-3 text-slate-400 text-lg">
+                        lock_outline
+                    </span>
+
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="••••••••"
+                        required
+                        class="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-300 focus:border-sky-400 outline-none text-sm"
+                    >
+
+                    <span
+                        id="togglePassword"
+                        class="material-icons absolute right-3 top-3 cursor-pointer text-slate-400 hover:text-sky-500"
+                    >
+                        visibility
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- REMEMBER -->
+            <div class="flex items-center text-sm text-slate-600">
+                <input type="checkbox" id="rememberMe" class="mr-2 rounded">
+                Ingat saya
+            </div>
+
+            <!-- LOGIN BUTTON -->
+            <button
+                type="submit"
+                class="w-full py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 transition shadow-lg"
+            >
+                Login
+            </button>
+
+            <!-- ERROR -->
+            <div id="login-error" class="hidden text-red-500 text-sm text-center"></div>
+
+        </form>
+
+        <p class="text-xs text-slate-500 text-center mt-8">
+            Butuh bantuan akses?
+            <span class="text-sky-600 hover:underline cursor-pointer">
+                Hubungi Administrator
+            </span>
+        </p>
+
+    </div>
+
+</div>
+
+</body>
 
     <script type="module" src="assets/js/main.js"></script>
 

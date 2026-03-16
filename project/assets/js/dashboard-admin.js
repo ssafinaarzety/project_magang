@@ -1863,7 +1863,7 @@ let idleTimer;
 let isSessionTimeoutShown = false;
 
 // 10 menit
-const IDLE_LIMIT = 10 * 60 * 1000;
+const IDLE_LIMIT = 1 * 60 * 1000;
 
 function ensureSessionTimeoutModal() {
     const existing = document.getElementById("sessionTimeoutModal");

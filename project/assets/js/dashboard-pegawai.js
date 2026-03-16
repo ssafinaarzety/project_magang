@@ -770,7 +770,7 @@ async function loadActivityLogs() {
         }
 
         // Limit to 10 most recent logs
-        const displayLogs = userLogs.slice(0, 4);
+        const displayLogs = userLogs.slice(0, 5);
 
         logsBody.innerHTML = "";
 

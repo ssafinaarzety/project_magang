@@ -1,16 +1,33 @@
-import { 
-  signInWithEmailAndPassword, 
-  onAuthStateChanged 
+import {
+    signInWithEmailAndPassword,
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import { 
-  getDoc, 
-  doc 
+import {
+    getDoc,
+    doc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { auth, db } from "./firebase-config.js";
 
 const loginErrorEl = document.getElementById("login-error");
+
+// Load email & password yang tersimpan
+window.addEventListener("load", () => {
+
+    const savedEmail = localStorage.getItem("rememberEmail");
+    const savedPassword = localStorage.getItem("rememberPassword");
+
+    if (savedEmail) {
+        document.getElementById("email").value = savedEmail;
+        document.getElementById("rememberMe").checked = true;
+    }
+
+    if (savedPassword) {
+        document.getElementById("password").value = savedPassword;
+    }
+
+});
 
 // Cek login otomatis
 onAuthStateChanged(auth, (user) => {
@@ -26,6 +43,15 @@ window.handleLogin = async (event) => {
 
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
+
+    const remember = document.getElementById("rememberMe").checked;
+
+    // Simpan email/password jika dicentang
+    if (remember) {
+        localStorage.setItem("rememberEmail", email);
+    } else {
+        localStorage.removeItem("rememberEmail");
+    }
 
     loginErrorEl.classList.add("hidden");
     loginErrorEl.textContent = "";

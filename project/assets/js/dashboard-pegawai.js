@@ -74,12 +74,13 @@ let currentUserUID = null;
 
 let currentPage = 1;
 const rowsPerPage = 10;
+let currentEditingFileId = null;
+let autoSaveTimer = null;
 
 
-function getPreviewUrl(filePath) {
+function getPreviewUrl(fileId) {
 
-    return "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
-        + filePath;
+    return "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId=" + fileId;
 
 }
 
@@ -860,12 +861,17 @@ async function handleArchiveAccess(fileId, fileName) {
     // ===============================
     // FILE GOOGLE DRIVE
     // ===============================
-    if (archive.filePath) {
+    if (archive.driveFileId) {
 
-        const previewUrl =
-            `https://drive.google.com/file/d/${archive.filePath}/preview`;
+        console.log("Opening Excel editor for:", archive.driveFileId);
 
-        openPreview(previewUrl);
+        currentEditingFileId = archive.driveFileId;
+
+        openPreview();
+
+        setTimeout(() => {
+            loadExcelEditor(archive.driveFileId);
+        }, 100);
 
         return;
 
@@ -1286,60 +1292,181 @@ function resetIdleTimer() {
 // mulai timer saat halaman dibuka
 resetIdleTimer();
 
-function openPreview(fileUrl) {
+function openPreview() {
 
     const modal = document.getElementById("previewModal");
-    const frame = document.getElementById("previewFrame");
 
-    if (!modal || !frame) return;
-
-    let previewUrl = fileUrl;
-
-    // GOOGLE SPREADSHEET
-    if (fileUrl.includes("docs.google.com/spreadsheets")) {
-
-        const match = fileUrl.match(/\/d\/(.*?)\//);
-
-        if (match) {
-            const fileId = match[1];
-            previewUrl = `https://docs.google.com/spreadsheets/d/${fileId}/preview`;
-        }
-
-    }
-
-    // GOOGLE DRIVE FILE
-    else if (fileUrl.includes("drive.google.com")) {
-
-        const match = fileUrl.match(/\/d\/(.*?)\//);
-
-        if (match) {
-            const fileId = match[1];
-            previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-        }
-
-    }
-
-    // FILE BIASA (PDF, Excel, dll)
-    else {
-
-        previewUrl =
-            `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-
-    }
-
-    frame.src = previewUrl;
+    if (!modal) return;
 
     modal.classList.remove("hidden");
+
 }
+
+async function loadExcelEditor(fileId) {
+
+    const url =
+        `https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=download&fileId=${fileId}`;
+
+    const response = await fetch(url);
+
+    const base64Data = (await response.text()).trim();
+
+    const loading = document.getElementById("previewLoading");
+    const table = document.getElementById("excelEditor");
+
+    if (loading) loading.style.display = "none";
+    if (table) table.classList.remove("hidden");
+
+    const cleanBase64 = base64Data
+        .replace(/\s/g, "")
+        .replace(/[\r\n]+/g, "");
+
+    const binary = atob(cleanBase64);
+
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    const workbook = XLSX.read(bytes, { type: "array" });
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    renderExcelTable(json);
+
+}
+
+function renderExcelTable(data) {
+
+    const table = document.getElementById("excelEditor");
+
+    if (!table) {
+        console.error("Excel editor table not found");
+        return;
+    }
+    table.innerHTML = "";
+
+    data.forEach((row) => {
+
+        const tr = document.createElement("tr");
+
+        row.forEach((cell) => {
+
+            const td = document.createElement("td");
+
+            td.contentEditable = true;
+
+            td.className =
+                "border px-3 py-2 min-w-[120px] focus:bg-yellow-100 outline-none";
+
+            td.innerText = cell ?? "";
+
+            // AUTO SAVE TRIGGER
+            td.addEventListener("input", () => {
+
+                clearTimeout(autoSaveTimer);
+
+                autoSaveTimer = setTimeout(() => {
+
+                    console.log("Auto saving...");
+                    saveExcel();
+
+                }, 3000); // 3 detik
+
+            });
+
+            tr.appendChild(td);
+
+        });
+
+        table.appendChild(tr);
+
+    });
+
+}
+
+async function saveExcel() {
+
+    const status = document.getElementById("saveStatus");
+    status.textContent = "Saving...";
+
+    try {
+
+        const table = document.getElementById("excelEditor");
+
+        let data = [];
+
+        table.querySelectorAll("tr").forEach(tr => {
+
+            let row = [];
+
+            tr.querySelectorAll("td").forEach(td => {
+                row.push(td.innerText);
+            });
+
+            data.push(row);
+
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        const wb = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        const file = XLSX.write(wb, {
+            bookType: "xlsx",
+            type: "base64"
+        });
+
+        await fetch(
+            "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",
+            {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({
+                    action: "update",
+                    fileId: currentEditingFileId,
+                    fileData: file
+                })
+            }
+        );
+
+        status.textContent = "Saved";
+
+    } catch (err) {
+
+        console.error(err);
+        status.textContent = "Error saving";
+
+    }
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const saveBtn = document.getElementById("saveSpreadsheetBtn");
+
+    if (saveBtn) {
+
+        saveBtn.onclick = saveExcel;
+
+    }
+
+});
 
 function closePreview() {
 
     const modal = document.getElementById("previewModal");
-    const frame = document.getElementById("previewFrame");
+    const table = document.getElementById("excelEditor");
 
-    if (!modal || !frame) return;
+    if (!modal) return;
 
-    frame.src = "";
+    if (table) table.innerHTML = "";
+
     modal.classList.add("hidden");
 }
 

@@ -496,36 +496,57 @@
         </div>
     </div>
 
-    <!-- FILE PREVIEW MODAL -->
-    <div id="previewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <!-- PREVIEW MODAL -->
+    <div id="previewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60">
 
-        <!-- BACKDROP -->
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePreview()">
-        </div>
-
-        <!-- MODAL -->
-        <div
-            class="relative bg-white dark:bg-slate-900 w-[75%] max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="w-[95vw] h-[95vh] bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
 
             <!-- HEADER -->
-            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between p-3 border-b">
 
-                <h3 class="font-semibold text-slate-800 dark:text-white">
+                <h3 class="font-semibold text-sm">
                     File Preview
                 </h3>
 
-                <button onclick="closePreview()" class="text-slate-500 hover:text-red-500 text-lg font-bold">
+                <div class="flex items-center gap-3">
 
-                    ✕
+                    <!-- SAVE STATUS -->
+                    <span id="saveStatus" class="text-xs text-gray-500">
+                        Saved
+                    </span>
 
-                </button>
+                    <!-- EDIT BUTTON -->
+                    <button id="editSpreadsheetBtn"
+                        class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 hidden">
+                        Edit Spreadsheet
+                    </button>
+
+                    <!-- SAVE BUTTON -->
+                    <button id="saveSpreadsheetBtn"
+                        class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 hidden">
+                        Save
+                    </button>
+
+                    <!-- CLOSE BUTTON -->
+                    <button onclick="closePreview()" class="text-red-500 font-bold text-lg">
+                        ✕
+                    </button>
+
+                </div>
 
             </div>
 
             <!-- CONTENT -->
-            <div class="flex-1 overflow-auto bg-slate-50 dark:bg-slate-950">
+            <div id="previewContent" class="flex-1 overflow-auto p-4 bg-gray-100 dark:bg-slate-700">
 
-                <iframe id="previewFrame" class="w-full h-full" allow="autoplay"></iframe>
+                <!-- LOADING TEXT -->
+                <div id="previewLoading" class="text-center text-gray-500 py-20">
+                    Loading preview...
+                </div>
+
+                <!-- EXCEL EDITOR TABLE -->
+                <table id="excelEditor" class="min-w-full border text-sm bg-white hidden">
+                </table>
 
             </div>
 
@@ -534,6 +555,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
     <script type="module" src="../assets/js/dashboard-pegawai.js"></script>
 </body>
 

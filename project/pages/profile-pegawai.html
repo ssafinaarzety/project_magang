@@ -1,152 +1,431 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html class="light" lang="id">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pegawai Profile - AUTORA</title>
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Profile Pegawai - AUTORA</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .grid-pattern {
+            background-image: radial-gradient(circle, #005bbf15 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+    </style>
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#137fec",
-                        "primary-dark": "#0f6fcd",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#101922",
-                        "card-light": "#ffffff",
-                        "card-dark": "#1a2632"
+                        "surface": "#f9f9ff",
+                        "on-tertiary-container": "#0e0200",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#2e4673",
+                        "surface-container": "#ecedf7",
+                        "secondary-fixed-dim": "#afc7fb",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#f9f9ff",
+                        "on-background": "#191c23",
+                        "surface-container-low": "#f2f3fd",
+                        "inverse-on-surface": "#eff0fa",
+                        "primary-container": "#1a73e8",
+                        "outline": "#727785",
+                        "surface-container-highest": "#e0e2ec",
+                        "on-primary-fixed": "#001a41",
+                        "on-surface": "#191c23",
+                        "inverse-surface": "#2d3038",
+                        "surface-dim": "#d8d9e3",
+                        "primary-fixed": "#d8e2ff",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#b2c9fe",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#414754",
+                        "on-primary-fixed-variant": "#004493",
+                        "inverse-primary": "#adc7ff",
+                        "tertiary-container": "#c55500",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#005bc0",
+                        "primary": "#005bbf",
+                        "tertiary-fixed": "#ffdbcb",
+                        "tertiary": "#9e4300",
+                        "on-secondary-container": "#3d5481",
+                        "secondary": "#475e8c",
+                        "on-tertiary-fixed": "#341100",
+                        "background": "#f9f9ff",
+                        "outline-variant": "#c1c6d6",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#783100",
+                        "on-secondary-fixed": "#001a41",
+                        "on-primary-container": "#ffffff",
+                        "primary-fixed-dim": "#adc7ff",
+                        "surface-container-high": "#e6e8f2",
+                        "surface-variant": "#e0e2ec"
                     },
                     fontFamily: {
-                        "display": ["Inter", "sans-serif"]
-                    }
-                }
-            }
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
         }
     </script>
 </head>
 
 <body data-required-role="pegawai"
-    class="bg-background-light dark:bg-background-dark font-display text-text-main antialiased h-screen flex overflow-hidden">
-    <aside
-        class="w-64 bg-card-light dark:bg-card-dark border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between hidden md:flex z-20 shadow-sm relative">
-        <div>
-            <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center gap-2 text-primary font-bold text-xl">
-                    <span class="material-icons-outlined">verified_user</span>
-                    <span>AUTORA</span>
-                </div>
+    class="text-on-background min-h-screen flex bg-gradient-to-br from-primary/10 via-surface to-secondary-container/20 grid-pattern">
+    <!-- SideNavBar Component -->
+    <aside id="sidebar"
+        class="h-screen w-72 fixed left-0 top-0 pt-6 flex flex-col transition-all duration-300 bg-white border-r border-slate-200 shadow-sm">
+        <div class="px-8 mb-8 flex items-center gap-3">
+            <div
+                class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary-container/20">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">database</span>
             </div>
-
-            <nav class="p-4 space-y-1">
-                <a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary rounded-lg font-medium transition-colors"
-                    href="dashboard-pegawai.html">
-                    <span class="material-icons-outlined">folder_open</span>
-                    Archive List & Logs
-                </a>
-            </nav>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight text-slate-800">AUTORA</h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">Access Database</p>
+            </div>
         </div>
+        <!-- NAVIGATION -->
+        <nav class="flex flex-col gap-1 pr-2">
 
-        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-3 mb-4 px-2">
-                <div id="profileAvatarSidebar"
-                    class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                    P
-                </div>
+            <!-- FILES -->
+            <a href="dashboard-pegawai.html"
+                class="nav-item flex items-center gap-4 px-8 py-3 bg-primary-container/10 text-primary rounded-r-full font-semibold">
 
-                <div class="overflow-hidden">
-                    <p id="profileNameSidebar" class="text-sm font-semibold truncate dark:text-white">Pegawai</p>
-                    <p id="profileEmailSidebar" class="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        pegawai@autora.sys</p>
-                </div>
+                <span class="material-symbols-outlined">
+                    folder_open
+                </span>
+
+                <span class="text-sm">
+                    Files
+                </span>
+
+            </a>
+
+            <!-- ACTIVITY LOGS -->
+            <a href="activity-logs.html"
+                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
+
+                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
+                    history
+                </span>
+
+                <span class="text-sm">
+                    Activity Logs
+                </span>
+
+            </a>
+
+            <!-- SETTINGS -->
+            <a href="settings.html"
+                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
+
+                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
+                    settings
+                </span>
+
+                <span class="text-sm">
+                    Settings
+                </span>
+
+            </a>
+
+        </nav>
+        <div class="mt-auto px-8 pb-10">
+
+            <div class="bg-red-50 backdrop-blur-md border border-red-200 rounded-2xl p-4">
+
+                <button id="logoutBtn" onclick="document.getElementById('logoutModal').classList.remove('hidden')"
+                    class="w-full py-2 text-[11px] font-bold text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+
+                    <span class="material-symbols-outlined text-sm">
+                        logout
+                    </span>
+
+                    Exit
+
+                </button>
+
             </div>
 
-            <button id="logoutBtn"
-                class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 rounded-lg text-sm font-medium transition-all text-slate-600 dark:text-slate-400">
-                <span class="material-icons-outlined text-lg">logout</span>
-                Logout
-            </button>
         </div>
     </aside>
-
-    <main class="flex-1 p-8 overflow-y-auto h-screen bg-background-light dark:bg-background-dark">
-        <div class="max-w-5xl mx-auto">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Profil Pegawai</h2>
-                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Informasi akun pegawai AUTORA.</p>
-            </div>
-
-            <div
-                class="bg-card-light dark:bg-card-dark rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-1">
-                        <div
-                            class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-5 text-center">
-                            <div id="profileAvatar"
-                                class="w-20 h-20 mx-auto rounded-full bg-emerald-100 text-emerald-700 font-bold text-2xl flex items-center justify-center">
-                                P</div>
-                            <h2 id="profileEmailHero"
-                                class="mt-4 text-base font-semibold text-slate-800 dark:text-white break-all">
-                                pegawai@autora.sys</h2>
-                            <p id="profileRole" class="text-sm text-slate-500 dark:text-slate-400">Pegawai</p>
-                        </div>
+    <!-- Main Content Canvas -->
+    <main class="ml-72 min-h-screen w-full flex flex-col"> <!-- TopAppBar Component -->
+        <header
+            class="sticky top-0 z-50 flex items-center justify-between px-8 py-4 w-full bg-white/30 backdrop-blur-lg border-b border-white/20">
+            <div class="flex-1 max-w-2xl">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span
+                            class="material-symbols-outlined text-slate-500 group-focus-within:text-primary transition-colors">search</span>
                     </div>
+                    <input
+                        class="block w-full pl-12 pr-4 py-3 bg-white/40 border border-white/50 rounded-xl focus:ring-2 focus:ring-primary/20 text-sm placeholder-slate-500 transition-all outline-none"
+                        id="archiveSearch" type="text" />
+                </div>
+            </div>
+            <div class="flex items-center gap-2 ml-4">
+                <button onclick="alert('Hubungi admin IT untuk bantuan')"
+                    class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
+                    <span class="material-symbols-outlined">help</span>
+                </button>
+                <button onclick="window.location.href='settings.html'"
+                    class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+                <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
+                    class="fixed right-8 bottom-8 w-16 h-16 bg-primary-container text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 md:hidden">
+                </button>
+                <div class="ml-2 w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                    <div id="profileBtn"
+                        class="w-9 h-9 flex items-center justify-center bg-primary text-white font-semibold rounded-full cursor-pointer hover:scale-105 transition">
+                    </div>
+        </header>
+        <!-- Animated Blob Backgrounds (Static for CSS only requirement) -->
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 blur-[100px] rounded-full"></div>
+        <div class="absolute top-1/2 -left-24 w-64 h-64 bg-tertiary/5 blur-[80px] rounded-full"></div>
+        <div class="max-w-[1400px] mx-auto px-10 py-12">
+            <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h2 class="text-4xl md:text-5xl font-black tracking-tight text-on-surface mb-2">Profil Pegawai</h2>
+                    <p class="text-on-surface-variant max-w-lg leading-relaxed">
+                        Lihat dan kelola informasi akun pegawai Anda pada sistem arsip AUTORA.
+                    </p>
+                </div>
+                <a href="dashboard-pegawai.html"
+                    class="flex items-center gap-2 bg-surface-container-highest/50 backdrop-blur px-6 py-3 rounded-full font-bold text-sm text-primary hover:bg-primary-fixed transition-colors">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Kembali ke Dashboard
+                </a>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                    <div class="md:col-span-2">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div
-                                class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-                                <p class="text-xs uppercase text-slate-500 dark:text-slate-400">Email</p>
-                                <p id="profileEmail" class="text-sm text-slate-800 dark:text-slate-200 mt-1">-</p>
+                <!-- PROFILE CARD -->
+                <div class="lg:col-span-4">
+                    <div
+                        class="glass-card rounded-2xl p-8 shadow-xl h-full flex flex-col bg-gradient-to-br from-primary/10 via-white/80 to-secondary/10 border border-white/60">
+
+                        <div class="flex flex-col items-center text-center flex-1">
+
+                            <!-- Avatar with gradient ring -->
+                            <div class="relative mb-6">
+                                <div id="profileAvatar"
+                                    class="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/40 flex items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-secondary/60 text-white text-2xl font-bold shadow-lg shadow-primary/30">
+                                </div>
+                                <div
+                                    class="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full border-4 border-white shadow-md flex items-center justify-center animate-pulse">
+                                    <span class="material-symbols-outlined text-white text-sm">check</span>
+                                </div>
                             </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-                                <p class="text-xs uppercase text-slate-500 dark:text-slate-400">UID</p>
-                                <p id="profileUid" class="text-sm text-slate-800 dark:text-slate-200 mt-1 break-all">-
-                                </p>
+
+                            <!-- Name and role -->
+                            <h3 id="profileName" class="text-2xl font-extrabold text-on-surface mb-1">
+                                Loading...
+                            </h3>
+
+                            <p id="profileRole" class="text-sm text-primary font-semibold mb-6"></p>
+                            <!-- Status badges -->
+                            <div class="flex gap-2 mb-8 flex-wrap justify-center">
+                                <span
+                                    class="bg-blue-100/80 text-blue-700 text-xs px-4 py-2 rounded-full font-semibold backdrop-blur-sm border border-blue-200/50 hover:shadow-lg transition-all">
+                                    <span class="material-symbols-outlined text-sm align-middle mr-1">
+                                        badge
+                                    </span>
+                                    Pegawai
+                                </span>
+
+                                <span
+                                    class="bg-green-100/80 text-green-700 text-xs px-4 py-2 rounded-full font-semibold backdrop-blur-sm border border-green-200/50 hover:shadow-lg transition-all">
+                                    <span class="material-symbols-outlined text-sm align-middle mr-1"
+                                        style="font-size: 16px; display: inline;">check_circle</span>
+                                    Active
+                                </span>
                             </div>
+
+                            <!-- Divider -->
                             <div
-                                class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-                                <p class="text-xs uppercase text-slate-500 dark:text-slate-400">Bergabung</p>
-                                <p id="profileJoined" class="text-sm text-slate-800 dark:text-slate-200 mt-1">-</p>
+                                class="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-6">
                             </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-                                <p class="text-xs uppercase text-slate-500 dark:text-slate-400">Login Terakhir</p>
-                                <p id="profileLastLogin" class="text-sm text-slate-800 dark:text-slate-200 mt-1">-</p>
+
+                            <!-- Stats -->
+                            <div class="w-full grid grid-cols-2 gap-4 mt-auto pt-4">
+                                <div
+                                    class="p-3 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors">
+                                    <p class="text-xs text-slate-500 font-semibold mb-1">Files Saya</p>
+                                    <p id="filesCount" class="text-lg font-bold text-primary">0</p>
+                                </div>
+                                <div
+                                    class="p-3 rounded-lg bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-colors">
+                                    <p class="text-xs text-slate-500 font-semibold mb-1">Activity Score</p>
+                                    <p class="text-lg font-bold text-secondary">100%</p>
+                                </div>
                             </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-                                <p class="text-xs uppercase text-slate-500 dark:text-slate-400">Departemen</p>
-                                <p id="profileDepartment" class="text-sm text-slate-800 dark:text-slate-200 mt-1">-</p>
-                            </div>
-                            <div
-                                class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-                                <p class="text-xs uppercase text-slate-500 dark:text-slate-400">No. Telepon</p>
-                                <p id="profilePhone" class="text-sm text-slate-800 dark:text-slate-200 mt-1">-</p>
-                            </div>
+
                         </div>
+
                     </div>
                 </div>
 
-                <div
-                    class="px-8 py-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-wrap gap-3 justify-end">
-                    <button id="backToDashboardBtn"
-                        class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-                        Kembali ke Dashboard
-                    </button>
+                <!-- ACCOUNT INFORMATION -->
+                <div class="lg:col-span-8">
+
+                    <div
+                        class="glass-card rounded-2xl p-10 shadow-xl h-full bg-gradient-to-br from-white/80 to-white/40 border border-white/60 flex flex-col">
+
+                        <h4 class="text-xl font-bold mb-8 flex items-center gap-3">
+                            <span class="w-1 h-6 bg-gradient-to-b from-primary to-primary/60 rounded-full"></span>
+                            Informasi Akun
+                        </h4>
+
+                        <div class="grid md:grid-cols-2 gap-8 flex-1">
+
+                            <div
+                                class="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 hover:border-primary/20 transition-all duration-300 hover:shadow-md">
+                                <span
+                                    class="material-symbols-outlined text-primary text-2xl flex-shrink-0 mt-1">mail</span>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Email
+                                    </p>
+                                    <p id="profileEmail" class="font-semibold text-on-surface">-</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-secondary/5 to-transparent border border-secondary/10 hover:border-secondary/20 transition-all duration-300 hover:shadow-md">
+                                <span
+                                    class="material-symbols-outlined text-secondary text-2xl flex-shrink-0 mt-1">fingerprint</span>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">User ID
+                                    </p>
+                                    <p id="profileUID" class="font-semibold text-on-surface">-</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-tertiary/5 to-transparent border border-tertiary/10 hover:border-tertiary/20 transition-all duration-300 hover:shadow-md">
+                                <span
+                                    class="material-symbols-outlined text-tertiary text-2xl flex-shrink-0 mt-1">calendar_today</span>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Tanggal
+                                        Bergabung</p>
+                                    <p id="profileCreated" class="font-semibold text-on-surface">-</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 hover:border-primary/20 transition-all duration-300 hover:shadow-md">
+                                <span
+                                    class="material-symbols-outlined text-primary text-2xl flex-shrink-0 mt-1">history</span>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Login
+                                        Terakhir</p>
+                                    <p id="profileLastLogin" class="font-semibold text-on-surface">-</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-secondary/5 to-transparent border border-secondary/10 hover:border-secondary/20 transition-all duration-300 hover:shadow-md">
+                                <span
+                                    class="material-symbols-outlined text-secondary text-2xl flex-shrink-0 mt-1">business</span>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                        Departemen</p>
+                                    <p id="profileDepartment" class="font-semibold text-on-surface">-</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-tertiary/5 to-transparent border border-tertiary/10 hover:border-tertiary/20 transition-all duration-300 hover:shadow-md">
+                                <span
+                                    class="material-symbols-outlined text-tertiary text-2xl flex-shrink-0 mt-1">call</span>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Telepon
+                                    </p>
+                                    <p id="profilePhone" class="font-semibold text-on-surface">-</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
+
             </div>
-        </div>
     </main>
+    <!-- BottomNavBar (Mobile Only) -->
+    <nav
+        class="md:hidden fixed bottom-0 w-full bg-white/80 backdrop-blur-xl flex justify-around items-center h-16 px-4 z-50">
+        <a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+            <span class="material-symbols-outlined">dashboard</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+            <span class="material-symbols-outlined">folder</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-blue-600" href="#">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+            <span class="material-symbols-outlined">settings</span>
+        </a>
+    </nav>
+    <div id="logoutModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50">
 
+        <div class="bg-white rounded-xl p-6 w-[320px] text-center shadow-xl">
+
+            <h3 class="text-lg font-bold mb-3">Konfirmasi Logout</h3>
+
+            <p class="text-sm text-gray-500 mb-5">
+                Yakin ingin keluar dari sistem?
+            </p>
+
+            <div class="flex justify-center gap-3">
+
+                <button id="confirmLogoutBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg">
+                    Ya
+                </button>
+
+                <button id="cancelLogoutBtn" class="px-4 py-2 bg-gray-200 rounded-lg">
+                    Tidak
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
     <script type="module" src="../assets/js/profile.js"></script>
 </body>
 

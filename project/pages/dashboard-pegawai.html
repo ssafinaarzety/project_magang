@@ -19,446 +19,467 @@
             darkMode: "class",
             theme: {
                 extend: {
+
                     colors: {
-                        "primary": "#137fec",
-                        "primary-hover": "#0e64bd",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#101922",
-                        "card-light": "#ffffff",
-                        "card-dark": "#1a2632",
-                        "text-main": "#1e293b",
-                        "text-muted": "#64748b",
+
+                        primary: "#005bbf",
+                        "primary-container": "#1a73e8",
+
+                        surface: "#f9f9ff",
+                        "surface-container": "#ecedf7",
+
+                        tertiary: "#9e4300",
+                        "tertiary-fixed": "#ffdbcb",
+                        "tertiary-fixed-dim": "#ffb691",
+
+                        "on-tertiary-fixed-variant": "#783100",
+
+                        outline: "#727785",
+
+                        "on-surface": "#191c23"
                     },
+
                     fontFamily: {
-                        "display": ["Inter", "sans-serif"]
+                        headline: ["Inter"],
+                        body: ["Inter"],
+                        label: ["Inter"]
                     },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                },
-            },
+
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                        lg: "2rem",
+                        xl: "3rem",
+                        full: "9999px"
+                    }
+
+                }
+            }
         }
+
     </script>
+    <style>
+        .mesh-gradient-bg {
+            background-color: #f0f4ff;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(225, 39%, 30%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 100%, 75%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(250, 100%, 70%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(220, 100%, 80%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(230, 100%, 90%, 0.15) 0px, transparent 50%);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+        }
+
+        .card-pattern {
+            background-image:
+                radial-gradient(circle at 100% 0%, rgba(0, 91, 191, 0.03) 0%, transparent 60%);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        .card-pattern {
+            background-image: radial-gradient(circle at 100% 0%, rgba(0, 91, 191, 0.04) 0%, transparent 60%);
+        }
+    </style>
 </head>
 
-<body
-    class="bg-background-light dark:bg-background-dark font-display text-text-main antialiased h-screen flex overflow-hidden">
-
-    <aside
-        class="w-60 bg-card-light dark:bg-card-dark border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between hidden md:flex z-20 shadow-sm relative">
-
-        <div>
-
-            <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center gap-2 text-primary font-bold text-xl">
-                    <span class="material-icons-outlined">verified_user</span>
-                    <span>AUTORA</span>
-                </div>
+<body class="mesh-gradient-bg text-on-background min-h-screen flex">
+    <!-- SideNavBar Component -->
+    <aside id="sidebar" class="h-screen w-72 fixed left-0 top-0 pt-6 flex flex-col transition-all duration-300">
+        <div class="px-8 mb-8 flex items-center gap-3">
+            <div
+                class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary-container/20">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">database</span>
             </div>
-
-            <nav class="p-4 space-y-1">
-
-                <a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary rounded-lg font-medium transition-colors"
-                    href="dashboard-pegawai.html">
-                    <span class="material-icons-outlined">folder_open</span>
-                    Archive List & Logs
-                </a>
-
-            </nav>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight text-slate-800">AUTORA</h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">Access Database</p>
+            </div>
         </div>
+        <!-- NAVIGATION -->
+        <nav class="flex flex-col gap-1 pr-2">
 
+            <!-- FILES -->
+            <a href="dashboard-pegawai.html"
+                class="nav-item flex items-center gap-4 px-8 py-3 bg-primary-container/10 text-primary rounded-r-full font-semibold">
 
-        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+                <span class="material-symbols-outlined">
+                    folder_open
+                </span>
 
-            <a href="profile-pegawai.html" id="profileCard"
-                class="flex items-center gap-3 mb-4 px-2 cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                <span class="text-sm">
+                    Files
+                </span>
 
-                <div id="pegawaiAvatar"
-                    class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                    JD
-                </div>
-
-                <div class="overflow-hidden">
-
-                    <p id="pegawaiRole" class="text-sm font-semibold truncate dark:text-white">
-                        -
-                    </p>
-
-                    <p id="pegawaiName" class="text-xs text-slate-500 truncate">
-                        Employee
-                    </p>
-
-                </div>
             </a>
 
+            <!-- ACTIVITY LOGS -->
+            <a href="#activitySection"
+                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
 
-            <button
-                class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 rounded-lg text-sm font-medium transition-all text-slate-600 dark:text-slate-400"
-                onclick="document.getElementById('logout-modal').classList.remove('hidden')">
+                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
+                    history
+                </span>
 
-                <span class="material-icons-outlined text-lg">logout</span>
-                Logout
+                <span class="text-sm">
+                    Activity Logs
+                </span>
 
-            </button>
+            </a>
+
+            <!-- SETTINGS -->
+            <a href="settings.html"
+                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
+
+                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
+                    settings
+                </span>
+
+                <span class="text-sm">
+                    Settings
+                </span>
+
+            </a>
+
+        </nav>
+        <div class="mt-auto px-8 pb-10">
+
+            <div class="bg-red-50 backdrop-blur-md border border-red-200 rounded-2xl p-4">
+
+                <button id="logoutBtn" onclick="document.getElementById('logout-modal').classList.remove('hidden')"
+                    class="w-full py-2 text-[11px] font-bold text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">
+                        logout
+                    </span>
+
+                    Exit
+
+                </button>
+
+            </div>
 
         </div>
     </aside>
+    <main class="flex-1 ml-72 min-h-screen flex flex-col">
+        <!-- TopAppBar Component -->
+        <header id="topbar"
+            class="sticky top-0 z-40 flex items-center justify-between px-8 py-4 w-full bg-white/30 backdrop-blur-lg border-b border-white/20">
 
+            <!-- LEFT SPACE -->
+            <div class="w-64"></div>
 
-    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- CENTER SEARCH -->
+            <div class="flex-1 flex justify-center">
 
-        <header
-            class="h-16 bg-card-light dark:bg-card-dark border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:hidden z-10">
+                <div class="relative w-full max-w-xl group">
 
-            <div class="flex items-center gap-2 text-primary font-bold text-lg">
-                <span class="material-icons-outlined">verified_user</span>
-                <span>AUTORA</span>
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-slate-500 group-focus-within:text-primary">
+                            search
+                        </span>
+                    </div>
+
+                    <input id="searchInput"
+                        class="block w-full pl-12 pr-4 py-3 bg-white/40 border border-white/50 rounded-xl focus:ring-2 focus:ring-primary/20 text-sm placeholder-slate-500 outline-none"
+                        placeholder="Cari file..." type="text">
+
+                </div>
+
             </div>
 
-            <button class="p-2 text-slate-500">
-                <span class="material-icons-outlined">menu</span>
-            </button>
+            <!-- RIGHT MENU -->
+            <div class="flex items-center gap-3">
+
+                <button onclick="document.getElementById('helpModal').classList.remove('hidden')"
+                    class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
+
+                    <span class="material-symbols-outlined">help</span>
+
+                </button>
+
+                <button onclick="window.location.href='settings.html'"
+                    class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
+
+                    <span class="material-symbols-outlined">settings</span>
+
+                </button>
+
+                <div onclick="window.location.href='profile-pegawai.html'"
+                    class="flex items-center gap-2 cursor-pointer">
+
+                    <div id="profileBtn"
+                        class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-primary-container text-white font-bold text-sm shadow-md">
+                    </div>
+
+                    <span id="profileNameTop" class="text-sm font-semibold text-slate-700 hidden md:block">
+                    </span>
+
+                </div>
+
+            </div>
 
         </header>
 
+        <div class="p-8 space-y-10 custom-scrollbar overflow-y-auto max-w-[1600px] mx-auto">
+            <!-- STATS -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-        <div class="flex-none px-6 py-8 bg-background-light dark:bg-background-dark">
+                <!-- TOTAL ARSIP -->
+                <div
+                    class="group relative overflow-hidden bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-xl p-7 rounded-[2.5rem] shadow-lg hover:shadow-xl hover:from-white/70 transition-all border border-white/40 hover:border-white/60">
 
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div class="absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-15 transition-opacity">
+                        <span class="material-symbols-outlined text-8xl text-primary/20">
+                            inventory_2
+                        </span>
+                    </div>
 
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">AUTORA</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                        Authorization & Role Access Database
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                        Total Arsip
                     </p>
-                </div>
 
-
-                <div class="flex gap-3 items-center w-full md:w-auto">
-
-
-                    <!-- SEARCH -->
-                    <div class="relative flex-grow md:flex-grow-0">
-
-                        <span
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-icons-outlined text-lg">
-                            search
-                        </span>
-
-                        <input id="searchInput"
-                            class="pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-full md:w-64 dark:text-white placeholder-slate-400"
-                            placeholder="Search by file name..." type="text" />
-
-                    </div>
-
-
-                    <!-- CATEGORY -->
-                    <div class="relative">
-
-                        <select id="categorySelect"
-                            class="appearance-none pl-4 pr-10 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-600 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-
-                            <option value="keuangan">Keuangan</option>
-                            <option value="legal">Legal</option>
-                            <option value="hr">HR</option>
-                            <option value="it">IT</option>
-                            <option value="marketing">Marketing</option>
-
-                        </select>
-
-                        <span
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none material-icons-outlined text-lg">
-                            expand_more
-                        </span>
-
-                    </div>
-
-
-                    <!-- YEAR FILTER -->
-                    <div class="relative">
-
-                        <select id="yearSelect"
-                            class="appearance-none pl-4 pr-10 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-600 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-
-                            <option value="all">Semua Tahun</option>
-                            <option value="2024">2024</option>
-                            <option value="2023">2023</option>
-                            <option value="2022">2022</option>
-                            <option value="2021">2021</option>
-
-                        </select>
-
-                        <span
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none material-icons-outlined text-lg">
-                            expand_more
-                        </span>
-
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- SCROLLABLE CONTENT AREA -->
-        <div class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 md:p-8">
-
-            <!-- STATISTICS CARDS -->
-            <div class="max-w-screen-xl mx-auto w-full">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-
-
-                    <!-- TOTAL ARSIP -->
-                    <div
-                        class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between hover:shadow-lg transition">
-                        <div>
-                            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                                Total Arsip
-                            </p>
-                            <h3 id="totalArsipStat" class="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                                0
-                            </h3>
-                        </div>
-                        <div class="p-3 bg-primary/10 rounded-lg text-primary">
-                            <span class="material-icons-outlined">folder</span>
-                        </div>
-                    </div>
-
-                    <!-- KATEGORI TERBANYAK -->
-                    <div
-                        class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between hover:shadow-lg transition">
-                        <div>
-                            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                                Kategori Terbanyak
-                            </p>
-                            <h3 id="topCategoryStat" class="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                                -
-                            </h3>
-                        </div>
-                        <div class="p-3 bg-purple-500/10 rounded-lg text-purple-600">
-                            <span class="material-icons-outlined">pie_chart</span>
-                        </div>
-                    </div>
-
-                    <!-- LAST ACCESSED ARCHIVE -->
-                    <div
-                        class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between hover:shadow-lg transition">
-                        <div>
-                            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                                Last Accessed
-                            </p>
-                            <h3 id="lastAccessedStat"
-                                class="text-lg font-bold text-slate-900 dark:text-white mt-2 truncate">
-                                -
-                            </h3>
-                            <p id="lastAccessedTime" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                -
-                            </p>
-                        </div>
-                        <button id="openLastAccessBtn" onclick="openLastAccessedArchive()"
-                            class="p-3 bg-green-500/10 rounded-lg text-green-600 hover:bg-green-500/20 transition hover:cursor-pointer">
-                            <span class="material-icons-outlined">download</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <!-- ARCHIVE LIST SECTION -->
-            <div class="max-w-screen-xl mx-auto w-full pb-8">
-
-                <div
-                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-
-                    <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-
-                        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-
-                            <span class="material-icons-outlined text-slate-500">folder</span>
-                            Archive List
-
-                        </h2>
-
-                    </div>
-
-                    <div class="overflow-x-auto">
-
-                        <table class="w-full text-left border-collapse">
-
-                            <thead>
-
-                                <tr
-                                    class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
-
-                                    <th class="px-6 py-4">No</th>
-                                    <th class="px-6 py-4">Title</th>
-                                    <th class="px-6 py-4">Year</th>
-                                    <th class="px-6 py-4">Category</th>
-                                    <th class="px-6 py-4 text-right">Action</th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="pegawaiTableBody"
-                                class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                    <!-- PAGINATION -->
-                    <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
-                        <div id="pagination" class="flex justify-end gap-2"></div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- CHART + LOGS GRID -->
-            <div class="max-w-screen-xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 items-stretch">
-
-                <!-- ACTIVITY ANALYTICS -->
-                <div
-                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 flex flex-col h-full">
-
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                        <span class="material-icons-outlined text-slate-500">analytics</span>
-                        Activity Analytics
+                    <h2 id="totalArsipStat"
+                        class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container tracking-tight">
+                        0
                     </h2>
 
-                    <p class="text-xs text-slate-500 mb-4">
-                        Activity in the last 7 days
-                    </p>
+                </div>
 
-                    <!-- CHART -->
-                    <div class="mb-6">
-                        <canvas id="activityChart" class="w-full h-64"></canvas>
+
+                <!-- MOST CATEGORY -->
+                <div
+                    class="group bg-gradient-to-br from-primary-container to-primary p-7 rounded-[2.5rem] shadow-xl hover:shadow-2xl shadow-primary-container/40 relative overflow-hidden transition-all">
+
+                    <div
+                        class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-110 transition-transform">
                     </div>
 
-                    <!-- SUMMARY STATS -->
-                    <div class="grid grid-cols-3 gap-4 mt-auto">
+                    <p class="text-xs font-bold text-white/75 uppercase tracking-widest mb-2">
+                        Most Accessed Category
+                    </p>
 
-                        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
-                            <p class="text-xs text-slate-500">
-                                Today Activity
-                            </p>
-                            <p id="todayActivity" class="text-xl font-bold text-primary">
-                                0
-                            </p>
-                        </div>
+                    <div class="flex items-center gap-3">
 
-                        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
-                            <p class="text-xs text-slate-500">
-                                Total Logs
-                            </p>
-                            <p id="totalLogs" class="text-xl font-bold text-primary">
-                                0
-                            </p>
-                        </div>
+                        <h2 id="topCategoryStat" class="text-3xl font-black text-white tracking-tight">
+                            -
+                        </h2>
 
-                        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
-                            <p class="text-xs text-slate-500">
-                                Most Active Day
-                            </p>
-                            <p id="mostActiveDay" class="text-xl font-bold text-primary">
-                                -
-                            </p>
+                        <div class="px-3 py-1 bg-white/25 text-white rounded-full text-xs font-bold backdrop-blur-sm">
+                            TOP
                         </div>
 
                     </div>
 
                 </div>
 
-                <!-- ACTIVITY LOGS -->
-                <div
-                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
 
-                    <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-                        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            <span class="material-icons-outlined text-slate-500">history</span>
-                            Activity Logs
-                        </h2>
+                <!-- LAST ACCESS -->
+                <div
+                    class="group relative overflow-hidden bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-xl p-7 rounded-[2.5rem] shadow-lg hover:shadow-xl hover:from-white/70 transition-all border border-white/40 hover:border-white/60">
+
+                    <div class="absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-15 transition-opacity">
+                        <span class="material-symbols-outlined text-8xl text-primary/20">
+                            schedule
+                        </span>
                     </div>
 
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                        Last Access
+                    </p>
+
+                    <h2 id="lastAccessedStat" class="text-2xl font-black text-slate-800 tracking-tight">
+                        -
+                    </h2>
+
+                </div>
+
+            </section>
+
+
+            <!-- TOOLBAR -->
+            <section class="flex items-center justify-between flex-wrap gap-4">
+
+                <!-- LEFT SIDE -->
+                <div class="flex items-center gap-4">
+
+                    <h3
+                        class="text-2xl font-black bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                        My Files
+                    </h3>
+
+                    <!-- GRID / LIST SWITCH -->
                     <div
-                        class="px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
-                        <p class="text-sm text-gray-600 dark:text-slate-400">
-                            Your activity logs (latest 10 entries)
-                        </p>
-                        <a href="activity-logs.html?view=pegawai"
-                            class="flex items-center gap-1 px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition">
-                            <span class="material-icons-outlined text-sm">
-                                arrow_outward
+                        class="flex items-center bg-white/40 backdrop-blur-md p-1.5 rounded-2xl border border-white/50 shadow-md">
+
+                        <button id="gridViewBtn"
+                            class="px-4 py-2 bg-white shadow-lg rounded-xl text-xs font-bold text-primary flex items-center gap-2 transition-all">
+
+                            <span class="material-symbols-outlined text-[18px]"
+                                style="font-variation-settings:'FILL' 1">
+                                grid_view
                             </span>
-                            View Full Logs
-                        </a>
-                    </div>
 
-                    <div class="overflow-x-auto">
+                            Grid
+                        </button>
 
-                        <table class="w-full text-left border-collapse">
+                        <button id="listViewBtn"
+                            class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 flex items-center gap-2 hover:bg-white/30 transition-all">
 
-                            <thead>
-                                <tr
-                                    class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+                            <span class="material-symbols-outlined text-[18px]">
+                                format_list_bulleted
+                            </span>
 
-                                    <th class="px-6 py-4">Access Date/Time</th>
-                                    <th class="px-6 py-4">File Name</th>
-                                    <th class="px-6 py-4">Details</th>
-
-                                </tr>
-                            </thead>
-
-                            <tbody id="activityLogsBody"
-                                class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-
-                                <tr>
-                                    <td colspan="3" class="px-6 py-6 text-center text-slate-500">
-                                        No activity logs yet
-                                    </td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
+                            List
+                        </button>
 
                     </div>
+
                 </div>
+
+                <!-- RIGHT SIDE -->
+                <div class="flex items-center gap-3">
+
+                    <select id="yearSelect"
+                        class="text-xs font-semibold text-slate-600 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-4 py-2.5 hover:bg-white/60 transition-all cursor-pointer">
+
+                        <option value="">Semua Tahun</option>
+
+                    </select>
+
+                    <select id="categorySelect"
+                        class="text-xs font-semibold text-slate-600 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-4 py-2.5 hover:bg-white/60 transition-all cursor-pointer">
+
+                        <option value="">Semua Kategori</option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+
+            <!-- FILE GRID -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+
+                <!-- FILE EXPLORER -->
+                <section class="lg:col-span-8 space-y-6 min-h-[600px]">
+
+                    <div class="flex items-center justify-between">
+
+                        <h4 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+
+                            <div class="p-2.5 bg-primary/15 rounded-xl">
+                                <span class="material-symbols-outlined text-primary text-xl">
+                                    grid_view
+                                </span>
+                            </div>
+
+                            Archive Explorer
+
+                        </h4>
+
+                        <span id="archiveCount"
+                            class="text-sm font-semibold text-slate-500 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-3 py-1">
+                            0 Files
+                        </span>
+
+                    </div>
+
+                    <div id="archiveContainer"
+                        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 transition-all duration-300">
+                        <!-- Skeleton -->
+                        <div class="animate-pulse bg-white/40 rounded-3xl h-[240px]"></div>
+                        <div class="animate-pulse bg-white/40 rounded-3xl h-[240px]"></div>
+                        <div class="animate-pulse bg-white/40 rounded-3xl h-[240px]"></div>
+                        <div class="animate-pulse bg-white/40 rounded-3xl h-[240px]"></div>
+                    </div>
+
+                </section>
+
+                <!-- SIDEBAR -->
+                <aside class="lg:col-span-4 space-y-6">
+
+                    <!-- TOP ACCESSED FILES -->
+                    <div
+                        class="bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/40 shadow-lg">
+
+                        <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">
+                            ⭐ Top Accessed Files
+                        </h4>
+
+                        <div id="recentFiles" class="space-y-3">
+                            Loading...
+                        </div>
+
+                    </div>
+
+                    <!-- ACTIVITY LOG -->
+                    <div id="activitySection"
+                        class="bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/40 shadow-lg">
+
+                        <div class="flex items-center justify-between mb-6">
+
+                            <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest">
+                                📋 Activity Logs
+                            </h4>
+
+                            <button onclick="window.location.href='activity-logs.html'"
+                                class="text-[11px] font-semibold text-primary hover:underline">
+                                View All
+                            </button>
+
+                        </div>
+
+                        <div class="overflow-y-auto rounded-2xl max-h-[380px] custom-scrollbar">
+
+                            <table class="w-full text-xs divide-y divide-slate-200">
+
+                                <thead class="text-slate-500 uppercase text-[11px]">
+                                    <tr>
+                                        <th class="text-left px-4 py-3">Date</th>
+                                        <th class="text-left px-4 py-3">File</th>
+                                        <th class="text-left px-4 py-3">Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="activityLogsBody">
+
+                                    <tr>
+                                        <td colspan="3" class="text-slate-400 py-4">
+                                            Loading...
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </aside>
+
             </div>
-
-            <!-- INSIGHT SECTION -->
-            <div class="max-w-screen-xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 items-stretch">
-
-                <!-- TOP ACCESSED FILES -->
-                <div
-                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 h-full">
-
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                        <span class="material-icons-outlined text-slate-500">description</span>
-                        Top Accessed Files
-                    </h2>
-
-                    <div id="topAccessedFiles" class="space-y-2">
-                        <p class="text-sm text-slate-500">
-                            No accessed files yet
-                        </p>
-                    </div>
-
-                </div>
-
-                <!-- RECENT ACTIVITY -->
-                <div
-                    class="bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
-
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                        <span class="material-icons-outlined text-slate-500">schedule</span>
-                        Recent Activity
-                    </h2>
-
-                    <div id="recentActivity"></div>
-
-                </div>
-
-            </div>
-
+            <!-- PAGINATION -->
+            <div id="pagination" class="flex justify-center gap-2 mt-8"></div>
         </div>
     </main>
     <div aria-labelledby="modal-title" aria-modal="true"
@@ -499,8 +520,7 @@
     <!-- PREVIEW MODAL -->
     <div id="previewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60">
 
-        <div class="w-[95vw] h-[95vh] bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
-
+        <div class="w-screen h-screen bg-white flex flex-col">
             <!-- HEADER -->
             <div class="flex items-center justify-between p-3 border-b">
 
@@ -537,27 +557,78 @@
             </div>
 
             <!-- CONTENT -->
-            <div id="previewContent" class="flex-1 overflow-auto p-4 bg-gray-100 dark:bg-slate-700">
+            <div class="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900 relative">
 
-                <!-- LOADING TEXT -->
-                <div id="previewLoading" class="text-center text-gray-500 py-20">
-                    Loading preview...
+                <iframe id="previewFrame" class="w-full h-full border-0" allowfullscreen
+                    sandbox="allow-same-origin allow-scripts">
+                </iframe>
+
+                <!-- blocker tombol open in drive -->
+                <div class="absolute top-0 right-0 w-64 h-32 z-[9999]"
+                    style="background: rgba(0,0,0,0.01); pointer-events:auto;">
                 </div>
-
-                <!-- EXCEL EDITOR TABLE -->
-                <table id="excelEditor" class="min-w-full border text-sm bg-white hidden">
-                </table>
 
             </div>
 
         </div>
 
     </div>
+    <!-- HELP MODAL PEGAWAI -->
+    <div id="helpModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50">
+
+        <div class="bg-white rounded-[2rem] w-[420px] shadow-xl">
+
+            <div class="flex justify-between items-center px-8 py-6 border-b">
+
+                <h3 class="text-xl font-semibold text-slate-800">
+                    Bantuan Penggunaan Sistem
+                </h3>
+
+                <button onclick="document.getElementById('helpModal').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600 text-xl">
+                    ✕
+                </button>
+
+            </div>
+
+            <div class="px-8 py-6 space-y-5 text-sm text-slate-600">
+
+                <div>
+                    <p class="font-semibold text-slate-800">Mencari Arsip</p>
+                    <p>Gunakan kolom pencarian di bagian atas untuk mencari file berdasarkan nama arsip.</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-slate-800">Filter Arsip</p>
+                    <p>Pilih tahun atau kategori untuk memfilter arsip yang tersedia.</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-slate-800">Membuka File</p>
+                    <p>Klik ikon <b>open</b> pada kartu arsip untuk melihat isi file.</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-slate-800">Preview Spreadsheet</p>
+                    <p>File Excel dapat dibuka langsung di sistem untuk dilihat tanpa mengunduh file.</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-slate-800">Butuh Bantuan?</p>
+                    <p>Hubungi Admin Sistem atau tim IT jika mengalami kendala saat mengakses arsip.</p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
     <script type="module" src="../assets/js/dashboard-pegawai.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </body>
 
 </html>

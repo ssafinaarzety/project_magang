@@ -11,46 +11,55 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 font-sans min-h-screen p-10">
+<body class="mesh-gradient-bg min-h-screen p-10 font-sans">
 
-    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow border">
+    <div class="max-w-6xl mx-auto">
 
         <!-- HEADER -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 border-b">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
             <div class="flex items-center gap-4">
 
                 <button onclick="goBack()"
-                    class="flex items-center gap-1 px-3 py-2 border rounded-lg text-sm hover:bg-gray-100 transition">
+                    class="flex items-center gap-1 px-3 py-2 bg-white/60 backdrop-blur rounded-lg text-sm hover:bg-white/80 transition">
 
                     <span class="material-icons-outlined text-sm">
                         arrow_back
                     </span>
 
                     Back
+
                 </button>
 
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <span class="material-icons-outlined text-blue-600">
+
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+
+                        <span class="material-icons-outlined text-primary">
                             history
                         </span>
+
                         Activity Logs
+
                     </h2>
 
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-slate-500">
                         Recent user actions and system events
                     </p>
+
                 </div>
 
             </div>
 
+
             <div class="flex flex-wrap items-center gap-3">
 
                 <input id="logSearch" type="text" placeholder="Search logs..."
-                    class="border rounded-lg px-3 py-2 text-sm w-40" />
+                    class="bg-white/60 backdrop-blur border border-white/60 rounded-lg px-3 py-2 text-sm w-40" />
 
-                <select id="logFilter" class="border rounded-lg px-3 py-2 text-sm">
+
+                <select id="logFilter"
+                    class="bg-white/60 backdrop-blur border border-white/60 rounded-lg px-3 py-2 text-sm">
 
                     <option value="all">All</option>
                     <option value="upload">Upload</option>
@@ -63,131 +72,140 @@
 
                 </select>
 
+
                 <button onclick="exportLogs()"
-                    class="flex items-center gap-1 border px-3 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
+                    class="flex items-center gap-1 bg-white/60 backdrop-blur border border-white/60 px-3 py-2 rounded-lg text-sm hover:bg-white/80 transition">
 
                     <span class="material-icons-outlined text-sm">
                         download
                     </span>
 
                     Export
+
                 </button>
 
+
                 <button onclick="refreshLogs()"
-                    class="flex items-center gap-1 border px-3 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
+                    class="flex items-center gap-1 bg-white/60 backdrop-blur border border-white/60 px-3 py-2 rounded-lg text-sm hover:bg-white/80 transition">
 
                     <span class="material-icons-outlined text-sm">
                         refresh
                     </span>
 
                     Refresh
+
                 </button>
 
             </div>
 
         </div>
 
+        <!-- CARD -->
+        <div class="bg-white/50 backdrop-blur-md rounded-2xl border border-white/60 overflow-hidden">
 
-        <!-- INFO BAR -->
-        <div class="flex items-center justify-between px-6 py-3 bg-gray-50 border-b text-sm text-gray-500">
+            <!-- INFO BAR -->
+            <div class="flex items-center justify-between px-6 py-3 bg-white/40 border-b text-sm text-slate-500">
 
-            <p id="logCount">
-                Loading logs...
-            </p>
+                <p id="logCount">
+                    Loading logs...
+                </p>
 
-            <p>
-                Latest system activity
-            </p>
+                <p>
+                    Latest system activity
+                </p>
 
-        </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="overflow-x-auto">
+
+                <table class="w-full text-sm text-left">
+
+                    <thead class="bg-white/40 border-b">
+
+                        <tr>
+
+                            <th class="px-6 py-3 font-semibold text-slate-600">
+                                Timestamp
+                            </th>
+
+                            <th class="px-6 py-3 font-semibold text-slate-600">
+                                User
+                            </th>
+
+                            <th class="px-6 py-3 font-semibold text-slate-600">
+                                Action
+                            </th>
+
+                            <th class="px-6 py-3 font-semibold text-slate-600">
+                                File
+                            </th>
+
+                            <th class="px-6 py-3 font-semibold text-slate-600 text-right">
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
 
 
-        <!-- TABLE -->
-        <div class="overflow-x-auto">
+                    <tbody id="activityLogTable" class="divide-y">
 
-            <table class="w-full text-sm text-left">
+                        <tr>
+                            <td colspan="5" class="text-center py-6 text-slate-400">
+                                Loading activity logs...
+                            </td>
+                        </tr>
 
-                <thead class="bg-gray-50 border-b">
-                    <tr>
+                    </tbody>
 
-                        <th class="px-6 py-3 font-semibold text-gray-600">
-                            Timestamp
-                        </th>
+                </table>
 
-                        <th class="px-6 py-3 font-semibold text-gray-600">
-                            User
-                        </th>
+            </div>
 
-                        <th class="px-6 py-3 font-semibold text-gray-600">
-                            Action
-                        </th>
+            <!-- PAGINATION -->
+            <div class="flex items-center justify-between px-6 py-4 border-t bg-white/40">
 
-                        <th class="px-6 py-3 font-semibold text-gray-600">
-                            File
-                        </th>
+                <p id="pageInfo" class="text-sm text-slate-600">
+                    Halaman 1
+                </p>
 
-                        <th class="px-6 py-3 font-semibold text-gray-600 text-right">
-                            Status
-                        </th>
+                <div class="flex items-center gap-2">
 
-                    </tr>
-                </thead>
+                    <button id="prevPageBtn" onclick="loadPrevPage()" disabled
+                        class="flex items-center gap-1 px-4 py-2 bg-white/60 backdrop-blur border rounded-lg text-sm hover:bg-white/80 transition disabled:opacity-50">
 
+                        <span class="material-icons-outlined text-sm">
+                            chevron_left
+                        </span>
 
-                <tbody id="activityLogTable" class="divide-y">
+                        Previous
 
-                    <tr>
-                        <td colspan="5" class="text-center py-6 text-gray-400">
-                            Loading activity logs...
-                        </td>
-                    </tr>
+                    </button>
 
-                </tbody>
+                    <button id="nextPageBtn" onclick="loadNextPage()"
+                        class="flex items-center gap-1 px-4 py-2 bg-white/60 backdrop-blur border rounded-lg text-sm hover:bg-white/80 transition disabled:opacity-50">
 
-            </table>
+                        Next
 
-        </div>
+                        <span class="material-icons-outlined text-sm">
+                            chevron_right
+                        </span>
 
-        <!-- PAGINATION CONTROLS -->
-        <div class="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
+                    </button>
 
-            <p id="pageInfo" class="text-sm text-gray-600">
-                Halaman 1
-            </p>
-
-            <div class="flex items-center gap-2">
-
-                <button id="prevPageBtn" onclick="loadPrevPage()" disabled
-                    class="flex items-center gap-1 px-4 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
-
-                    <span class="material-icons-outlined text-sm">
-                        chevron_left
-                    </span>
-
-                    Previous
-                </button>
-
-                <button id="nextPageBtn" onclick="loadNextPage()"
-                    class="flex items-center gap-1 px-4 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
-
-                    Next
-
-                    <span class="material-icons-outlined text-sm">
-                        chevron_right
-                    </span>
-                </button>
+                </div>
 
             </div>
 
         </div>
+
+        <p class="text-center text-slate-400 mt-6 text-sm">
+            AUTORA Access System
+        </p>
 
     </div>
-
-
-    <p class="text-center text-gray-400 mt-6 text-sm">
-        AUTORA Access System
-    </p>
-
 
     <script>
 

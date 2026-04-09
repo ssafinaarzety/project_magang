@@ -1,34 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html class="light" lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Admin Dashboard - AUTORA</title>
+    <title>AUTORA - Authorization &amp; Role Access Database</title>
+    <!-- Inter Font for Editorial Precision -->
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
         rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+    <!-- Material Symbols -->
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#137fec",
-                        "primary-dark": "#0e64bd",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#101922",
+                        "on-secondary-fixed": "#001a41",
+                        "on-background": "#191c23",
+                        "on-tertiary-fixed": "#341100",
+                        "secondary-container": "#b2c9fe",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e0e2ec",
+                        "tertiary": "#9e4300",
+                        "on-primary-fixed": "#001a41",
+                        "on-surface-variant": "#414754",
+                        "inverse-primary": "#adc7ff",
+                        "on-secondary-container": "#3d5481",
+                        "surface-dim": "#d8d9e3",
+                        "primary": "#005bbf",
+                        "outline-variant": "#c1c6d6",
+                        "background": "#f0f4ff",
+                        "tertiary-fixed": "#ffdbcb",
+                        "primary-container": "#1a73e8",
+                        "on-primary-fixed-variant": "#004493",
+                        "inverse-on-surface": "#eff0fa",
+                        "surface-container-high": "#e6e8f2",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#005bc0",
+                        "surface-container": "#ecedf7",
+                        "on-surface": "#191c23",
+                        "outline": "#727785",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2d3038",
+                        "on-tertiary-container": "#0e0200",
+                        "on-primary-container": "#ffffff",
+                        "surface": "#f9f9ff",
+                        "tertiary-container": "#c55500",
+                        "primary-fixed-dim": "#adc7ff",
+                        "secondary": "#475e8c",
+                        "surface-bright": "#f9f9ff",
+                        "on-secondary-fixed-variant": "#2e4673",
+                        "tertiary-fixed-dim": "#ffb691",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f2f3fd",
+                        "on-tertiary-fixed-variant": "#783100",
+                        "secondary-fixed": "#d8e2ff",
+                        "secondary-fixed-dim": "#afc7fb",
+                        "surface-container-highest": "#e0e2ec"
                     },
                     fontFamily: {
-                        "display": ["Inter", "sans-serif"]
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
                     },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
                 },
             },
         }
@@ -38,9 +85,12 @@
             font-family: 'Inter', sans-serif;
         }
 
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
-            height: 6px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
@@ -48,809 +98,958 @@
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .mesh-gradient-bg {
+            background-color: #f0f4ff;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(225, 39%, 30%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 100%, 75%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(250, 100%, 70%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(220, 100%, 80%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(230, 100%, 90%, 0.15) 0px, transparent 50%);
+            position: relative;
         }
 
-        .animate-spin-slow {
-            animation: spin 3s linear infinite;
+        .mesh-gradient-bg::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            opacity: 0.4;
         }
 
-        .toast {
-            animation: toastIn .35s ease;
+        .avatar-group img {
+            margin-left: -8px;
+            border: 2px solid white;
         }
 
-        @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateX(40px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        #sidebar {
+            transition: all 0.3s ease;
         }
 
-        .fade-row {
-            opacity: 0;
-            transform: translateY(6px);
-            animation: fadeInRow .3s ease forwards;
-        }
-
-        @keyframes fadeInRow {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        html {
+            scroll-behavior: smooth;
         }
     </style>
 </head>
 
-<body
-    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display min-h-screen flex overflow-hidden">
-    <aside
-        class="w-64 bg-white dark:bg-[#1a2634] border-r border-slate-200 dark:border-slate-700 flex flex-col h-screen fixed left-0 top-0 z-20 transition-transform duration-300">
-        <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
-            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white mr-3">
-                <span class="material-icons-outlined text-xl">admin_panel_settings</span>
+<body class="mesh-gradient-bg text-on-background min-h-screen flex">
+    <!-- SideNavBar Component -->
+    <aside id="sidebar" class="h-screen w-72 fixed left-0 top-0 pt-6 flex flex-col transition-all duration-300">
+        <div class="px-8 mb-8 flex items-center gap-3">
+            <div
+                class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary-container/20">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">database</span>
             </div>
-            <h1 class="font-bold text-lg text-slate-800 dark:text-white tracking-tight">AUTORA <span
-                    class="text-primary">Admin</span></h1>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight text-slate-800">AUTORA</h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">Access Database</p>
+            </div>
         </div>
-        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto relative">
+        <div class="px-4 mb-6">
+            <button id="newArchiveBtn"
+                class="flex items-center gap-3 px-6 py-4 bg-white/80 text-on-surface shadow-sm hover:shadow-md transition-all rounded-xl w-full group active:scale-95 border border-white/50">
+                <span class="material-symbols-outlined text-primary"
+                    style="font-variation-settings: 'wght' 600;">add</span>
+                <span class="font-semibold text-sm">New <span
+                        class="text-slate-400 font-normal ml-1">Arsip</span></span>
+            </button>
+        </div>
+        <!-- NAVIGATION -->
+        <nav class="flex flex-col gap-1 pr-2">
 
-            <a class="flex items-center px-4 py-3 text-primary bg-primary/10 rounded-lg font-medium transition-colors"
-                href="dashboard-admin.html">
-                <span class="material-icons-outlined mr-3">table_view</span>
-                Daftar Arsip
+            <!-- FILES -->
+            <a href="dashboard-admin.html"
+                class="nav-item flex items-center gap-4 px-8 py-3 bg-primary-container/10 text-primary rounded-r-full font-semibold">
+
+                <span class="material-symbols-outlined">
+                    folder_open
+                </span>
+
+                <span class="text-sm">
+                    Files
+                </span>
+
             </a>
 
-            <button
-                class="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors text-left"
-                onclick="document.getElementById('uploadModal').classList.remove('hidden')">
+            <!-- ACTIVITY LOGS -->
+            <a href="#recentActivity"
+                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
 
-                <span class="material-icons-outlined mr-3">cloud_upload</span>
-                Upload Arsip
-            </button>
+                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
+                    history
+                </span>
 
-            <button id="backupBtn"
-                class="w-full flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-lg font-medium transition-colors text-left">
+                <span class="text-sm">
+                    Activity Logs
+                </span>
 
-                <span class="material-icons-outlined mr-3">backup</span>
-                Backup Data
+            </a>
 
-            </button>
+            <!-- BACKUP -->
+            <a href="#" id="backupBtn"
+                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
+
+                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
+                    backup
+                </span>
+
+                <span class="text-sm">
+                    Backup
+                </span>
+
+            </a>
+
+            <!-- SETTINGS -->
+            <a href="settings.html"
+                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
+
+                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
+                    settings
+                </span>
+
+                <span class="text-sm">
+                    Settings
+                </span>
+
+            </a>
 
         </nav>
-        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-            <a href="profile-admin.html"
-                class="flex items-center gap-3 px-2 mb-4 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
-                    <img alt="Admin profile picture" class="object-cover w-full h-full"
-                        data-alt="Profile picture of a male admin user"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfvnIeyQegZfjwTdo6zrAHBMfKN5ARSgM9wEUc62fPVxXGPeRBybf6CSi-827Febn7JSIJqiXnRHyWiNbUMPYeveZ7UfpaEcr-kT1b2k8DaGxY8RK6ygpmXFmoRvzTAcbiiV4zDxHVEDsNLZS_c09aUEyd5QRjKacZuUzKGBrawwXPEx9EcQ0eJjKEIkQyDwv-qB1DfLdY6-OCJ_IOGp5MOUJgjaaJECF6TxVGkDrMsXDjyyHuPvlDoJVH2aeWAwmIoUfz-cv5_Q" />
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p id="adminName" class="text-sm font-medium text-slate-900 dark:text-white truncate">
-                        Administrator
-                    </p>
+        <div class="mt-auto px-8 pb-10">
 
-                    <p id="adminEmail" class="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        admin@autora.sys
-                    </p>
-                </div>
-            </a>
-            <button
-                class="w-full flex items-center justify-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors"
-                onclick="document.getElementById('logoutModal').classList.remove('hidden')">
-                <span class="material-icons-outlined mr-2 text-lg">logout</span>
-                Logout
-            </button>
+            <div class="bg-red-50 backdrop-blur-md border border-red-200 rounded-2xl p-4">
+
+                <button id="logoutBtn"
+                    class="w-full py-2 text-[11px] font-bold text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+
+                    <span class="material-symbols-outlined text-sm">
+                        logout
+                    </span>
+
+                    Exit
+
+                </button>
+
+            </div>
+
         </div>
     </aside>
-    <main class="flex-1 ml-64 p-8 overflow-y-auto h-screen bg-background-light dark:bg-background-dark">
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">AUTORA</h2>
-                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Authorization &amp; Role Access Database</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button
-                    class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center shadow-md shadow-primary/20 transition-all"
-                    onclick="document.getElementById('uploadModal').classList.remove('hidden')">
-                    <span class="material-icons-outlined mr-2 text-lg">add</span>
-                    Tambah Arsip
-                </button>
-                <input type="file" id="importCSVInput" accept=".csv" class="hidden">
+    <!-- Main Canvas -->
+    <main class="flex-1 ml-72 min-h-screen flex flex-col">
+        <div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-50 overflow-y-auto hidden"
+            id="uploadModal" role="dialog">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                onclick="document.getElementById('uploadModal').classList.add('hidden')"></div>
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200 dark:border-slate-700">
+                    <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="w-full">
+                                <div class="flex items-center justify-between mb-6">
 
-                <button id="importCSVBtn"
-                    class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center shadow-md shadow-primary/20 transition-all">
+                                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white"
+                                        id="uploadModalTitle">
+                                        Upload Arsip
+                                    </h3>
 
-                    <span class="material-icons-outlined mr-2 text-lg">upload_file</span>
-                    Import CSV
+                                    <button onclick="document.getElementById('uploadModal').classList.add('hidden')"
+                                        class="text-slate-400 hover:text-slate-600 text-lg">
+                                        ✕
+                                    </button>
 
-                </button>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-            <!-- TOTAL ARSIP -->
-            <div
-                class="bg-white dark:bg-[#1a2634] p-6 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between hover:shadow-lg transition">
-
-                <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                        Total Arsip
-                    </p>
-
-                    <h3 id="totalArsip" class="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                        0
-                    </h3>
-                </div>
-
-                <div class="p-3 bg-primary/10 rounded-lg text-primary">
-                    <span class="material-icons-outlined">folder</span>
-                </div>
-
-            </div>
-
-
-            <!-- ARSIP BULAN INI -->
-            <div
-                class="bg-white dark:bg-[#1a2634] p-6 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between hover:shadow-lg transition">
-
-                <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                        Arsip Baru (Bulan Ini)
-                    </p>
-
-                    <h3 id="monthlyCount" class="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                        0
-                    </h3>
-                </div>
-
-                <div class="p-3 bg-green-500/10 rounded-lg text-green-600">
-                    <span class="material-icons-outlined">trending_up</span>
-                </div>
-
-            </div>
-
-
-            <!-- KATEGORI TERBANYAK -->
-            <div
-                class="bg-white dark:bg-[#1a2634] p-6 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between hover:shadow-lg transition">
-
-                <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                        Kategori Terbanyak
-                    </p>
-
-                    <h3 id="topCategory" class="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                        -
-                    </h3>
-                </div>
-
-                <div class="p-3 bg-purple-500/10 rounded-lg text-purple-600">
-                    <span class="material-icons-outlined">pie_chart</span>
-                </div>
-
-            </div>
-
-        </div>
-        <div
-            class="bg-white dark:bg-[#1a2634] p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="flex-1 w-full md:w-auto relative">
-                <span
-                    class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                <input id="searchInput"
-                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    placeholder="Cari berdasarkan Judul Arsip..." type="text" />
-            </div>
-            <div class="flex gap-4 w-full md:w-auto">
-                <div class="relative w-full md:w-40">
-                    <span
-                        class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">calendar_today</span>
-                    <select id="yearFilter"
-                        class="w-full pl-10 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none cursor-pointer text-slate-600 dark:text-slate-300">
-                        <option value="">Semua Tahun</option>
-                    </select>
-                    <span
-                        class="material-icons-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
-                </div>
-                <div class="relative w-full md:w-48">
-                    <span
-                        class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">category</span>
-                    <select id="categoryFilter"
-                        class="w-full pl-10 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none cursor-pointer text-slate-600 dark:text-slate-300">
-                        <option value="">Semua Kategori</option>
-                    </select>
-                    <span
-                        class="material-icons-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
-                </div>
-            </div>
-        </div>
-        <div
-            class="bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden mb-8">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table id="archiveTable" class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                        <tr>
-                            <th class="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300 w-20" scope="col">No
-                            </th>
-                            <th class="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300" scope="col">Judul
-                                Arsip</th>
-                            <th class="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300 w-32" scope="col">
-                                Tahun</th>
-                            <th class="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300 w-48" scope="col">
-                                Kategori</th>
-                            <th class="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300 w-56" scope="col">
-                                Akses Diberikan Ke</th>
-                            <th class="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300 w-48 text-right"
-                                scope="col">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="archiveTableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <p id="tableInfo" class="text-sm text-slate-500 dark:text-slate-400">
-                    Loading data...
-                </p>
-                <div class="flex items-center gap-2">
-                    <button id="prevPageBtn"
-                        class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 text-slate-600 dark:text-slate-300"
-                        disabled="">Previous</button>
-                    <button id="nextPageBtn"
-                        class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        Next
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div
-            class="bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-            <div
-                class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span class="material-icons-outlined text-primary">history</span>
-                        Activity Logs
-                    </h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Recent user actions and system events.
-                    </p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button
-                        class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors flex items-center gap-1">
-                        <span class="material-icons-outlined text-sm">filter_list</span> Filter
-                    </button>
-                    <button
-                        class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors flex items-center gap-1">
-                        <span class="material-icons-outlined text-sm">download</span> Export
-                    </button>
-                </div>
-            </div>
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                        <tr>
-                            <th class="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300" scope="col">Timestamp
-                            </th>
-                            <th class="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300" scope="col">User</th>
-                            <th class="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300" scope="col">Action
-                            </th>
-                            <th class="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300" scope="col">Details
-                            </th>
-                            <th class="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300 text-right"
-                                scope="col">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="activityLogBody" class="divide-y divide-slate-100 dark:divide-slate-700">
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
-                <button onclick="window.location.href='activity-logs.html'"
-                    class="w-full text-center text-sm text-primary hover:text-primary-dark font-medium py-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                    View All Activity Logs
-                </button>
-            </div>
-        </div>
-    </main>
-    <div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-50 overflow-y-auto hidden"
-        id="uploadModal" role="dialog">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-            onclick="document.getElementById('uploadModal').classList.add('hidden')"></div>
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200 dark:border-slate-700">
-                <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="w-full">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white flex items-center gap-2"
-                                    id="uploadModalTitle">
-                                    <div class="p-2 bg-primary/10 rounded-lg text-primary">
-                                        <span class="material-icons-outlined text-xl">cloud_upload</span>
-                                    </div>
-                                    Upload Arsip Baru
-                                </h3>
-                                <button class="text-slate-400 hover:text-slate-500"
-                                    onclick="document.getElementById('uploadModal').classList.add('hidden')"
-                                    type="button">
-                                    <span class="material-icons-outlined">close</span>
-                                </button>
-                            </div>
-                            <div id="uploadProgressBox"
-                                class="mb-6 hidden p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/20 text-sm text-blue-700 dark:text-blue-300">
-                                Sedang memproses upload...
-                            </div>
-                            <form id="uploadForm" class="space-y-4">
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
-                                        for="judul">Judul Arsip</label>
-                                    <input
-                                        class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
-                                        id="judul" required name="judul" placeholder="Contoh: Laporan Tahunan 2023"
-                                        type="text" />
                                 </div>
-                                <div class="grid grid-cols-2 gap-4">
+                                <div id="uploadProgressBox"
+                                    class="mb-6 hidden p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/20 text-sm text-blue-700 dark:text-blue-300">
+                                    Sedang memproses upload...
+                                </div>
+                                <form id="uploadForm" class="space-y-4">
                                     <div>
                                         <label
                                             class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
-                                            for="tahun">Tahun</label>
-                                        <input id="tahun" required name="tahun" type="number" min="1900" max="2100"
-                                            placeholder="2024"
-                                            class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6" />
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
-                                            for="kategori">Kategori</label>
-                                        <select
-                                            class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
-                                            id="kategori">
-                                            <option value="keuangan">Keuangan</option>
-                                            <option value="hrd">HRD</option>
-                                            <option value="logistik">Logistik</option>
-                                            <option value="legal">Legal</option>
-                                            <option value="marketing">Marketing</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
-                                        for="link">Link Excel / Spreadsheet</label>
-                                    <div class="relative rounded-md shadow-sm">
-                                        <div
-                                            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                            <span class="material-icons-outlined text-slate-400 text-lg">link</span>
-                                        </div>
+                                            for="judul">Judul Arsip</label>
                                         <input
-                                            class="block w-full rounded-lg border-0 py-2.5 pl-10 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
-                                            id="link" name="link" placeholder="https://docs.google.com/spreadsheets/..."
-                                            type="url" />
+                                            class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
+                                            id="judul" required name="judul" placeholder="Contoh: Laporan Tahunan 2023"
+                                            type="text" />
                                     </div>
-                                    <p id="uploadLinkError" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden">
-                                    </p>
-                                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Validasi link: hanya
-                                        menerima URL Google Sheets yang valid.</p>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-2">
-                                        Atau Upload File Excel / CSV
-                                    </label>
-                                    <div id="uploadFileDropzone"
-                                        class="rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 p-4 bg-slate-50 dark:bg-slate-800/40 transition">
-                                        <div class="flex items-center justify-between gap-3">
-                                            <div>
-                                                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Drag &
-                                                    drop file di sini</p>
-                                                <p id="uploadFileInfo"
-                                                    class="text-xs text-slate-500 dark:text-slate-400">Belum ada file
-                                                    dipilih (.pdf, .xlsx atau .csv)</p>
-                                            </div>
-                                            <div class="flex gap-2">
-                                                <label for="uploadFileInput"
-                                                    class="cursor-pointer inline-flex items-center rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary-dark transition-colors">
-                                                    Browse
-                                                </label>
-                                                <button id="uploadFileClearBtn" type="button"
-                                                    class="inline-flex items-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
-                                                    Reset
-                                                </button>
-                                            </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
+                                                for="tahun">Tahun</label>
+                                            <input id="tahun" required name="tahun" type="number" min="1900" max="2100"
+                                                placeholder="2024"
+                                                class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6" />
                                         </div>
-                                        <input id="uploadFileInput" class="hidden" type="file" accept=".xlsx,.csv,.pdf"
-                                            multiple />
-                                    </div>
-                                    <p id="uploadSourceError"
-                                        class="mt-2 text-xs text-red-600 dark:text-red-400 hidden"></p>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
-                    <button id="saveArchiveBtn" type="button"
-                        class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark sm:w-auto transition-colors">
-                        Simpan Arsip
-                    </button>
-                    <button
-                        class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors"
-                        onclick="document.getElementById('uploadModal').classList.add('hidden')"
-                        type="button">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
-        id="logoutModal" role="dialog">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-            onclick="document.getElementById('logoutModal').classList.add('hidden')"></div>
-        <div class="flex min-h-full items-center justify-center p-4 text-center">
-            <div
-                class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-center shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700">
-                <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div
-                        class="mx-auto flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-                        <span class="material-icons-outlined text-red-600 dark:text-red-400 text-2xl">logout</span>
-                    </div>
-                    <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white" id="logoutModalTitle">
-                        Konfirmasi Keluar</h3>
-                    <div class="mt-2">
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Apakah anda yakin ingin keluar dari sistem
-                            admin? Anda harus login kembali untuk mengakses data.</p>
-                    </div>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:justify-center gap-3">
-                    <button id="confirmLogoutBtn"
-                        class="inline-flex w-full justify-center rounded-lg bg-red-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:w-auto transition-colors min-w-[100px]"
-                        type="button">
-                        Ya
-                    </button>
-                    <button
-                        class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-8 py-2.5 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors min-w-[100px]"
-                        onclick="document.getElementById('logoutModal').classList.add('hidden')"
-                        type="button">Tidak</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
-        id="accessModal" role="dialog">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-            onclick="document.getElementById('accessModal').classList.add('hidden')"></div>
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200 dark:border-slate-700">
-                <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="w-full">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3
-                                    class="text-lg font-semibold leading-6 text-slate-900 dark:text-white flex items-center gap-2">
-                                    <div
-                                        class="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
-                                        <span class="material-icons-outlined text-xl">group_add</span>
-                                    </div>
-                                    Manage User Access
-                                </h3>
-                                <button class="text-slate-400 hover:text-slate-500"
-                                    onclick="document.getElementById('accessModal').classList.add('hidden')"
-                                    type="button">
-                                    <span class="material-icons-outlined">close</span>
-                                </button>
-                            </div>
-                            <div class="mb-4">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div class="relative w-full mr-2">
-                                        <span
-                                            class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                                        <input id="accessUserSearch"
-                                            class="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800"
-                                            placeholder="Search user to add..." type="text" />
-                                    </div>
-                                    <button id="addUserToAccessBtn"
-                                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">Add</button>
-                                </div>
-                                <div id="accessUserList"
-                                    class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
-                    <button id="accessModalSaveBtn"
-                        class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:w-auto transition-colors"
-                        type="button">Save Changes</button>
-                    <button
-                        class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors"
-                        onclick="document.getElementById('accessModal').classList.add('hidden')"
-                        type="button">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- MODAL EDIT ARSIP -->
-    <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
-        id="editModal" role="dialog">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-            onclick="document.getElementById('editModal').classList.add('hidden')"></div>
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200 dark:border-slate-700">
-                <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="w-full">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white flex items-center gap-2"
-                                    id="editModalTitle">
-                                    <div
-                                        class="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg text-yellow-600 dark:text-yellow-400">
-                                        <span class="material-icons-outlined">edit</span>
-                                    </div>
-                                    Edit Arsip
-                                </h3>
-                                <button class="text-slate-400 hover:text-slate-500"
-                                    onclick="document.getElementById('editModal').classList.add('hidden')"
-                                    type="button">
-                                    <span class="material-icons-outlined">close</span>
-                                </button>
-                            </div>
-                            <form id="editForm" class="space-y-4">
-                                <input type="hidden" id="editFileId">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-                                        for="editJudul">Judul Arsip</label>
-                                    <input id="editJudul"
-                                        class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all"
-                                        type="text" />
-                                </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-                                            for="editTahun">Tahun</label>
-                                        <input id="editTahun"
-                                            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all"
-                                            type="number" min="1900" max="2100" />
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
+                                                for="kategori">Kategori</label>
+                                            <select
+                                                class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
+                                                id="kategori">
+                                                <option value="keuangan">Keuangan</option>
+                                                <option value="hrd">HRD</option>
+                                                <option value="logistik">Logistik</option>
+                                                <option value="legal">Legal</option>
+                                                <option value="marketing">Marketing</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-                                            for="editKategori">Kategori</label>
-                                        <select id="editKategori"
-                                            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all appearance-none cursor-pointer">
-                                            <option>Keuangan</option>
-                                            <option>HRD</option>
-                                            <option>Logistik</option>
-                                            <option>Legal</option>
-                                            <option>Marketing</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-                                        for="editLink">Link Excel / Spreadsheet</label>
-                                    <input id="editLink"
-                                        class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all"
-                                        type="url" placeholder="https://..." />
-                                    <p id="editLinkError" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden">
-                                    </p>
-                                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Validasi link: hanya
-                                        menerima URL Google Sheets yang valid.</p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Atau Upload File Excel / CSV
-                                    </label>
-                                    <div id="editFileDropzone"
-                                        class="rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 p-4 bg-slate-50 dark:bg-slate-800/40 transition">
-                                        <div class="flex items-center justify-between gap-3">
-                                            <div>
-                                                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Drag &
-                                                    drop file di sini</p>
-                                                <p id="editFileInfo" class="text-xs text-slate-500 dark:text-slate-400">
-                                                    Belum ada file dipilih (.pdf, .xlsx, atau .csv)</p>
+                                        <label
+                                            class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
+                                            for="link">Link Excel / Spreadsheet</label>
+                                        <div class="relative rounded-md shadow-sm">
+                                            <div
+                                                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                <span class="material-icons-outlined text-slate-400 text-lg">link</span>
                                             </div>
-                                            <div class="flex gap-2">
-                                                <label for="editFileInput"
-                                                    class="cursor-pointer inline-flex items-center rounded-lg bg-yellow-600 px-3 py-2 text-xs font-semibold text-white hover:bg-yellow-700 transition-colors">
-                                                    Browse
-                                                </label>
-                                                <button id="editFileClearBtn" type="button"
-                                                    class="inline-flex items-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
-                                                    Reset
-                                                </button>
-                                            </div>
+                                            <input
+                                                class="block w-full rounded-lg border-0 py-2.5 pl-10 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
+                                                id="link" name="link"
+                                                placeholder="https://docs.google.com/spreadsheets/..." type="url" />
                                         </div>
-                                        <input id="editFileInput" class="hidden" type="file" accept=".xlsx,.csv,.pdf" />
+                                        <p id="uploadLinkError"
+                                            class="mt-2 text-xs text-red-600 dark:text-red-400 hidden">
+                                        </p>
+                                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Validasi link: hanya
+                                            menerima URL Google Sheets yang valid.</p>
                                     </div>
-                                    <p id="editSourceError" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden">
-                                    </p>
-                                </div>
-                            </form>
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-2">
+                                            Atau Upload File Excel / CSV
+                                        </label>
+                                        <div id="uploadFileDropzone"
+                                            class="rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 p-4 bg-slate-50 dark:bg-slate-800/40 transition">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div>
+                                                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                        Drag &
+                                                        drop file di sini</p>
+                                                    <p id="uploadFileInfo"
+                                                        class="text-xs text-slate-500 dark:text-slate-400">Belum ada
+                                                        file
+                                                        dipilih (.pdf, .xlsx atau .csv)</p>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <label for="uploadFileInput"
+                                                        class="cursor-pointer inline-flex items-center rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary-dark transition-colors">
+                                                        Browse
+                                                    </label>
+                                                    <button id="uploadFileClearBtn" type="button"
+                                                        class="inline-flex items-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                                                        Reset
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <input id="uploadFileInput" class="hidden" type="file"
+                                                accept=".xlsx,.csv,.pdf" multiple />
+                                        </div>
+                                        <p id="uploadSourceError"
+                                            class="mt-2 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
-                    <button id="editModalSaveBtn" type="button"
-                        class="inline-flex w-full justify-center rounded-lg bg-yellow-600 hover:bg-yellow-700 px-3 py-2 text-sm font-semibold text-white shadow-sm sm:w-auto transition-colors">
-                        Simpan Perubahan
-                    </button>
-                    <button
-                        class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors"
-                        onclick="document.getElementById('editModal').classList.add('hidden')"
-                        type="button">Batal</button>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
+                        <button id="saveArchiveBtn" type="button"
+                            class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark sm:w-auto transition-colors">
+                            Simpan Arsip
+                        </button>
+                        <button
+                            class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors"
+                            onclick="document.getElementById('uploadModal').classList.add('hidden')"
+                            type="button">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        <div id="logoutModal"
+            class="hidden fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50">
 
-    <!-- MODAL KONFIRMASI HAPUS ARSIP -->
-    <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
-        id="deleteModal" role="dialog">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-            onclick="document.getElementById('deleteModal').classList.add('hidden')"></div>
-        <div class="flex min-h-full items-center justify-center p-4 text-center">
-            <div
-                class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-center shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700">
-                <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div
-                        class="mx-auto flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-                        <span class="material-icons-outlined text-red-600 dark:text-red-400 text-2xl">delete</span>
-                    </div>
-                    <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white" id="deleteModalTitle">
-                        Konfirmasi Hapus Arsip</h3>
-                    <div class="mt-2">
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Apakah anda yakin ingin menghapus arsip
-                            <span id="deleteFileName" class="font-semibold text-slate-700 dark:text-slate-300"></span>?
-                            Tindakan ini tidak dapat diulang.
-                        </p>
-                    </div>
-                    <input type="hidden" id="deleteFileId">
-                    <input type="hidden" id="deleteFilePath">
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:justify-center gap-3">
-                    <button id="confirmDeleteBtn"
-                        class="inline-flex w-full justify-center rounded-lg bg-red-600 hover:bg-red-700 px-8 py-2.5 text-sm font-semibold text-white shadow-sm sm:w-auto transition-colors min-w-[100px]"
-                        type="button">
-                        Ya, Hapus
-                    </button>
-                    <button
-                        class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-8 py-2.5 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors min-w-[100px]"
-                        onclick="document.getElementById('deleteModal').classList.add('hidden')"
-                        type="button">Batal</button>
-                </div>
-            </div>
-        </div>
-    </div>
+            <div class="bg-white rounded-[2rem] p-8 w-[360px] text-center shadow-xl">
 
-    <!-- MODAL SUKSES MODIFIKASI -->
-    <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
-        id="successModal" role="dialog">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-            onclick="document.getElementById('successModal').classList.add('hidden')"></div>
-        <div class="flex min-h-full items-center justify-center p-4 text-center">
-            <div
-                class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-center shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700">
-                <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div
-                        class="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
-                        <span
-                            class="material-icons-outlined text-green-600 dark:text-green-400 text-3xl">check_circle</span>
-                    </div>
-                    <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white" id="successModalTitle">
-                        Berhasil!</h3>
-                    <div class="mt-3">
-                        <p id="successModalMessage" class="text-sm text-slate-600 dark:text-slate-300">
-                            Perubahan telah berhasil disimpan.
-                        </p>
-                    </div>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:justify-center">
-                    <button id="successModalCloseBtn"
-                        class="inline-flex w-full justify-center rounded-lg bg-green-600 hover:bg-green-700 px-8 py-2.5 text-sm font-semibold text-white shadow-sm sm:w-auto transition-colors"
-                        type="button">
-                        OK
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="errorModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
-
-        <div class="flex min-h-full items-center justify-center p-4">
-
-            <div class="bg-white dark:bg-[#1a2634] rounded-xl shadow-xl max-w-md w-full p-6 text-center">
-
-                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 mb-4">
-                    <span class="material-icons-outlined text-red-600 text-2xl">error</span>
-                </div>
-
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-                    Upload Gagal
+                <h3 class="text-xl font-semibold text-slate-800 mb-3">
+                    Konfirmasi Logout
                 </h3>
 
-                <p id="errorModalMessage" class="text-sm text-slate-500 mt-2">
-                    Terjadi kesalahan saat upload
+                <p class="text-sm text-slate-500 mb-6">
+                    Apakah kamu yakin ingin keluar dari sistem?
                 </p>
 
-                <button onclick="document.getElementById('errorModal').classList.add('hidden')"
-                    class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg">
+                <div class="flex justify-center gap-3">
 
-                    OK
+                    <button id="cancelLogoutBtn"
+                        class="px-5 py-2 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100">
+
+                        Batal
+
+                    </button>
+
+                    <button id="confirmLogoutBtn" class="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600">
+
+                        Logout
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+        <div id="helpModal"
+            class="hidden fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50">
+
+            <div class="bg-white rounded-[2rem] w-[420px] shadow-xl">
+
+                <div class="flex justify-between items-center px-8 py-6">
+
+                    <h3 class="text-xl font-semibold text-slate-800">
+                        Bantuan Sistem
+                    </h3>
+
+                    <button onclick="document.getElementById('helpModal').classList.add('hidden')"
+                        class="text-slate-400 hover:text-slate-600 text-xl">
+
+                        ✕
+
+                    </button>
+
+                </div>
+
+                <div class="px-8 pb-8 space-y-4 text-sm text-slate-600">
+
+                    <div>
+                        <p class="font-medium text-slate-800">Upload Arsip</p>
+                        <p>Gunakan tombol upload untuk menambahkan file Excel atau CSV.</p>
+                    </div>
+
+                    <div>
+                        <p class="font-medium text-slate-800">Edit Arsip</p>
+                        <p>Admin dapat mengubah judul, kategori, atau file.</p>
+                    </div>
+
+                    <div>
+                        <p class="font-medium text-slate-800">Manage Access</p>
+                        <p>Admin dapat menentukan siapa yang bisa membuka file.</p>
+                    </div>
+
+                    <div>
+                        <p class="font-medium text-slate-800">Butuh bantuan?</p>
+                        <p>Hubungi admin IT untuk bantuan lebih lanjut.</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        <div id="accessModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+
+            <!-- overlay -->
+            <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                onclick="document.getElementById('accessModal').classList.add('hidden')"></div>
+
+            <div class="relative w-full max-w-lg bg-white rounded-[2rem] shadow-xl">
+                <!-- HEADER -->
+                <div class="flex items-center justify-between px-8 py-6">
+
+                    <h3 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                        Manage User Access
+                    </h3>
+
+                    <button onclick="document.getElementById('accessModal').classList.add('hidden')"
+                        class="text-slate-400 hover:text-slate-600 text-xl">
+
+                        ✕
+
+                    </button>
+
+                </div>
+
+                <!-- BODY -->
+                <div class="px-8 pb-6 space-y-6">
+
+                    <!-- CURRENT ACCESS -->
+                    <div>
+
+                        <p class="text-sm text-slate-500 mb-2">
+                            Current Access
+                        </p>
+
+                        <div id="accessAvatarList" class="flex flex-wrap gap-2">
+                        </div>
+
+                    </div>
+
+
+                    <!-- SEARCH -->
+                    <div class="flex gap-3">
+
+                        <div class="relative flex-1">
+
+                            <input id="accessUserSearch" type="text" placeholder="Search user..."
+                                class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- USER LIST -->
+                    <div id="accessUserList" class="max-h-64 overflow-y-auto space-y-3 pr-1">
+
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="flex justify-end gap-3 px-8 py-5 bg-slate-50 rounded-b-[2rem]">
+
+                    <button onclick="document.getElementById('accessModal').classList.add('hidden')"
+                        class="px-5 py-2 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100">
+
+                        Batal
+
+                    </button>
+
+                    <button id="accessModalSaveBtn"
+                        class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-full hover:bg-indigo-700">
+
+                        Simpan Perubahan
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        </div>
+        <!-- MODAL EDIT ARSIP -->
+        <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
+            id="editModal" role="dialog">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                onclick="document.getElementById('editModal').classList.add('hidden')"></div>
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200 dark:border-slate-700">
+                    <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="w-full">
+                                <div class="flex items-center justify-between mb-6">
+
+                                    <div class="flex items-center gap-3">
+
+                                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white"
+                                            id="editModalTitle">
+                                            Edit Arsip
+                                        </h3>
+
+                                    </div>
+                                    <button onclick="document.getElementById('editModal').classList.add('hidden')"
+                                        class="text-slate-400 hover:text-slate-600 text-lg">
+
+                                        ✕
+
+                                    </button>
+
+                                </div>
+                                <form id="editForm" class="space-y-4">
+                                    <input type="hidden" id="editFileId">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                            for="editJudul">Judul Arsip</label>
+                                        <input id="editJudul"
+                                            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all"
+                                            type="text" />
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                                for="editTahun">Tahun</label>
+                                            <input id="editTahun"
+                                                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all"
+                                                type="number" min="1900" max="2100" />
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                                for="editKategori">Kategori</label>
+                                            <select id="editKategori"
+                                                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all appearance-none cursor-pointer">
+                                                <option>Keuangan</option>
+                                                <option>HRD</option>
+                                                <option>Logistik</option>
+                                                <option>Legal</option>
+                                                <option>Marketing</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                            for="editLink">Link Excel / Spreadsheet</label>
+                                        <input id="editLink"
+                                            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 transition-all"
+                                            type="url" placeholder="https://..." />
+                                        <p id="editLinkError"
+                                            class="mt-2 text-xs text-red-600 dark:text-red-400 hidden">
+                                        </p>
+                                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Validasi link: hanya
+                                            menerima URL Google Sheets yang valid.</p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Atau Upload File Excel / CSV
+                                        </label>
+                                        <div id="editFileDropzone"
+                                            class="rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 p-4 bg-slate-50 dark:bg-slate-800/40 transition">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div>
+                                                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                        Drag &
+                                                        drop file di sini</p>
+                                                    <p id="editFileInfo"
+                                                        class="text-xs text-slate-500 dark:text-slate-400">
+                                                        Belum ada file dipilih (.pdf, .xlsx, atau .csv)</p>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <label for="editFileInput"
+                                                        class="cursor-pointer inline-flex items-center rounded-lg bg-yellow-600 px-3 py-2 text-xs font-semibold text-white hover:bg-yellow-700 transition-colors">
+                                                        Browse
+                                                    </label>
+                                                    <button id="editFileClearBtn" type="button"
+                                                        class="inline-flex items-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                                                        Reset
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <input id="editFileInput" class="hidden" type="file"
+                                                accept=".xlsx,.csv,.pdf" />
+                                        </div>
+                                        <p id="editSourceError"
+                                            class="mt-2 text-xs text-red-600 dark:text-red-400 hidden">
+                                        </p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
+                        <button id="editModalSaveBtn" type="button"
+                            class="inline-flex w-full justify-center rounded-lg bg-yellow-600 hover:bg-yellow-700 px-3 py-2 text-sm font-semibold text-white shadow-sm sm:w-auto transition-colors">
+                            Simpan Perubahan
+                        </button>
+                        <button
+                            class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors"
+                            onclick="document.getElementById('editModal').classList.add('hidden')"
+                            type="button">Batal</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL KONFIRMASI HAPUS ARSIP -->
+        <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
+            id="deleteModal" role="dialog">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                onclick="document.getElementById('deleteModal').classList.add('hidden')"></div>
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+                <div
+                    class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-center shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700">
+                    <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div
+                            class="mx-auto flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                            <span class="material-icons-outlined text-red-600 dark:text-red-400 text-2xl">delete</span>
+                        </div>
+                        <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white"
+                            id="deleteModalTitle">
+                            Konfirmasi Hapus Arsip</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Apakah anda yakin ingin menghapus
+                                arsip
+                                <span id="deleteFileName"
+                                    class="font-semibold text-slate-700 dark:text-slate-300"></span>?
+                                Tindakan ini tidak dapat diulang.
+                            </p>
+                        </div>
+                        <input type="hidden" id="deleteFileId">
+                        <input type="hidden" id="deleteFilePath">
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:justify-center gap-3">
+                        <button id="confirmDeleteBtn"
+                            class="inline-flex w-full justify-center rounded-lg bg-red-600 hover:bg-red-700 px-8 py-2.5 text-sm font-semibold text-white shadow-sm sm:w-auto transition-colors min-w-[100px]"
+                            type="button">
+                            Ya, Hapus
+                        </button>
+                        <button
+                            class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-8 py-2.5 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto transition-colors min-w-[100px]"
+                            onclick="document.getElementById('deleteModal').classList.add('hidden')"
+                            type="button">Batal</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL SUKSES MODIFIKASI -->
+        <div aria-labelledby="modal-title" aria-modal="true" class="hidden fixed inset-0 z-50 overflow-y-auto"
+            id="successModal" role="dialog">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                onclick="document.getElementById('successModal').classList.add('hidden')"></div>
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+                <div
+                    class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] text-center shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200 dark:border-slate-700">
+                    <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div
+                            class="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
+                            <span class="material-symbols-outlined text-green-600 text-3xl">
+                                check_circle
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white"
+                            id="successModalTitle">
+                            Berhasil!</h3>
+                        <div class="mt-3">
+                            <p id="successModalMessage" class="text-sm text-slate-600 dark:text-slate-300">
+                                Perubahan telah berhasil disimpan.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:justify-center">
+                        <button id="successModalCloseBtn"
+                            class="inline-flex w-full justify-center rounded-lg bg-green-600 hover:bg-green-700 px-8 py-2.5 text-sm font-semibold text-white shadow-sm sm:w-auto transition-colors"
+                            type="button">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+
+            <div class="flex min-h-full items-center justify-center p-4">
+
+                <div class="bg-white dark:bg-[#1a2634] rounded-xl shadow-xl max-w-md w-full p-6 text-center">
+
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 mb-4">
+                        <span class="material-icons-outlined text-red-600 text-2xl">error</span>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                        Upload Gagal
+                    </h3>
+
+                    <p id="errorModalMessage" class="text-sm text-slate-500 mt-2">
+                        Terjadi kesalahan saat upload
+                    </p>
+
+                    <button onclick="document.getElementById('errorModal').classList.add('hidden')"
+                        class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg">
+
+                        OK
+
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL PREVIEW FILE -->
+        <div id="previewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+
+            <div class="absolute inset-0 bg-black/50"
+                onclick="document.getElementById('previewModal').classList.add('hidden')">
+            </div>
+
+            <div
+                class="relative bg-white dark:bg-[#1a2634] w-[96vw] max-w-none h-[92vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                <!-- HEADER -->
+                <div
+                    class="flex justify-between items-center px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+
+                    <h3 class="font-semibold text-slate-900 dark:text-white">
+                        Preview Arsip
+                    </h3>
+
+                    <button onclick="document.getElementById('previewModal').classList.add('hidden')"
+                        class="text-slate-500 hover:text-red-500 text-lg">
+
+                        ✖
+
+                    </button>
+
+                </div>
+
+                <!-- CONTENT -->
+                <div class="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900">
+
+                    <iframe id="previewFrame" class="w-full h-full border-0" allowfullscreen>
+                    </iframe>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- TopAppBar Component -->
+        <header
+            class="sticky top-0 z-40 flex items-center justify-between px-8 py-4 w-full bg-white/30 backdrop-blur-lg border-b border-white/20">
+            <!-- LEFT SPACE -->
+            <div class="w-64"></div>
+
+            <!-- CENTER SEARCH -->
+            <div class="flex-1 flex justify-center">
+
+                <div class="relative w-full max-w-xl group">
+
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-slate-500 group-focus-within:text-primary">
+                            search
+                        </span>
+                    </div>
+
+                    <input id="archiveSearch"
+                        class="block w-full pl-12 pr-4 py-3 bg-white/40 border border-white/50 rounded-xl focus:ring-2 focus:ring-primary/20 text-sm placeholder-slate-500 outline-none"
+                        placeholder="Cari file..." type="text">
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT MENU -->
+            <div class="flex items-center gap-3">
+
+                <button onclick="document.getElementById('helpModal').classList.remove('hidden')"
+                    class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
+
+                    <span class="material-symbols-outlined">help</span>
 
                 </button>
 
-            </div>
-        </div>
-    </div>
+                <button onclick="window.location.href='settings.html'"
+                    class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
 
-    <!-- MODAL PREVIEW FILE -->
-    <div id="previewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-
-        <div class="absolute inset-0 bg-black/50"
-            onclick="document.getElementById('previewModal').classList.add('hidden')">
-        </div>
-
-        <div
-            class="relative bg-white dark:bg-[#1a2634] w-[75%] max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
-
-            <!-- HEADER -->
-            <div class="flex justify-between items-center px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-
-                <h3 class="font-semibold text-slate-900 dark:text-white">
-                    Preview Arsip
-                </h3>
-
-                <button onclick="document.getElementById('previewModal').classList.add('hidden')"
-                    class="text-slate-500 hover:text-red-500 text-lg">
-
-                    ✖
+                    <span class="material-symbols-outlined">settings</span>
 
                 </button>
 
+                <div onclick="window.location.href='profile-admin.html'" class="flex items-center gap-2 cursor-pointer">
+
+                    <div id="profileBtn"
+                        class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-primary-container text-white font-bold text-sm shadow-md">
+                    </div>
+
+                    <span id="profileNameTop" class="text-sm font-semibold text-slate-700 hidden md:block">
+                    </span>
+
+                </div>
+
             </div>
 
-            <!-- CONTENT -->
-            <div class="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900">
+        </header>
+        <!-- Page Content -->
+        <div class="p-8 space-y-10 custom-scrollbar overflow-y-auto">
+            <!-- Editorial Stats Section -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div
+                    class="group relative overflow-hidden bg-white/50 backdrop-blur-md p-8 rounded-lg shadow-sm hover:shadow-lg transition-all border border-white/60">
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity">
+                        <span class="material-symbols-outlined text-9xl">inventory_2</span>
+                    </div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1">Total Arsip</p>
+                    <div class="flex items-baseline gap-2">
+                        <h2 id="totalArsip" class="text-5xl font-extrabold text-slate-800 tracking-tight">
+                            0
+                        </h2>
+                        <span id="weeklyGrowth" class="text-primary font-bold text-sm"></span>
+                    </div>
+                </div>
+                <div
+                    class="group bg-primary-container p-8 rounded-lg shadow-lg shadow-primary-container/30 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                    <p class="text-[11px] font-bold text-white/70 uppercase tracking-[0.15em] mb-1">Arsip Baru (Bulan
+                        Ini)</p>
+                    <div class="flex items-baseline gap-2">
+                        <h2 id="monthlyCount" class="text-5xl font-extrabold text-white tracking-tight">
+                            0
+                        </h2>
+                        <span id="statsUpdated" class="text-white/80 font-medium text-sm"></span>
+                    </div>
+                </div>
+                <div
+                    class="group bg-white/50 backdrop-blur-md p-8 rounded-lg shadow-sm hover:shadow-lg transition-all border border-white/60">
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1">Kategori Terbanyak
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <h2 id="topCategory" class="text-3xl font-extrabold text-slate-800 tracking-tight">
+                            -
+                        </h2>
+                        <div
+                            class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-md text-[10px] font-bold">
+                            TOP</div>
+                    </div>
+                    <p id="topCategoryPercent" class="text-xs text-slate-500 mt-2"></p>
+                </div>
+            </section>
+            <!-- Toolbar & Filter Area -->
+            <section class="flex items-center justify-between flex-wrap gap-4">
 
-                <iframe id="previewFrame" class="w-full h-full" src="" allow="autoplay"></iframe>
+                <!-- LEFT SIDE -->
+                <div class="flex items-center gap-4">
+
+                    <h3 class="text-xl font-bold text-slate-800">
+                        My Files
+                    </h3>
+
+                    <!-- GRID / LIST SWITCH -->
+                    <div
+                        class="relative flex items-center bg-white/40 backdrop-blur-md p-1 rounded-xl border border-white/50 w-[150px]">
+
+                        <!-- SLIDER -->
+                        <div id="viewSlider"
+                            class="absolute top-1 bottom-1 left-1 w-[70px] bg-white rounded-lg shadow transition-all duration-300">
+                        </div>
+
+                        <!-- GRID BUTTON -->
+                        <button id="gridBtn" onclick="setGridView()"
+                            class="relative z-10 flex items-center justify-center gap-1 w-[70px] py-1.5 text-xs font-bold text-primary">
+
+                            <span class="material-symbols-outlined text-[18px]"
+                                style="font-variation-settings:'FILL' 1">
+                                grid_view
+                            </span>
+
+                            Grid
+
+                        </button>
+
+                        <!-- LIST BUTTON -->
+                        <button id="listBtn" onclick="setListView()"
+                            class="relative z-10 flex items-center justify-center gap-1 w-[70px] py-1.5 text-xs font-bold text-slate-600">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                format_list_bulleted
+                            </span>
+
+                            List
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RIGHT SIDE -->
+                <div class="flex items-center gap-2">
+
+                    <select id="yearFilter"
+                        class="text-xs font-semibold text-slate-600 bg-white/40 backdrop-blur-md border border-white/50 rounded-lg px-3 py-2">
+
+                        <option value="">Semua Tahun</option>
+
+                    </select>
+
+                    <select id="categoryFilter"
+                        class="text-xs font-semibold text-slate-600 bg-white/40 backdrop-blur-md border border-white/50 rounded-lg px-3 py-2">
+
+                        <option value="">Semua Kategori</option>
+
+                    </select>
+
+                </div>
+
+            </section>
+            <!-- File Grid -->
+            <section id="archiveContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+            </section>
+
+            <div class="group border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-8 bg-white/30 backdrop-blur-md hover:bg-white/50 hover:border-primary/40 transition-all cursor-pointer"
+                id="newArchiveCard">
+
+                <div
+                    class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors mb-4">
+                    <span class="material-symbols-outlined text-3xl">add</span>
+                </div>
+
+                <p class="text-sm font-bold text-slate-500 group-hover:text-primary">
+                    Tambah Arsip Baru
+                </p>
 
             </div>
+            <section class="mt-4 pt-10">
+
+                <div class="bg-white/50 backdrop-blur-md rounded-2xl border border-white/60 p-6">
+
+                    <!-- HEADER -->
+                    <div class="flex items-center justify-between mb-6">
+
+                        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">history</span>
+                            Recent Activity
+                        </h3>
+
+                        <button id="recentActivity" onclick="window.location.href='activity-logs.html'"
+                            class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition">
+
+                            <span class="material-symbols-outlined text-sm">
+                                open_in_new
+                            </span>
+
+                            View All Logs
+
+                        </button>
+
+                    </div>
+
+                    <!-- ACTIVITY LIST -->
+                    <div id="activityLogBody" class="space-y-3 divide-y divide-slate-200">
+
+                        <div class="flex items-center gap-4 animate-pulse">
+
+                            <div class="w-10 h-10 rounded-full bg-slate-200"></div>
+
+                            <div class="flex-1">
+                                <div class="h-3 bg-slate-200 rounded w-1/3 mb-2"></div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+            <!-- Contextual FAB (Only shown for main task screen) -->
+            <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
+                class="fixed right-8 bottom-8 w-16 h-16 bg-primary-container text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 md:hidden">
+
+                <span class="material-symbols-outlined text-3xl">
+                    add
+                </span>
+
+            </button>
+            </section>
 
         </div>
 
-    </div>
+        <script type="module" src="../assets/js/dashboard_admin/admin-core.js"></script>
 
-    <script type="module" src="../assets/js/dashboard-admin.js"></script>
-
-    <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-3"></div>
-
-    <script>
-
-        document.getElementById("importCSVBtn").addEventListener("click", () => {
-
-            document.getElementById("importCSVInput").click();
-
-        });
-
-    </script>
 </body>
 
 </html>

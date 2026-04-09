@@ -69,6 +69,7 @@ let allArchives = [];        // semua data dari firestore
 let filteredArchives = [];   // data setelah filter
 let allActivityLogs = [];    // semua activity logs user
 let lastAccessedArchive = null;  // archive yang terakhir diakses
+let viewMode = "grid";
 
 let currentUserUID = null;
 
@@ -76,7 +77,7 @@ let currentPage = 1;
 const rowsPerPage = 10;
 let currentEditingFileId = null;
 let autoSaveTimer = null;
-
+let usersCache = {};
 
 function getPreviewUrl(fileId) {
 
@@ -88,6 +89,8 @@ function getPreviewUrl(fileId) {
 // AUTH CHECK
 // ===============================
 onAuthStateChanged(auth, async (user) => {
+
+    console.log("UID LOGIN:", user.uid);
 
     if (!user) {
         window.location.href = "../index.html";
@@ -130,6 +133,7 @@ onAuthStateChanged(auth, async (user) => {
         // Load profile ke sidebar
         loadUserProfile(userData);
         setupProfileRedirect();
+        await loadUsers();
         loadArchives();
 
     } catch (error) {
@@ -175,14 +179,35 @@ function loadUserProfile(userData) {
     const email = userData.email || auth.currentUser?.email || "user@email.com";
 
     if (nameEl) nameEl.textContent = email;
-
     if (roleEl) roleEl.textContent = "Pegawai";
 
     if (avatarEl) {
-
         const initial = email.charAt(0).toUpperCase();
         avatarEl.textContent = initial;
+    }
 
+    // ===============================
+    // TOP BAR AVATAR
+    // ===============================
+
+    const profileBtn = document.getElementById("profileBtn");
+    const profileNameTop = document.getElementById("profileNameTop");
+
+    const name = userData.nama || userData.name || userData.email || "User";
+
+    if (profileBtn) {
+
+        const parts = name.trim().split(" ");
+
+        let initial = parts.length > 1
+            ? parts[0][0] + parts[1][0]
+            : parts[0][0];
+
+        profileBtn.textContent = initial.toUpperCase();
+    }
+
+    if (profileNameTop) {
+        profileNameTop.textContent = name;
     }
 
 }
@@ -220,7 +245,7 @@ async function loadArchives() {
 
         populateFilters(allArchives);
 
-        renderTable();
+        renderArchiveGrid();
         renderPagination();
 
         await Promise.all([
@@ -228,7 +253,7 @@ async function loadArchives() {
             loadActivityLogs(),
             loadActivityChart(),
             loadActivitySummary(),
-            loadTopAccessedFiles()
+            loadRecentFiles()
         ]);
 
     } catch (err) {
@@ -239,12 +264,12 @@ async function loadArchives() {
 
         if (tableBody) {
             tableBody.innerHTML = `
-<tr>
-<td colspan="5" class="px-6 py-6 text-center text-red-500">
-Gagal memuat data arsip
-</td>
-</tr>
-`;
+            <tr>
+            <td colspan="5" class="px-6 py-6 text-center text-red-500">
+            Gagal memuat data arsip
+            </td>
+            </tr>
+            `;
         }
 
     }
@@ -253,24 +278,63 @@ Gagal memuat data arsip
 
 }
 
-// ===============================
-// RENDER TABLE
-// ===============================
+function getFileTypeInfo(fileType) {
 
-function renderTable() {
+    if (!fileType) return { icon: "description", color: "text-slate-500", label: "FILE" };
 
-    const tableBody = document.getElementById("pegawaiTableBody");
+    fileType = fileType.toLowerCase();
 
-    tableBody.innerHTML = "";
+    if (fileType.includes("pdf")) {
+        return { icon: "picture_as_pdf", color: "text-red-500", label: "PDF" };
+    }
+
+    if (fileType.includes("excel") || fileType.includes("sheet")) {
+        return { icon: "table_view", color: "text-green-600", label: "XLS" };
+    }
+
+    return { icon: "description", color: "text-slate-500", label: "FILE" };
+}
+
+function getThumbnail(fileId) {
+
+    if (!fileId) return null;
+
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+
+}
+
+function renderArchiveGrid() {
+
+    const container = document.getElementById("archiveContainer");
+    const archiveCount = document.getElementById("archiveCount");
+
+    if (!container) return;
+
+    // jika mode list → render list
+    if (viewMode === "list") {
+        renderArchiveList();
+        return;
+    }
+
+    // reset class grid (supaya balik normal setelah list)
+    container.className =
+        "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 transition-all duration-300";
+
+    // update jumlah file
+    if (archiveCount) {
+        archiveCount.textContent = filteredArchives.length + " Files";
+    }
+
+    container.innerHTML = "";
 
     if (filteredArchives.length === 0) {
-        tableBody.innerHTML = `
-        <tr>
-            <td colspan="5" class="px-6 py-6 text-center text-slate-500">
-                Tidak ada arsip
-            </td>
-        </tr>
+
+        container.innerHTML = `
+        <div class="text-slate-400 text-sm">
+        Tidak ada arsip
+        </div>
         `;
+
         return;
     }
 
@@ -278,53 +342,202 @@ function renderTable() {
     const end = start + rowsPerPage;
 
     const pageData = filteredArchives.slice(start, end);
-    let rows = "";
 
-    pageData.forEach((item, index) => {
+    pageData.forEach(item => {
 
-        rows += `
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+        const year = item.tanggal ? item.tanggal.split("-")[0] : "-";
+        const fileTypeInfo = getFileTypeInfo(item.fileType);
+        const thumbnail = getThumbnail(item.filePath);
 
-            <td class="px-6 py-4">${start + index + 1}</td>
+        // ambil uploader dari users cache
+        const users = item.allowedUsers || [];
 
-            <td class="px-6 py-4 font-medium text-slate-800 dark:text-white">
-            ${item.nama || item.name || "Untitled File"}
-            </td>
+        const avatars = users.slice(0, 3).map(uid => {
 
-            <td class="px-6 py-4 text-slate-500">
-            ${item.tanggal ? item.tanggal.split("-")[0] : "-"}
-            </td>
+            const user = usersCache[uid];
+            const email = user?.email || "user";
 
-            <td class="px-6 py-4">
-            <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">
-            ${item.kategori || "-"}
-            </span>
-            </td>
+            return `
+            <div title="${email}"
+            class="w-10 h-10 rounded-full bg-primary text-white text-base flex items-center justify-center font-bold border-2 border-white shadow-sm">
 
-            <td class="px-6 py-4 text-right">
+            ${email.charAt(0).toUpperCase()}
 
-            <button 
-            onclick="handleArchiveAccess('${item.id}', '${(item.nama || '-').replace(/'/g, "\\'")}')"
-            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-white hover:bg-primary-dark transition">
-
-            <span class="material-icons-outlined text-sm">open_in_new</span>
-            Buka
-
-            </button>
-
-            </td>
-
-            </tr>
+            </div>
             `;
+
+            }).join("");
+
+            const extra = users.length > 3 ? `
+            <div class="text-xs text-slate-500 ml-1">
+            +${users.length - 3}
+            </div>` : "";
+
+            const card = `
+
+                <div class="glass-panel rounded-3xl border border-white/70 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col">
+
+                    <div class="h-36 bg-slate-100 relative flex items-center justify-center overflow-hidden">
+
+                    ${thumbnail ? `
+                    <img src="${thumbnail}" loading="lazy" class="w-full h-full object-cover"/>
+                    ` : `
+                    <span class="material-symbols-outlined text-5xl ${fileTypeInfo.color}">
+                    ${fileTypeInfo.icon}
+                    </span>
+                    `}
+
+                    <div class="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full bg-white/90 text-slate-700 shadow">
+                    ${fileTypeInfo.label}
+                    </div>
+
+                    </div>
+
+                    <div class="p-4 flex flex-col flex-1">
+
+                    <h5 class="text-lg font-bold text-slate-800 truncate">
+                    ${item.nama || "Untitled File"}
+                    </h5>
+
+                    <div class="text-sm text-slate-500 mt-1 uppercase tracking-wider font-medium">
+                    ${item.kategori || "File"} • ${year}
+                    </div>
+
+                    </div>
+
+                    <div class="px-6 py-3 border-t border-white/40 flex items-center justify-between">
+                    <div class="flex items-center -space-x-2 ml-1">
+                    ${avatars}
+                    ${extra}
+
+                    </div>
+
+                    <button
+                    onclick="handleArchiveAccess('${item.id}','${(item.nama || "-").replace(/'/g, "\\'")}')"
+                    class="px-4 py-1.5 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition">
+
+                    Open
+
+                    </button>
+
+                    </div>
+
+                </div>
+                `;
+
+                    container.innerHTML += card;
+
+                });
+
+            }
+
+function renderArchiveList() {
+
+    const container = document.getElementById("archiveContainer");
+
+    if (!container) return;
+
+    container.className = "flex flex-col gap-2";
+
+    container.innerHTML = `
+
+    <div class="grid grid-cols-12 px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+
+        <div class="col-span-5">Name</div>
+        <div class="col-span-2">Category</div>
+        <div class="col-span-1">Year</div>
+        <div class="col-span-3">User Access</div>
+        <div class="col-span-1 text-right">Open</div>
+
+    </div>
+
+    `;
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    const pageData = filteredArchives.slice(start, end);
+
+    pageData.forEach(item => {
+
+        const year = item.tanggal ? item.tanggal.split("-")[0] : "-";
+
+        const users = item.allowedUsers || [];
+
+        const avatars = users.slice(0, 3).map(uid => {
+
+            const user = usersCache[uid];
+
+            const email = user?.email || "user";
+
+            return `
+            <div title="${email}"
+            class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold border-2 border-white">
+
+            ${email.charAt(0).toUpperCase()}
+
+            </div>
+            `;
+
+        }).join("");
+
+        const extra = users.length > 3 ? `
+        <div class="text-xs text-slate-500 ml-1">
+        +${users.length - 3}
+        </div>` : "";
+
+        const row = `
+
+        <div class="grid grid-cols-12 items-center px-6 py-4 bg-white/70 backdrop-blur rounded-xl hover:bg-white transition border border-white/40">
+
+            <div class="col-span-5 flex items-center gap-3">
+
+                <span class="material-symbols-outlined text-slate-500">
+                description
+                </span>
+
+                <span class="text-base font-semibold text-slate-800 truncate">
+                ${item.nama || "Untitled File"}
+                </span>
+
+            </div>
+
+            <div class="col-span-2 text-base text-slate-700 font-semibold">                
+            ${item.kategori || "File"}
+            </div>
+
+            <div class="col-span-1 text-base text-slate-600 font-medium">                
+            ${year}
+            </div>
+
+            <div class="col-span-3 flex items-center -space-x-2">
+
+                ${avatars}
+                ${extra}
+
+            </div>
+
+            <div class="col-span-1 flex justify-end">
+
+               <button
+                onclick="handleArchiveAccess('${item.id}','${(item.nama || "-").replace(/'/g, "\\'")}')"
+                class="px-4 py-1.5 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition">
+
+                Open
+
+                </button>
+
+            </div>
+
+        </div>
+
+        `;
+
+        container.innerHTML += row;
 
     });
 
-    tableBody.innerHTML = rows;
-
-
 }
-
-
 // ===============================
 // POPULATE FILTER
 // ===============================
@@ -412,7 +625,7 @@ function applyFilters() {
 
     currentPage = 1;
 
-    renderTable();
+    renderArchiveGrid();
     renderPagination();
 
 }
@@ -431,6 +644,35 @@ document.addEventListener("DOMContentLoaded", () => {
     if (yearSelect) yearSelect.addEventListener("change", applyFilters);
     if (categorySelect) categorySelect.addEventListener("change", applyFilters);
 
+    const gridBtn = document.getElementById("gridViewBtn");
+    const listBtn = document.getElementById("listViewBtn");
+
+    if (gridBtn && listBtn) {
+
+        gridBtn.addEventListener("click", () => {
+
+            viewMode = "grid";
+
+            gridBtn.classList.add("bg-white", "shadow");
+            listBtn.classList.remove("bg-white", "shadow");
+
+            renderArchiveGrid();
+
+        });
+
+        listBtn.addEventListener("click", () => {
+
+            viewMode = "list";
+
+            listBtn.classList.add("bg-white", "shadow");
+            gridBtn.classList.remove("bg-white", "shadow");
+
+            renderArchiveGrid();
+
+        });
+
+    }
+
 });
 
 // ===============================
@@ -446,6 +688,29 @@ function renderPagination() {
 
     const totalPages = Math.max(1, Math.ceil(filteredArchives.length / rowsPerPage));
 
+    // PREVIOUS BUTTON
+    const prevBtn = document.createElement("button");
+
+    prevBtn.innerHTML = "‹";
+
+    prevBtn.className = `
+    px-4 py-2 rounded-xl text-sm font-semibold
+    bg-white/60 hover:bg-white border
+    `;
+
+    prevBtn.disabled = currentPage === 1;
+
+    prevBtn.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderArchiveGrid();
+            renderPagination();
+        }
+    };
+
+    container.appendChild(prevBtn);
+
+    // PAGE NUMBERS
     for (let i = 1; i <= totalPages; i++) {
 
         const btn = document.createElement("button");
@@ -453,15 +718,17 @@ function renderPagination() {
         btn.textContent = i;
 
         btn.className = `
-        px-3 py-1 border rounded text-sm
-        ${i === currentPage ? "bg-primary text-white" : "bg-white"}
+        px-4 py-2 rounded-xl text-sm font-semibold transition
+        ${i === currentPage
+                ? "bg-primary text-white shadow-md"
+                : "bg-white/60 hover:bg-white border"}
         `;
 
         btn.onclick = () => {
 
             currentPage = i;
 
-            renderTable();
+            renderArchiveGrid();
             renderPagination();
 
         };
@@ -470,7 +737,35 @@ function renderPagination() {
 
     }
 
+    // NEXT BUTTON
+    const nextBtn = document.createElement("button");
+
+    nextBtn.innerHTML = "›";
+
+    nextBtn.className = `
+    px-4 py-2 rounded-xl text-sm font-semibold
+    bg-white/60 hover:bg-white border
+    `;
+
+    nextBtn.disabled = currentPage === totalPages;
+
+    nextBtn.onclick = () => {
+
+        if (currentPage < totalPages) {
+
+            currentPage++;
+
+            renderArchiveGrid();
+            renderPagination();
+
+        }
+
+    };
+
+    container.appendChild(nextBtn);
+
 }
+
 // ===============================
 // CALCULATE STATISTICS
 // ===============================
@@ -553,7 +848,6 @@ async function calculateStatistics() {
 // ===============================
 // LOG ACCESS - SAVE TO ACTIVITY LOGS
 // ===============================
-
 async function logAccess(fileId, fileName) {
 
     try {
@@ -628,18 +922,21 @@ async function increaseFileAccessCount(fileId) {
 // LOAD TOP ACCESSED FILES
 // ===============================
 
-async function loadTopAccessedFiles() {
+async function loadRecentFiles() {
 
     try {
 
         const q = query(
-            collection(db, "files"),
-            where("allowedUsers", "array-contains", currentUserUID)
+            collection(db, "activityLogs"),
+            where("uid", "==", currentUserUID),
+            where("action", "==", "access"),
+            orderBy("timestamp", "desc"),
+            limit(5)
         );
 
         const snapshot = await getDocs(q);
 
-        const container = document.getElementById("topAccessedFiles");
+        const container = document.getElementById("recentFiles");
 
         if (!container) return;
 
@@ -649,51 +946,26 @@ async function loadTopAccessedFiles() {
 
             container.innerHTML = `
             <p class="text-sm text-slate-500">
-                No accessed files yet
+                No recent files
             </p>
             `;
 
             return;
-
         }
-
-        let files = [];
 
         snapshot.forEach(docSnap => {
 
             const data = docSnap.data();
 
-            files.push({
-                id: docSnap.id,
-                ...data
-            });
-
-        });
-
-        // sort berdasarkan accessCount
-        files.sort((a, b) => (b.accessCount || 0) - (a.accessCount || 0));
-
-        const topFiles = files.slice(0, 5);
-
-        topFiles.forEach(data => {
-
             const row = `
-            <div class="flex justify-between items-center py-2 border-b">
+            <div class="flex justify-between py-2 border-b">
 
-                <div class="flex items-center gap-2">
+                <span class="text-sm text-slate-700">
+                    ${data.fileName || "Untitled"}
+                </span>
 
-                    <span class="material-icons-outlined text-slate-500">
-                        description
-                    </span>
-
-                    <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
-                        ${data.nama || "Untitled"}
-                    </span>
-
-                </div>
-
-                <span class="text-xs text-slate-500">
-                    ${data.accessCount || 0}x
+                <span class="text-xs text-slate-400">
+                    Opened
                 </span>
 
             </div>
@@ -705,7 +977,7 @@ async function loadTopAccessedFiles() {
 
     } catch (err) {
 
-        console.error("Top accessed error:", err);
+        console.error("Recent files error:", err);
 
     }
 
@@ -788,11 +1060,11 @@ async function loadActivityLogs() {
 
             const row = `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                <td class="px-6 py-4 text-sm font-medium text-slate-800 dark:text-white">
-                    ${dateString}
-                </td>
-                <td class="px-6 py-4 text-sm font-medium text-slate-800 dark:text-white">
-                    ${log.fileName || "-"}
+                <td class="px-4 py-3 text-xs text-slate-700">                    
+                ${dateString}
+                </td>   
+                <td class="px-4 py-3 text-xs text-slate-700">                    
+                ${log.fileName || "-"}
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-500">
                     ${log.action === "login_pegawai" ? "User login to Dashboard" : "File accessed from Dashboard"}
@@ -844,52 +1116,90 @@ function renderRecentActivity(userLogs) {
 // HANDLE ARCHIVE ACCESS
 // ===============================
 
-async function handleArchiveAccess(fileId, fileName) {
-    // Log the access and wait for it to complete
-    await logAccess(fileId, fileName);
-    await increaseFileAccessCount(fileId);
-    await updateLastActive();
+function handleArchiveAccess(fileId, fileName) {
 
-    // Refresh activity logs after access is logged
-    await loadActivityLogs();
+    // logging jalan di background (tidak blocking preview)
+    logAccess(fileId, fileName);
+    increaseFileAccessCount(fileId);
+    updateLastActive();
+    loadActivityLogs();
 
-    // Find the archive and open it
     const archive = allArchives.find(a => a.id === fileId);
-
     if (!archive) return;
 
+    let url = "";
+
     // ===============================
-    // FILE GOOGLE DRIVE
+    // FILE UPLOAD
     // ===============================
-    if (archive.driveFileId) {
+    if (archive.filePath) {
 
-        console.log("Opening Excel editor for:", archive.driveFileId);
+        const fileId = archive.filePath;
+        const type = (archive.fileType || "").toLowerCase();
 
-        currentEditingFileId = archive.driveFileId;
+        // PDF
+        if (type.includes("pdf")) {
 
-        openPreview();
+            url = `https://docs.google.com/viewer?embedded=true&url=https://drive.google.com/uc?id=${fileId}`;
 
-        setTimeout(() => {
-            loadExcelEditor(archive.driveFileId);
-        }, 100);
+        }
 
-        return;
+        // IMAGE
+        else if (
+            type.includes("png") ||
+            type.includes("jpg") ||
+            type.includes("jpeg")
+        ) {
+
+            url = `https://drive.google.com/uc?id=${fileId}`;
+
+        }
+
+        // EXCEL
+        else if (
+            type.includes("xls") ||
+            type.includes("xlsx") ||
+            type.includes("csv")
+        ) {
+
+            url = `https://drive.google.com/file/d/${fileId}/preview`;
+
+        }
+
+        // fallback
+        else {
+
+            url =
+                "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
+                + fileId;
+
+        }
 
     }
 
     // ===============================
-    // GOOGLE SPREADSHEET
+    // GOOGLE SPREADSHEET LINK
     // ===============================
-    if (archive.spreadsheetLink) {
+    else if (archive.spreadsheetLink) {
 
-        const previewUrl = archive.spreadsheetLink.replace("/edit", "/preview");
+        const sheetId = archive.spreadsheetLink
+            .split("/d/")[1]
+            ?.split("/")[0];
 
-        openPreview(previewUrl);
-
-        return;
+        url = `https://docs.google.com/spreadsheets/d/${sheetId}/edit?rm=minimal`;
 
     }
 
+    if (!url) {
+        alert("File tidak tersedia");
+        return;
+    }
+
+    const frame = document.getElementById("previewFrame");
+
+    if (frame) frame.src = url;
+
+    openPreview();
 }
 
 // ===============================
@@ -1124,9 +1434,13 @@ async function loadActivitySummary() {
 
         }
 
-        document.getElementById("todayActivity").textContent = todayCount;
-        document.getElementById("totalLogs").textContent = totalLogs;
-        document.getElementById("mostActiveDay").textContent = mostActiveDay;
+        const todayEl = document.getElementById("todayActivity");
+        const totalEl = document.getElementById("totalLogs");
+        const mostActiveEl = document.getElementById("mostActiveDay");
+
+        if (todayEl) todayEl.textContent = todayCount;
+        if (totalEl) totalEl.textContent = totalLogs;
+        if (mostActiveEl) mostActiveEl.textContent = mostActiveDay;
 
     } catch (err) {
 
@@ -1144,12 +1458,11 @@ async function loadActivitySummary() {
 window.handleArchiveAccess = handleArchiveAccess;
 window.openLastAccessedArchive = openLastAccessedArchive;
 
-const logoutBtn = document.getElementById("confirmLogoutBtn");
+const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
 
-if (logoutBtn) {
+if (confirmLogoutBtn) {
 
-    logoutBtn.addEventListener("click", async () => {
-
+    confirmLogoutBtn.addEventListener("click", async () => {
         try {
 
             // reset login session
@@ -1285,7 +1598,13 @@ function resetIdleTimer() {
 // aktivitas yang dianggap sebagai aktivitas user
 ["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
 
-    document.addEventListener(event, resetIdleTimer);
+    document.addEventListener(event, () => {
+
+        resetIdleTimer();
+
+        updateLastActive();
+
+    });
 
 });
 
@@ -1300,6 +1619,8 @@ function openPreview() {
 
     modal.classList.remove("hidden");
 
+    updateLastActive();
+
 }
 
 async function loadExcelEditor(fileId) {
@@ -1311,17 +1632,26 @@ async function loadExcelEditor(fileId) {
 
     const base64Data = (await response.text()).trim();
 
-    const loading = document.getElementById("previewLoading");
-    const table = document.getElementById("excelEditor");
-
-    if (loading) loading.style.display = "none";
-    if (table) table.classList.remove("hidden");
-
-    const cleanBase64 = base64Data
+    // bersihkan prefix data URL jika ada
+    let cleanBase64 = base64Data
+        .replace(/^data:.*;base64,/, "")
         .replace(/\s/g, "")
         .replace(/[\r\n]+/g, "");
 
-    const binary = atob(cleanBase64);
+    // decode base64 dengan aman
+    let binary;
+
+    try {
+
+        binary = atob(cleanBase64);
+
+    } catch (err) {
+
+        console.error("Base64 decode failed:", err);
+        alert("File preview gagal dimuat");
+        return;
+
+    }
 
     const bytes = new Uint8Array(binary.length);
 
@@ -1342,11 +1672,16 @@ async function loadExcelEditor(fileId) {
 function renderExcelTable(data) {
 
     const table = document.getElementById("excelEditor");
+    const loading = document.getElementById("previewLoading");
 
-    if (!table) {
-        console.error("Excel editor table not found");
-        return;
-    }
+    if (!table) return;
+
+    // sembunyikan loading
+    if (loading) loading.style.display = "none";
+
+    // tampilkan tabel
+    table.classList.remove("hidden");
+
     table.innerHTML = "";
 
     data.forEach((row) => {
@@ -1472,3 +1807,50 @@ function closePreview() {
 
 window.openPreview = openPreview;
 window.closePreview = closePreview;
+
+// ===============================
+// HEARTBEAT - UPDATE LAST ACTIVE
+// ===============================
+
+// update lastActive setiap 5 menit
+setInterval(() => {
+
+    updateLastActive();
+
+}, 5 * 60 * 1000);
+
+// ===============================
+// UPDATE LAST ACTIVE SAAT TAB DITUTUP
+// ===============================
+
+window.addEventListener("beforeunload", () => {
+
+    updateLastActive();
+
+});
+
+// ===============================
+// UPDATE SAAT TAB TIDAK AKTIF
+// ===============================
+
+document.addEventListener("visibilitychange", () => {
+
+    if (document.visibilityState === "hidden") {
+
+        updateLastActive();
+
+    }
+
+});
+
+async function loadUsers() {
+
+    const snapshot = await getDocs(collection(db, "users"));
+
+    snapshot.forEach(doc => {
+
+        usersCache[doc.id] = doc.data();
+
+    });
+
+}

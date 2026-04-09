@@ -681,10 +681,45 @@ function renderTable(data, reset = true) {
 
                 </button>
 
+                <button class="open-dashboard-btn flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition">
+
+                📂 Open
+
+                </button>
+
                 </div>
         `;
 
         tableBody.appendChild(row);
+
+        // ===============================
+        // OPEN FILE
+        // ===============================
+        row.querySelector(".open-dashboard-btn")?.addEventListener("click", () => {
+
+            let url = "";
+
+            if (item.spreadsheetLink) {
+
+                const fileId = item.spreadsheetLink
+                    .split("/d/")[1]
+                    ?.split("/")[0];
+
+                url = `https://docs.google.com/spreadsheets/d/${fileId}/edit?rm=minimal`;
+
+            }
+
+            else if (item.filePath) {
+
+                url =
+                    "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
+                    + item.filePath;
+
+            }
+
+            window.open(url, "_blank");
+
+        });
 
         // ===============================
         // MANAGE ACCESS
@@ -743,276 +778,257 @@ function renderTable(data, reset = true) {
             document.getElementById("editModal").classList.remove("hidden");
         });
 
-
         // ===============================
-        // PREVIEW FILE
+        // PREVIEW FILE (EDITABLE)
         // ===============================
         row.querySelector(".preview-btn")?.addEventListener("click", () => {
 
-            if (!item.filePath) {
-                alert("Preview tidak tersedia untuk file ini");
-                return;
+            let previewUrl = "";
+
+            // jika file spreadsheet (Google Sheets)
+            if (item.spreadsheetLink) {
+
+                const fileId = item.spreadsheetLink
+                    .split("/d/")[1]
+                    ?.split("/")[0];
+
+                previewUrl = `https://docs.google.com/spreadsheets/d/${fileId}/edit?rm=minimal`;
+
             }
 
-            const previewUrl =
-                "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
-                + item.filePath;
+            // jika file upload (pdf/xlsx)
+            else if (item.filePath) {
+
+                previewUrl =
+                    "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec?action=preview&fileId="
+                    + item.filePath;
+
+            }
 
             const frame = document.getElementById("previewFrame");
 
-            if (frame) {
-                frame.src = "";
-                frame.src = previewUrl;
-            }
+            frame.src = previewUrl;
 
-            document.getElementById("previewModal")
+            document
+                .getElementById("previewModal")
                 ?.classList.remove("hidden");
 
         });
 
-        row.querySelector(".open-btn")?.addEventListener("click", async () => {
+        // ===============================
+        // RENDER ACCESS COUNT
+        // ===============================
+        function renderAccessUsers(allowedUsers) {
 
-            const openUrl = getArchiveOpenUrl(item);
-            if (!openUrl) return;
-
-            await addDoc(collection(db, "activityLogs"), {
-                uid: auth.currentUser.uid,
-                userEmail: auth.currentUser.email,
-                action: "open_file",
-                fileName: item.nama || item.name || item.Judul || "-",
-                status: "success",
-                timestamp: serverTimestamp()
-            });
-
-            if (isFileArchive(item)) {
-                await downloadArchiveToLocal(item);
-                return;
+            if (!allowedUsers || allowedUsers.length === 0) {
+                return `<span class="text-xs text-gray-500">Private</span>`;
             }
 
-            window.open(openUrl, "_blank");
-
-        });
-
-        no++;
-
-    });
-
-}
-
-// ===============================
-// RENDER ACCESS COUNT
-// ===============================
-function renderAccessUsers(allowedUsers) {
-
-    if (!allowedUsers || allowedUsers.length === 0) {
-        return `<span class="text-xs text-gray-500">Private</span>`;
-    }
-
-    return `<span class="text-xs text-indigo-600">
+            return `<span class="text-xs text-indigo-600">
         ${allowedUsers.length} User
     </span>`;
-}
+        }
 
 
-// ===============================
-// UPLOAD FILE METADATA
-// ===============================
-function setupUpload() {
+        // ===============================
+        // UPLOAD FILE METADATA
+        // ===============================
+        function setupUpload() {
 
-    const saveBtn = document.getElementById("saveArchiveBtn");
-    if (!saveBtn) return;
+            const saveBtn = document.getElementById("saveArchiveBtn");
+            if (!saveBtn) return;
 
-    saveBtn.replaceWith(saveBtn.cloneNode(true));
-    const newSaveBtn = document.getElementById("saveArchiveBtn");
+            saveBtn.replaceWith(saveBtn.cloneNode(true));
+            const newSaveBtn = document.getElementById("saveArchiveBtn");
 
-    newSaveBtn.addEventListener("click", async () => {
+            newSaveBtn.addEventListener("click", async () => {
 
-        const progressBox = document.getElementById("uploadProgressBox");
-        if (progressBox) progressBox.classList.remove("hidden");
+                const progressBox = document.getElementById("uploadProgressBox");
+                if (progressBox) progressBox.classList.remove("hidden");
 
-        try {
+                try {
 
-            if (!evaluateUploadFormState()) {
-                alert("Data belum valid. Periksa kembali link/file dan field wajib.");
-                return;
-            }
-
-            const judul = document.getElementById("judul").value.trim();
-            const kategori = document.getElementById("kategori").value.toLowerCase();
-            console.log("Kategori yang dikirim:", kategori);
-            const tahun = document.getElementById("tahun").value;
-            const link = document.getElementById("link").value.trim();
-            const hasLink = !!link;
-            const hasFile = selectedUploadFiles.length > 0;
-
-            if (!judul || !kategori || !tahun) {
-                alert("Semua field wajib diisi");
-                return;
-            }
-
-            if (!hasLink && !hasFile) {
-                alert("Isi link spreadsheet atau upload file (.xlsx, .csv, atau .pdf)");
-                return;
-            }
-
-            if (hasLink && !isValidSpreadsheetLink(link)) {
-                alert("Link spreadsheet tidak valid. Gunakan format Google Sheets yang benar.");
-                return;
-            }
-
-            if (tahun < 1900 || tahun > 2100) {
-                alert("Tahun tidak valid");
-                return;
-            }
-
-            const user = auth.currentUser;
-
-            if (selectedUploadFiles.length > 0) {
-
-                for (const file of selectedUploadFiles) {
-
-                    const filePayload = await uploadArchiveFile(file, kategori);
-
-                    if (!filePayload || filePayload.status !== "success") {
-                        throw new Error("Upload ke Google Drive gagal");
+                    if (!evaluateUploadFormState()) {
+                        alert("Data belum valid. Periksa kembali link/file dan field wajib.");
+                        return;
                     }
 
-                    const newArchivePayload = {
-                        nama: judul,
-                        kategori: kategori,
-                        tanggal: new Date().toISOString().split("T")[0],
-                        createdBy: user.uid,
-                        allowedUsers: [user.uid],
-                        createdAt: serverTimestamp(),
+                    const judul = document.getElementById("judul").value.trim();
+                    const kategori = document.getElementById("kategori").value.toLowerCase();
+                    console.log("Kategori yang dikirim:", kategori);
+                    const tahun = document.getElementById("tahun").value;
+                    const link = document.getElementById("link").value.trim();
+                    const hasLink = !!link;
+                    const hasFile = selectedUploadFiles.length > 0;
 
-                        spreadsheetLink: "",
-                        driveFileId: filePayload.fileId || "",
-                        sourceType: "file",
+                    if (!judul || !kategori || !tahun) {
+                        alert("Semua field wajib diisi");
+                        return;
+                    }
 
-                        filePath: filePayload.fileId || "",
-                        fileName: file.name,
-                        fileType: file.type
-                    };
+                    if (!hasLink && !hasFile) {
+                        alert("Isi link spreadsheet atau upload file (.xlsx, .csv, atau .pdf)");
+                        return;
+                    }
 
-                    const newDoc = await addDoc(collection(db, "files"), newArchivePayload);
+                    if (hasLink && !isValidSpreadsheetLink(link)) {
+                        alert("Link spreadsheet tidak valid. Gunakan format Google Sheets yang benar.");
+                        return;
+                    }
 
-                    await addDoc(collection(db, "activityLogs"), {
-                        uid: user.uid,
-                        userEmail: user.email,
-                        action: "upload",
-                        fileName: file.name,
-                        status: "success",
-                        fileId: newDoc.id,
-                        timestamp: serverTimestamp()
+                    if (tahun < 1900 || tahun > 2100) {
+                        alert("Tahun tidak valid");
+                        return;
+                    }
+
+                    const user = auth.currentUser;
+
+                    if (selectedUploadFiles.length > 0) {
+
+                        for (const file of selectedUploadFiles) {
+
+                            const filePayload = await uploadArchiveFile(file, kategori);
+
+                            if (!filePayload || filePayload.status !== "success") {
+                                throw new Error("Upload ke Google Drive gagal");
+                            }
+
+                            const newArchivePayload = {
+                                nama: judul,
+                                kategori: kategori,
+                                tanggal: new Date().toISOString().split("T")[0],
+                                createdBy: user.uid,
+                                allowedUsers: [user.uid],
+                                createdAt: serverTimestamp(),
+
+                                spreadsheetLink: "",
+                                driveFileId: filePayload.fileId || "",
+                                sourceType: "file",
+
+                                filePath: filePayload.fileId || "",
+                                fileName: file.name,
+                                fileType: file.type
+                            };
+
+                            const newDoc = await addDoc(collection(db, "files"), newArchivePayload);
+
+                            await addDoc(collection(db, "activityLogs"), {
+                                uid: user.uid,
+                                userEmail: user.email,
+                                action: "upload",
+                                fileName: file.name,
+                                status: "success",
+                                fileId: newDoc.id,
+                                timestamp: serverTimestamp()
+                            });
+
+                        }
+
+                    }
+
+                    await loadArchiveData(currentFilters, true);
+                    await loadDashboardStats();
+
+                    document.getElementById("uploadModal").classList.add("hidden");
+                    document.getElementById("judul").value = "";
+                    document.getElementById("kategori").value = "";
+                    document.getElementById("tahun").value = "";
+                    document.getElementById("link").value = "";
+                    const uploadInput = document.getElementById("uploadFileInput");
+                    if (uploadInput) uploadInput.value = "";
+                    selectedUploadFiles = [];
+                    updateFileFieldInfo("uploadFileInfo", null);
+                    showToast("Upload berhasil");
+
+                } catch (err) {
+                    console.error("Upload error:", err);
+                    console.error("Error code:", err.code);
+                    console.error("Error message:", err.message);
+
+                    let errorMsg = "Upload gagal. Periksa kembali data dan coba lagi.";
+
+                    if (err.code === "permission-denied") {
+                        errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan create file.";
+                    } else if (err.code === "unauthenticated") {
+                        errorMsg = "Anda tidak authenticated. Silakan login kembali.";
+                    } else if (err.message?.includes("storage")) {
+                        errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
+                    }
+
+                    alert(errorMsg);
+                } finally {
+                    if (progressBox) progressBox.classList.add("hidden");
+                }
+            });
+
+        }
+
+        // ===============================
+        // ACTIVITY LOGS
+        // ===============================
+        async function loadActivityLogs() {
+            const tableBody = document.querySelector("#activityLogBody");
+            if (!tableBody) return;
+
+            try {
+                tableBody.innerHTML = "";
+
+                const validLogs = [];
+                let cursorDoc = null;
+                const FETCH_SIZE = 25;
+
+                // Keep fetching in chunks until we have 10 valid rows or data is exhausted.
+                while (validLogs.length < 10) {
+                    const constraints = [
+                        orderBy("timestamp", "desc"),
+                        limit(FETCH_SIZE)
+                    ];
+
+                    if (cursorDoc) {
+                        constraints.push(startAfter(cursorDoc));
+                    }
+
+                    const q = query(collection(db, "activityLogs"), ...constraints);
+                    const snapshot = await getDocs(q);
+
+                    if (snapshot.empty) {
+                        break;
+                    }
+
+                    snapshot.forEach(docSnap => {
+                        if (validLogs.length >= 10) return;
+
+                        const log = docSnap.data();
+
+                        // Samakan filter dengan halaman full log.
+                        if (!log.userEmail || !log.action) {
+                            return;
+                        }
+
+                        validLogs.push(log);
                     });
 
+                    cursorDoc = snapshot.docs[snapshot.docs.length - 1] || null;
+
+                    if (snapshot.size < FETCH_SIZE) {
+                        break;
+                    }
                 }
 
-            }
-
-            await loadArchiveData(currentFilters, true);
-            await loadDashboardStats();
-
-            document.getElementById("uploadModal").classList.add("hidden");
-            document.getElementById("judul").value = "";
-            document.getElementById("kategori").value = "";
-            document.getElementById("tahun").value = "";
-            document.getElementById("link").value = "";
-            const uploadInput = document.getElementById("uploadFileInput");
-            if (uploadInput) uploadInput.value = "";
-            selectedUploadFiles = [];
-            updateFileFieldInfo("uploadFileInfo", null);
-            showToast("Upload berhasil");
-
-        } catch (err) {
-            console.error("Upload error:", err);
-            console.error("Error code:", err.code);
-            console.error("Error message:", err.message);
-
-            let errorMsg = "Upload gagal. Periksa kembali data dan coba lagi.";
-
-            if (err.code === "permission-denied") {
-                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan create file.";
-            } else if (err.code === "unauthenticated") {
-                errorMsg = "Anda tidak authenticated. Silakan login kembali.";
-            } else if (err.message?.includes("storage")) {
-                errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
-            }
-
-            alert(errorMsg);
-        } finally {
-            if (progressBox) progressBox.classList.add("hidden");
-        }
-    });
-
-}
-
-// ===============================
-// ACTIVITY LOGS
-// ===============================
-async function loadActivityLogs() {
-    const tableBody = document.querySelector("#activityLogBody");
-    if (!tableBody) return;
-
-    try {
-        tableBody.innerHTML = "";
-
-        const validLogs = [];
-        let cursorDoc = null;
-        const FETCH_SIZE = 25;
-
-        // Keep fetching in chunks until we have 10 valid rows or data is exhausted.
-        while (validLogs.length < 10) {
-            const constraints = [
-                orderBy("timestamp", "desc"),
-                limit(FETCH_SIZE)
-            ];
-
-            if (cursorDoc) {
-                constraints.push(startAfter(cursorDoc));
-            }
-
-            const q = query(collection(db, "activityLogs"), ...constraints);
-            const snapshot = await getDocs(q);
-
-            if (snapshot.empty) {
-                break;
-            }
-
-            snapshot.forEach(docSnap => {
-                if (validLogs.length >= 10) return;
-
-                const log = docSnap.data();
-
-                // Samakan filter dengan halaman full log.
-                if (!log.userEmail || !log.action) {
+                if (validLogs.length === 0) {
+                    tableBody.innerHTML =
+                        "<tr><td colspan='5' class='px-6 py-4 text-center text-slate-400'>Belum ada aktivitas</td></tr>";
                     return;
                 }
 
-                validLogs.push(log);
-            });
+                validLogs.forEach(log => {
+                    const date = log.timestamp?.toDate
+                        ? log.timestamp.toDate()
+                        : null;
 
-            cursorDoc = snapshot.docs[snapshot.docs.length - 1] || null;
+                    const row = document.createElement("tr");
 
-            if (snapshot.size < FETCH_SIZE) {
-                break;
-            }
-        }
-
-        if (validLogs.length === 0) {
-            tableBody.innerHTML =
-                "<tr><td colspan='5' class='px-6 py-4 text-center text-slate-400'>Belum ada aktivitas</td></tr>";
-            return;
-        }
-
-        validLogs.forEach(log => {
-            const date = log.timestamp?.toDate
-                ? log.timestamp.toDate()
-                : null;
-
-            const row = document.createElement("tr");
-
-            row.innerHTML = `
+                    row.innerHTML = `
                 <td class="px-6 py-3">${date ? date.toLocaleString("id-ID") : "-"}</td>
                 <td class="px-6 py-3">${log.userEmail || "-"}</td>
                 <td class="px-6 py-3">${log.action || "-"}</td>
@@ -1020,40 +1036,40 @@ async function loadActivityLogs() {
                 <td class="px-6 py-3 text-green-600">${log.status || "Success"}</td>
             `;
 
-            tableBody.appendChild(row);
-        });
-    } catch (error) {
-        console.error("Activity logs error:", error);
-        const tableBody = document.querySelector("#activityLogBody");
-        if (tableBody) {
-            tableBody.innerHTML =
-                "<tr><td colspan='5' class='px-6 py-4 text-center text-red-500'>Gagal memuat aktivitas</td></tr>";
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Activity logs error:", error);
+                const tableBody = document.querySelector("#activityLogBody");
+                if (tableBody) {
+                    tableBody.innerHTML =
+                        "<tr><td colspan='5' class='px-6 py-4 text-center text-red-500'>Gagal memuat aktivitas</td></tr>";
+                }
+            }
         }
-    }
-}
 
-// ===============================
-// ACCESS MANAGEMENT
-// ===============================
-async function openAccessModal() {
+        // ===============================
+        // ACCESS MANAGEMENT
+        // ===============================
+        async function openAccessModal() {
 
-    const listContainer = document.getElementById("accessUserList");
-    listContainer.innerHTML = "";
+            const listContainer = document.getElementById("accessUserList");
+            listContainer.innerHTML = "";
 
-    const snapshot = await getDocs(collection(db, "users"));
+            const snapshot = await getDocs(collection(db, "users"));
 
-    snapshot.forEach(docSnap => {
+            snapshot.forEach(docSnap => {
 
-        const uid = docSnap.id;
-        const user = docSnap.data();
+                const uid = docSnap.id;
+                const user = docSnap.data();
 
-        const isActive = selectedAccessUsers.includes(uid);
+                const isActive = selectedAccessUsers.includes(uid);
 
-        const div = document.createElement("div");
-        div.className =
-            "flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition";
+                const div = document.createElement("div");
+                div.className =
+                    "flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition";
 
-        div.innerHTML = `
+                div.innerHTML = `
         <div>
         <p class="text-sm font-medium">
         ${user.name || user.email?.split("@")[0] || "User"}
@@ -1064,815 +1080,815 @@ async function openAccessModal() {
         </div>
 
         ${isActive
-                ? `<span class="text-green-600 text-sm font-semibold">✔</span>`
-                : `<span class="text-slate-400 text-sm">+</span>`}
+                        ? `<span class="text-green-600 text-sm font-semibold">✔</span>`
+                        : `<span class="text-slate-400 text-sm">+</span>`}
         `;
 
-        div.addEventListener("click", () => {
-            toggleUserAccess(uid);
+                div.addEventListener("click", () => {
+                    toggleUserAccess(uid);
 
-            const icon = div.querySelector("span");
+                    const icon = div.querySelector("span");
+
+                    if (selectedAccessUsers.includes(uid)) {
+                        icon.textContent = "✔";
+                        icon.className = "text-green-600 text-sm font-semibold";
+                    } else {
+                        icon.textContent = "+";
+                        icon.className = "text-slate-400 text-sm";
+                    }
+                });
+
+                listContainer.appendChild(div);
+            });
+
+            document.getElementById("accessModal").classList.remove("hidden");
+        }
+
+        function toggleUserAccess(uid) {
 
             if (selectedAccessUsers.includes(uid)) {
-                icon.textContent = "✔";
-                icon.className = "text-green-600 text-sm font-semibold";
+                selectedAccessUsers =
+                    selectedAccessUsers.filter(id => id !== uid);
+                console.log("Access removed:", uid);
             } else {
-                icon.textContent = "+";
-                icon.className = "text-slate-400 text-sm";
+                selectedAccessUsers.push(uid);
+                console.log("Access added:", uid);
             }
+        }
+
+        function setupAccessSave() {
+
+            const btn = document.getElementById("accessModalSaveBtn");
+            if (!btn) return;
+
+            btn.addEventListener("click", async () => {
+
+                if (!selectedFileId) {
+                    alert("No file selected");
+                    return;
+                }
+
+                try {
+                    // Validasi data sebelum update
+                    if (!Array.isArray(selectedAccessUsers)) {
+                        console.error("Invalid selectedAccessUsers:", selectedAccessUsers);
+                        alert("Error: Invalid access users data. Please try again.");
+                        return;
+                    }
+
+                    console.log("Updating file permissions:", {
+                        fileId: selectedFileId,
+                        allowedUsers: selectedAccessUsers,
+                        currentUser: auth.currentUser?.uid
+                    });
+
+                    // Update document dengan error handling lebih baik
+                    const fileRef = doc(db, "files", selectedFileId);
+
+                    // Cek apakah document ada sebelum update
+                    const fileSnap = await getDoc(fileRef);
+                    if (!fileSnap.exists()) {
+                        alert("File not found");
+                        return;
+                    }
+
+                    // Update dengan explicit field
+                    await updateDoc(fileRef, {
+                        allowedUsers: selectedAccessUsers,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: auth.currentUser.uid
+                    });
+
+                    // ambil nama file
+                    const fileData = fileSnap.data();
+
+                    // buat log activity
+                    await addDoc(collection(db, "activityLogs"), {
+                        uid: auth.currentUser.uid,
+                        userEmail: auth.currentUser.email,
+                        action: "manage_access",
+                        fileName: fileData.nama || fileData.name || fileData.Judul || "-",
+                        fileId: selectedFileId,
+                        status: "success",
+                        timestamp: serverTimestamp()
+                    });
+
+                    document.getElementById("accessModal").classList.add("hidden");
+                    showSuccessModal("Hak akses berhasil diperbarui");
+                    await loadArchiveData(currentFilters, true);
+
+                } catch (error) {
+                    console.error("Access save error:", error);
+                    console.error("Error code:", error.code);
+                    console.error("Error message:", error.message);
+
+                    let errorMsg = "Gagal mengupdate hak akses";
+
+                    if (error.code === "permission-denied") {
+                        errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan operasi ini.";
+                    } else if (error.code === "not-found") {
+                        errorMsg = "File tidak ditemukan";
+                    }
+
+                    alert(errorMsg);
+                }
+            });
+        }
+
+        // ===============================
+        // EDIT MODAL SAVE
+        // ===============================
+        function setupEditModalSave() {
+            const btn = document.getElementById("editModalSaveBtn");
+            if (!btn) return;
+
+            btn.addEventListener("click", async () => {
+                if (!evaluateEditFormState()) {
+                    alert("Data belum valid. Periksa kembali link/file dan field wajib.");
+                    return;
+                }
+
+                const fileId = document.getElementById("editFileId").value;
+                const judul = document.getElementById("editJudul").value.trim();
+                const kategori = document.getElementById("editKategori").value.trim().toLowerCase();
+                const tahun = document.getElementById("editTahun").value;
+                const link = document.getElementById("editLink").value.trim();
+                const hasLink = !!link;
+                const hasNewFile = selectedEditFiles.length > 0;
+
+                if (!judul || !kategori || !tahun) {
+                    alert("Semua field wajib diisi");
+                    return;
+                }
+
+                if (hasLink && !isValidSpreadsheetLink(link)) {
+                    alert("Link spreadsheet tidak valid. Gunakan format Google Sheets yang benar.");
+                    return;
+                }
+
+                const currentIsFile = isFileArchive(activeEditItem);
+                if (!hasLink && !hasNewFile && !currentIsFile) {
+                    alert("Isi link spreadsheet atau upload file .xlsx, .csv, atau .pdf");
+                    return;
+                }
+
+                if (tahun < 1900 || tahun > 2100) {
+                    alert("Tahun tidak valid");
+                    return;
+                }
+
+                try {
+                    const updatePayload = {
+                        nama: judul,
+                        kategori: kategori,
+                        tanggal: tahun + "-01-01",
+                        spreadsheetLink: hasLink ? link : "",
+                        driveFileId: hasLink ? link : ""
+                    };
+
+                    if (hasNewFile) {
+
+
+                        // hapus file lama di drive
+                        if (activeEditItem?.filePath) {
+
+                            await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
+                                method: "POST",
+                                body: JSON.stringify({
+                                    action: "delete",
+                                    fileId: activeEditItem.filePath
+                                })
+                            });
+
+                        }
+
+                        const file = selectedEditFiles[0];
+
+                        const uploadedFile = await uploadArchiveFile(file, kategori);
+
+                        updatePayload.filePath = uploadedFile.fileId || "";
+                        updatePayload.fileName = file.name;
+                        updatePayload.fileType = file.type;
+
+                    } else if (hasLink) {
+
+                        updatePayload.sourceType = "link";
+                        updatePayload.filePath = "";
+                        updatePayload.fileName = "";
+                        updatePayload.fileType = "";
+                    }
+
+                    await updateDoc(doc(db, "files", fileId), updatePayload);
+
+                    await addDoc(collection(db, "activityLogs"), {
+                        uid: auth.currentUser.uid,
+                        userEmail: auth.currentUser.email,
+                        action: "edit",
+                        fileName: judul,
+                        status: "success",
+                        fileId: fileId,
+                        timestamp: serverTimestamp()
+                    });
+
+                    document.getElementById("editModal").classList.add("hidden");
+                    const editFileInput = document.getElementById("editFileInput");
+                    if (editFileInput) editFileInput.value = "";
+                    selectedEditFiles = [];
+                    activeEditItem = null;
+                    updateFileFieldInfo("editFileInfo", null);
+                    showSuccessModal("Arsip berhasil diperbarui");
+                    await loadArchiveData(currentFilters, true);
+                    await loadDashboardStats();
+
+                } catch (err) {
+                    console.error("Edit error:", err);
+                    console.error("Error code:", err.code);
+                    console.error("Error message:", err.message);
+
+                    let errorMsg = "Gagal mengedit arsip. Periksa kembali data dan coba lagi.";
+
+                    if (err.code === "permission-denied") {
+                        errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan update file.";
+                    } else if (err.code === "not-found") {
+                        errorMsg = "File tidak ditemukan";
+                    } else if (err.message?.includes("storage")) {
+                        errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
+                    }
+
+                    alert(errorMsg);
+                }
+            });
+        }
+
+        // ===============================
+        // DELETE MODAL CONFIRM
+        // ===============================
+        function setupDeleteModal() {
+            const btn = document.getElementById("confirmDeleteBtn");
+            if (!btn) return;
+
+            btn.addEventListener("click", async () => {
+                const fileId = document.getElementById("deleteFileId").value;
+                const fileName = document.getElementById("deleteFileName").textContent;
+                const filePath = document.getElementById("deleteFilePath").value;
+
+                try {
+
+                    if (filePath) {
+                        await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
+                            method: "POST",
+                            body: JSON.stringify({
+                                action: "delete",
+                                fileId: filePath
+                            })
+                        });
+                    }
+
+                    await deleteDoc(doc(db, "files", fileId));
+
+                    await addDoc(collection(db, "activityLogs"), {
+                        uid: auth.currentUser.uid,
+                        userEmail: auth.currentUser.email,
+                        action: "delete",
+                        fileName: fileName,
+                        status: "success",
+                        fileId: fileId,
+                        timestamp: serverTimestamp()
+                    });
+
+                    document.getElementById("deleteModal").classList.add("hidden");
+                    showSuccessModal("Arsip berhasil dihapus");
+                    await loadArchiveData(currentFilters, true);
+                    await loadDashboardStats();
+
+                } catch (err) {
+                    console.error("Delete error:", err);
+                    console.error("Error code:", err.code);
+                    console.error("Error message:", err.message);
+
+                    let errorMsg = "Gagal menghapus arsip. Periksa kembali dan coba lagi.";
+
+                    if (err.code === "permission-denied") {
+                        errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan delete file.";
+                    } else if (err.code === "not-found") {
+                        errorMsg = "File tidak ditemukan";
+                    }
+
+                    alert(errorMsg);
+                }
+            });
+        }
+
+        // ===============================
+        // SUCCESS MODAL
+        // ===============================
+        function showSuccessModal(message) {
+            document.getElementById("successModalMessage").textContent = message;
+            document.getElementById("successModal").classList.remove("hidden");
+
+            document.getElementById("successModalCloseBtn").replaceWith(document.getElementById("successModalCloseBtn").cloneNode(true));
+            const closeBtn = document.getElementById("successModalCloseBtn");
+
+            closeBtn.addEventListener("click", () => {
+                document.getElementById("successModal").classList.add("hidden");
+            });
+
+            setTimeout(() => {
+                document.getElementById("successModal").classList.add("hidden");
+            }, 3000);
+        }
+
+        // ===============================
+        // LOGOUT
+        // ===============================
+        function setupLogout() {
+
+            const logoutBtn = document.getElementById("confirmLogoutBtn");
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", async () => {
+
+                    // reset login session
+                    sessionStorage.removeItem("loginRecorded");
+
+                    await signOut(auth);
+
+                    window.location.href = "../index.html";
+                });
+            }
+        }
+
+        // ===============================
+        // FILTER
+        // ===============================
+        function setupFilters() {
+
+            const yearFilter = document.getElementById("yearFilter");
+            const categoryFilter = document.getElementById("categoryFilter");
+
+            if (!yearFilter || !categoryFilter) return;
+
+            async function applyFilters() {
+
+                currentPage = 1;
+
+                currentFilters = {
+                    year: yearFilter.value || null,
+                    category: categoryFilter.value
+                        ? categoryFilter.value.toLowerCase()
+                        : null
+                };
+
+                const searchInput = document.getElementById("searchInput");
+                if (searchInput) searchInput.value = "";
+
+                await loadArchiveData(currentFilters, true);
+            }
+
+            yearFilter.addEventListener("change", applyFilters);
+            categoryFilter.addEventListener("change", applyFilters);
+
+            const searchInput = document.getElementById("searchInput");
+
+            if (searchInput) {
+                searchInput.addEventListener("input", () => {
+
+                    clearTimeout(searchTimeout);
+
+                    searchTimeout = setTimeout(() => {
+
+                        const keyword = searchInput.value.toLowerCase();
+
+                        const filtered = currentPageData.filter(item => {
+
+                            const title =
+                                (item.nama ||
+                                    item.name ||
+                                    item.Judul ||
+                                    "").toLowerCase();
+
+                            return title.includes(keyword);
+
+                        });
+
+                        renderTable(filtered, true);
+
+                    }, 300);
+                });
+            }
+        }
+
+        //==============================
+        //USER BUTTON
+        //==============================    
+        function setupAddUserButton() {
+
+            const addBtn = document.getElementById("addUserToAccessBtn");
+            const searchInput = document.getElementById("accessUserSearch");
+
+            if (!addBtn || !searchInput) return;
+
+            addBtn.addEventListener("click", async () => {
+
+                const keyword = searchInput.value.trim().toLowerCase();
+                if (!keyword) return;
+
+                const snapshot = await getDocs(collection(db, "users"));
+
+                snapshot.forEach(docSnap => {
+
+                    const uid = docSnap.id;
+                    const user = docSnap.data();
+
+                    const match =
+                        user.name?.toLowerCase().includes(keyword) ||
+                        user.email?.toLowerCase().includes(keyword);
+
+                    if (match && !selectedAccessUsers.includes(uid)) {
+                        selectedAccessUsers.push(uid);
+                    }
+                });
+
+                searchInput.value = "";
+                openAccessModal();
+            });
+        }
+
+        async function generateFilterOptions() {
+            try {
+                const snapshot = await getDocs(
+                    query(collection(db, "files"), limit(100))
+                );
+
+                const yearSet = new Set();
+                const categorySet = new Set();
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+
+                    if (data.tanggal) {
+                        yearSet.add(data.tanggal.split("-")[0]);
+                    }
+
+                    if (data.kategori) {
+                        categorySet.add(data.kategori.trim());
+                    }
+                });
+
+                const yearFilter = document.getElementById("yearFilter");
+                const categoryFilter = document.getElementById("categoryFilter");
+
+                if (yearFilter) {
+                    yearFilter.innerHTML = `<option value="">Semua Tahun</option>`;
+                    [...yearSet].sort((a, b) => b - a).forEach(year => {
+                        yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+                    });
+                }
+
+                if (categoryFilter) {
+                    categoryFilter.innerHTML = `<option value="">Semua Kategori</option>`;
+                    [...categorySet].sort().forEach(cat => {
+                        categoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error("Generate filter options error:", error);
+            }
+        }
+
+        function showToast(message) {
+
+            const toast = document.createElement("div");
+
+            toast.className =
+                "fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow z-50";
+
+            toast.innerText = message;
+
+            const container = document.getElementById("toastContainer");
+
+            if (container) {
+                container.appendChild(toast);
+            } else {
+                document.body.appendChild(toast);
+            }
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+
+        }
+
+        async function loadDashboardStats() {
+
+            try {
+
+                // ===============================
+                // TOTAL FILES
+                // ===============================
+                const countSnapshot = await getCountFromServer(
+                    query(collection(db, "files"))
+                );
+
+                const totalFiles = countSnapshot.data().count;
+
+                const totalEl = document.getElementById("totalArsip");
+                if (totalEl) totalEl.innerText = totalFiles;
+
+
+                // ===============================
+                // BULAN INI
+                // ===============================
+                const now = new Date();
+                const startMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+
+                const endMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-31`;
+
+                const monthlySnapshot = await getCountFromServer(
+                    query(
+                        collection(db, "files"),
+                        where("tanggal", ">=", startMonth),
+                        where("tanggal", "<=", endMonth)
+                    )
+                );
+
+                const monthlyEl = document.getElementById("monthlyCount");
+                if (monthlyEl) monthlyEl.innerText = monthlySnapshot.data().count;
+
+
+                // ===============================
+                // TOP CATEGORY
+                // ===============================
+                const snapshot = await getDocs(
+                    query(collection(db, "files"), limit(1000))
+                );
+
+                const categoryMap = {};
+
+                snapshot.forEach(doc => {
+
+                    const data = doc.data();
+
+                    if (data.kategori) {
+                        categoryMap[data.kategori] =
+                            (categoryMap[data.kategori] || 0) + 1;
+                    }
+
+                });
+
+                let topCategory = "-";
+                let max = 0;
+
+                for (const cat in categoryMap) {
+
+                    if (categoryMap[cat] > max) {
+                        max = categoryMap[cat];
+                        topCategory = cat;
+                    }
+
+                }
+
+                const topCatEl = document.getElementById("topCategory");
+                if (topCatEl) topCatEl.innerText = topCategory;
+
+            } catch (error) {
+
+                console.error("Dashboard stats error:", error);
+
+                const monthlyEl = document.getElementById("monthlyCount");
+                if (monthlyEl) monthlyEl.innerText = "0";
+
+                const topCatEl = document.getElementById("topCategory");
+                if (topCatEl) topCatEl.innerText = "-";
+
+            }
+
+        }
+
+        async function backupData() {
+
+            const snapshot = await getDocs(collection(db, "files"));
+
+            const data = [];
+
+            snapshot.forEach(docSnap => {
+                data.push({
+                    id: docSnap.id,
+                    ...docSnap.data()
+                });
+            });
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: "application/json"
+            });
+
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+
+            a.href = url;
+            a.download = `backup_arsip_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+
+        }
+
+        async function exportLogs() {
+
+            const snapshot = await getDocs(
+                query(collection(db, "activityLogs"), orderBy("timestamp", "desc"))
+            );
+
+            let csv = "Timestamp,User,Action,File,Status\n";
+
+            snapshot.forEach(doc => {
+
+                const log = doc.data();
+                const date = log.timestamp?.toDate
+                    ? log.timestamp.toDate()
+                    : null;
+
+                csv += `"${date?.toLocaleString("id-ID")}","${log.userEmail}","${log.action}","${log.fileName}","${log.status}"\n`;
+
+            });
+
+            const blob = new Blob([csv], { type: "text/csv" });
+
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "activity_logs.csv";
+            a.click();
+
+        }
+
+        window.exportLogs = exportLogs;
+
+        window.backupData = backupData;
+
+        // ===============================
+        // EVENT LISTENERS WITH SAFETY CHECKS
+        // ===============================
+        const backupBtn = document.getElementById("backupBtn");
+        if (backupBtn) {
+            backupBtn.addEventListener("click", () => {
+                backupData();
+            });
+        }
+
+        const nextPageBtn = document.getElementById("nextPageBtn");
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener("click", async () => {
+                currentPage++;
+                await loadArchiveData(currentFilters, false);
+            });
+        }
+
+        // ===============================
+        // GLOBAL ERROR HANDLERS
+        // ===============================
+        window.addEventListener("error", (event) => {
+            console.error("Global error:", event.error);
+            hideLoading();
         });
 
-        listContainer.appendChild(div);
-    });
+        window.addEventListener("unhandledrejection", (event) => {
+            console.error("Promise error:", event.reason);
+            hideLoading();
+        });
 
-    document.getElementById("accessModal").classList.remove("hidden");
-}
-
-function toggleUserAccess(uid) {
-
-    if (selectedAccessUsers.includes(uid)) {
-        selectedAccessUsers =
-            selectedAccessUsers.filter(id => id !== uid);
-        console.log("Access removed:", uid);
-    } else {
-        selectedAccessUsers.push(uid);
-        console.log("Access added:", uid);
-    }
-}
-
-function setupAccessSave() {
-
-    const btn = document.getElementById("accessModalSaveBtn");
-    if (!btn) return;
-
-    btn.addEventListener("click", async () => {
-
-        if (!selectedFileId) {
-            alert("No file selected");
-            return;
-        }
-
-        try {
-            // Validasi data sebelum update
-            if (!Array.isArray(selectedAccessUsers)) {
-                console.error("Invalid selectedAccessUsers:", selectedAccessUsers);
-                alert("Error: Invalid access users data. Please try again.");
-                return;
+        // ===============================
+        // EMERGENCY FALLBACK - AUTO HIDE OVERLAY
+        // ===============================
+        setTimeout(() => {
+            const loader = document.getElementById("loadingOverlay");
+            if (loader && !loader.classList.contains("hidden")) {
+                console.warn("Emergency fallback: Hiding loading overlay");
+                loader.classList.add("hidden");
             }
+        }, 4000);
 
-            console.log("Updating file permissions:", {
-                fileId: selectedFileId,
-                allowedUsers: selectedAccessUsers,
-                currentUser: auth.currentUser?.uid
-            });
+        // ===============================
+        // IMPORT CSV MASSAL
+        // ===============================
 
-            // Update document dengan error handling lebih baik
-            const fileRef = doc(db, "files", selectedFileId);
+        async function importCSV(file) {
 
-            // Cek apakah document ada sebelum update
-            const fileSnap = await getDoc(fileRef);
-            if (!fileSnap.exists()) {
-                alert("File not found");
-                return;
-            }
+            try {
 
-            // Update dengan explicit field
-            await updateDoc(fileRef, {
-                allowedUsers: selectedAccessUsers,
-                updatedAt: serverTimestamp(),
-                updatedBy: auth.currentUser.uid
-            });
+                const text = await file.text();
+                const rows = text.trim().split(/\r?\n/);
 
-            // ambil nama file
-            const fileData = fileSnap.data();
+                for (let i = 1; i < rows.length; i++) {
 
-            // buat log activity
-            await addDoc(collection(db, "activityLogs"), {
-                uid: auth.currentUser.uid,
-                userEmail: auth.currentUser.email,
-                action: "manage_access",
-                fileName: fileData.nama || fileData.name || fileData.Judul || "-",
-                fileId: selectedFileId,
-                status: "success",
-                timestamp: serverTimestamp()
-            });
+                    const cols = rows[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
 
-            document.getElementById("accessModal").classList.add("hidden");
-            showSuccessModal("Hak akses berhasil diperbarui");
-            await loadArchiveData(currentFilters, true);
+                    if (!cols || cols.length < 4) continue;
 
-        } catch (error) {
-            console.error("Access save error:", error);
-            console.error("Error code:", error.code);
-            console.error("Error message:", error.message);
+                    const judul = cols[0]?.replace(/"/g, "").trim();
+                    const tahun = cols[1]?.replace(/"/g, "").trim();
+                    const kategori = cols[2]?.replace(/"/g, "").trim().toLowerCase();
+                    const link = cols[3]?.replace(/"/g, "").trim();
 
-            let errorMsg = "Gagal mengupdate hak akses";
+                    if (!judul || !tahun || !kategori || !link) continue;
 
-            if (error.code === "permission-denied") {
-                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan operasi ini.";
-            } else if (error.code === "not-found") {
-                errorMsg = "File tidak ditemukan";
-            }
+                    const payload = {
 
-            alert(errorMsg);
-        }
-    });
-}
+                        nama: judul,
+                        kategori: kategori,
+                        tanggal: tahun + "-01-01",
+                        createdBy: auth.currentUser.uid,
+                        allowedUsers: [auth.currentUser.uid],
+                        createdAt: serverTimestamp(),
 
-// ===============================
-// EDIT MODAL SAVE
-// ===============================
-function setupEditModalSave() {
-    const btn = document.getElementById("editModalSaveBtn");
-    if (!btn) return;
+                        spreadsheetLink: link,
+                        driveFileId: link,
+                        sourceType: "link",
 
-    btn.addEventListener("click", async () => {
-        if (!evaluateEditFormState()) {
-            alert("Data belum valid. Periksa kembali link/file dan field wajib.");
-            return;
-        }
+                        filePath: "",
+                        fileName: "",
+                        fileType: ""
 
-        const fileId = document.getElementById("editFileId").value;
-        const judul = document.getElementById("editJudul").value.trim();
-        const kategori = document.getElementById("editKategori").value.trim().toLowerCase();
-        const tahun = document.getElementById("editTahun").value;
-        const link = document.getElementById("editLink").value.trim();
-        const hasLink = !!link;
-        const hasNewFile = selectedEditFiles.length > 0;
+                    };
 
-        if (!judul || !kategori || !tahun) {
-            alert("Semua field wajib diisi");
-            return;
-        }
+                    await addDoc(collection(db, "files"), payload);
 
-        if (hasLink && !isValidSpreadsheetLink(link)) {
-            alert("Link spreadsheet tidak valid. Gunakan format Google Sheets yang benar.");
-            return;
-        }
+                    await addDoc(collection(db, "activityLogs"), {
 
-        const currentIsFile = isFileArchive(activeEditItem);
-        if (!hasLink && !hasNewFile && !currentIsFile) {
-            alert("Isi link spreadsheet atau upload file .xlsx, .csv, atau .pdf");
-            return;
-        }
+                        uid: auth.currentUser.uid,
+                        userEmail: auth.currentUser.email,
+                        action: "import_csv",
+                        fileName: judul,
+                        status: "success",
+                        timestamp: serverTimestamp()
 
-        if (tahun < 1900 || tahun > 2100) {
-            alert("Tahun tidak valid");
-            return;
-        }
-
-        try {
-            const updatePayload = {
-                nama: judul,
-                kategori: kategori,
-                tanggal: tahun + "-01-01",
-                spreadsheetLink: hasLink ? link : "",
-                driveFileId: hasLink ? link : ""
-            };
-
-            if (hasNewFile) {
-
-
-                // hapus file lama di drive
-                if (activeEditItem?.filePath) {
-
-                    await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
-                        method: "POST",
-                        body: JSON.stringify({
-                            action: "delete",
-                            fileId: activeEditItem.filePath
-                        })
                     });
 
                 }
 
-                const file = selectedEditFiles[0];
+                alert("Import CSV berhasil");
 
-                const uploadedFile = await uploadArchiveFile(file, kategori);
+                await loadArchiveData();
+                await loadDashboardStats();
 
-                updatePayload.filePath = uploadedFile.fileId || "";
-                updatePayload.fileName = file.name;
-                updatePayload.fileType = file.type;
+            } catch (err) {
 
-            } else if (hasLink) {
+                console.error("Import CSV error:", err);
+                alert("Import CSV gagal");
 
-                updatePayload.sourceType = "link";
-                updatePayload.filePath = "";
-                updatePayload.fileName = "";
-                updatePayload.fileType = "";
-            }
-
-            await updateDoc(doc(db, "files", fileId), updatePayload);
-
-            await addDoc(collection(db, "activityLogs"), {
-                uid: auth.currentUser.uid,
-                userEmail: auth.currentUser.email,
-                action: "edit",
-                fileName: judul,
-                status: "success",
-                fileId: fileId,
-                timestamp: serverTimestamp()
-            });
-
-            document.getElementById("editModal").classList.add("hidden");
-            const editFileInput = document.getElementById("editFileInput");
-            if (editFileInput) editFileInput.value = "";
-            selectedEditFiles = [];
-            activeEditItem = null;
-            updateFileFieldInfo("editFileInfo", null);
-            showSuccessModal("Arsip berhasil diperbarui");
-            await loadArchiveData(currentFilters, true);
-            await loadDashboardStats();
-
-        } catch (err) {
-            console.error("Edit error:", err);
-            console.error("Error code:", err.code);
-            console.error("Error message:", err.message);
-
-            let errorMsg = "Gagal mengedit arsip. Periksa kembali data dan coba lagi.";
-
-            if (err.code === "permission-denied") {
-                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan update file.";
-            } else if (err.code === "not-found") {
-                errorMsg = "File tidak ditemukan";
-            } else if (err.message?.includes("storage")) {
-                errorMsg = "Gagal upload file ke storage. Periksa ukuran file dan koneksi.";
-            }
-
-            alert(errorMsg);
-        }
-    });
-}
-
-// ===============================
-// DELETE MODAL CONFIRM
-// ===============================
-function setupDeleteModal() {
-    const btn = document.getElementById("confirmDeleteBtn");
-    if (!btn) return;
-
-    btn.addEventListener("click", async () => {
-        const fileId = document.getElementById("deleteFileId").value;
-        const fileName = document.getElementById("deleteFileName").textContent;
-        const filePath = document.getElementById("deleteFilePath").value;
-
-        try {
-
-            if (filePath) {
-                await fetch("https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "delete",
-                        fileId: filePath
-                    })
-                });
-            }
-
-            await deleteDoc(doc(db, "files", fileId));
-
-            await addDoc(collection(db, "activityLogs"), {
-                uid: auth.currentUser.uid,
-                userEmail: auth.currentUser.email,
-                action: "delete",
-                fileName: fileName,
-                status: "success",
-                fileId: fileId,
-                timestamp: serverTimestamp()
-            });
-
-            document.getElementById("deleteModal").classList.add("hidden");
-            showSuccessModal("Arsip berhasil dihapus");
-            await loadArchiveData(currentFilters, true);
-            await loadDashboardStats();
-
-        } catch (err) {
-            console.error("Delete error:", err);
-            console.error("Error code:", err.code);
-            console.error("Error message:", err.message);
-
-            let errorMsg = "Gagal menghapus arsip. Periksa kembali dan coba lagi.";
-
-            if (err.code === "permission-denied") {
-                errorMsg = "Permission denied. Pastikan Anda login sebagai admin dan Firestore rules mengizinkan delete file.";
-            } else if (err.code === "not-found") {
-                errorMsg = "File tidak ditemukan";
-            }
-
-            alert(errorMsg);
-        }
-    });
-}
-
-// ===============================
-// SUCCESS MODAL
-// ===============================
-function showSuccessModal(message) {
-    document.getElementById("successModalMessage").textContent = message;
-    document.getElementById("successModal").classList.remove("hidden");
-
-    document.getElementById("successModalCloseBtn").replaceWith(document.getElementById("successModalCloseBtn").cloneNode(true));
-    const closeBtn = document.getElementById("successModalCloseBtn");
-
-    closeBtn.addEventListener("click", () => {
-        document.getElementById("successModal").classList.add("hidden");
-    });
-
-    setTimeout(() => {
-        document.getElementById("successModal").classList.add("hidden");
-    }, 3000);
-}
-
-// ===============================
-// LOGOUT
-// ===============================
-function setupLogout() {
-
-    const logoutBtn = document.getElementById("confirmLogoutBtn");
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", async () => {
-
-            // reset login session
-            sessionStorage.removeItem("loginRecorded");
-
-            await signOut(auth);
-
-            window.location.href = "../index.html";
-        });
-    }
-}
-
-// ===============================
-// FILTER
-// ===============================
-function setupFilters() {
-
-    const yearFilter = document.getElementById("yearFilter");
-    const categoryFilter = document.getElementById("categoryFilter");
-
-    if (!yearFilter || !categoryFilter) return;
-
-    async function applyFilters() {
-
-        currentPage = 1;
-
-        currentFilters = {
-            year: yearFilter.value || null,
-            category: categoryFilter.value
-                ? categoryFilter.value.toLowerCase()
-                : null
-        };
-
-        const searchInput = document.getElementById("searchInput");
-        if (searchInput) searchInput.value = "";
-
-        await loadArchiveData(currentFilters, true);
-    }
-
-    yearFilter.addEventListener("change", applyFilters);
-    categoryFilter.addEventListener("change", applyFilters);
-
-    const searchInput = document.getElementById("searchInput");
-
-    if (searchInput) {
-        searchInput.addEventListener("input", () => {
-
-            clearTimeout(searchTimeout);
-
-            searchTimeout = setTimeout(() => {
-
-                const keyword = searchInput.value.toLowerCase();
-
-                const filtered = currentPageData.filter(item => {
-
-                    const title =
-                        (item.nama ||
-                            item.name ||
-                            item.Judul ||
-                            "").toLowerCase();
-
-                    return title.includes(keyword);
-
-                });
-
-                renderTable(filtered, true);
-
-            }, 300);
-        });
-    }
-}
-
-//==============================
-//USER BUTTON
-//==============================    
-function setupAddUserButton() {
-
-    const addBtn = document.getElementById("addUserToAccessBtn");
-    const searchInput = document.getElementById("accessUserSearch");
-
-    if (!addBtn || !searchInput) return;
-
-    addBtn.addEventListener("click", async () => {
-
-        const keyword = searchInput.value.trim().toLowerCase();
-        if (!keyword) return;
-
-        const snapshot = await getDocs(collection(db, "users"));
-
-        snapshot.forEach(docSnap => {
-
-            const uid = docSnap.id;
-            const user = docSnap.data();
-
-            const match =
-                user.name?.toLowerCase().includes(keyword) ||
-                user.email?.toLowerCase().includes(keyword);
-
-            if (match && !selectedAccessUsers.includes(uid)) {
-                selectedAccessUsers.push(uid);
-            }
-        });
-
-        searchInput.value = "";
-        openAccessModal();
-    });
-}
-
-async function generateFilterOptions() {
-    try {
-        const snapshot = await getDocs(
-            query(collection(db, "files"), limit(100))
-        );
-
-        const yearSet = new Set();
-        const categorySet = new Set();
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-
-            if (data.tanggal) {
-                yearSet.add(data.tanggal.split("-")[0]);
-            }
-
-            if (data.kategori) {
-                categorySet.add(data.kategori.trim());
-            }
-        });
-
-        const yearFilter = document.getElementById("yearFilter");
-        const categoryFilter = document.getElementById("categoryFilter");
-
-        if (yearFilter) {
-            yearFilter.innerHTML = `<option value="">Semua Tahun</option>`;
-            [...yearSet].sort((a, b) => b - a).forEach(year => {
-                yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
-            });
-        }
-
-        if (categoryFilter) {
-            categoryFilter.innerHTML = `<option value="">Semua Kategori</option>`;
-            [...categorySet].sort().forEach(cat => {
-                categoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
-            });
-        }
-    } catch (error) {
-        console.error("Generate filter options error:", error);
-    }
-}
-
-function showToast(message) {
-
-    const toast = document.createElement("div");
-
-    toast.className =
-        "fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow z-50";
-
-    toast.innerText = message;
-
-    const container = document.getElementById("toastContainer");
-
-    if (container) {
-        container.appendChild(toast);
-    } else {
-        document.body.appendChild(toast);
-    }
-
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-
-}
-
-async function loadDashboardStats() {
-
-    try {
-
-        // ===============================
-        // TOTAL FILES
-        // ===============================
-        const countSnapshot = await getCountFromServer(
-            query(collection(db, "files"))
-        );
-
-        const totalFiles = countSnapshot.data().count;
-
-        const totalEl = document.getElementById("totalArsip");
-        if (totalEl) totalEl.innerText = totalFiles;
-
-
-        // ===============================
-        // BULAN INI
-        // ===============================
-        const now = new Date();
-        const startMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-
-        const endMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-31`;
-
-        const monthlySnapshot = await getCountFromServer(
-            query(
-                collection(db, "files"),
-                where("tanggal", ">=", startMonth),
-                where("tanggal", "<=", endMonth)
-            )
-        );
-
-        const monthlyEl = document.getElementById("monthlyCount");
-        if (monthlyEl) monthlyEl.innerText = monthlySnapshot.data().count;
-
-
-        // ===============================
-        // TOP CATEGORY
-        // ===============================
-        const snapshot = await getDocs(
-            query(collection(db, "files"), limit(1000))
-        );
-
-        const categoryMap = {};
-
-        snapshot.forEach(doc => {
-
-            const data = doc.data();
-
-            if (data.kategori) {
-                categoryMap[data.kategori] =
-                    (categoryMap[data.kategori] || 0) + 1;
-            }
-
-        });
-
-        let topCategory = "-";
-        let max = 0;
-
-        for (const cat in categoryMap) {
-
-            if (categoryMap[cat] > max) {
-                max = categoryMap[cat];
-                topCategory = cat;
             }
 
         }
 
-        const topCatEl = document.getElementById("topCategory");
-        if (topCatEl) topCatEl.innerText = topCategory;
+        // ===============================
+        // EVENT IMPORT CSV
+        // ===============================
 
-    } catch (error) {
+        const importInput = document.getElementById("importCSVInput");
 
-        console.error("Dashboard stats error:", error);
+        if (importInput) {
 
-        const monthlyEl = document.getElementById("monthlyCount");
-        if (monthlyEl) monthlyEl.innerText = "0";
+            importInput.addEventListener("change", async (e) => {
 
-        const topCatEl = document.getElementById("topCategory");
-        if (topCatEl) topCatEl.innerText = "-";
+                const file = e.target.files[0];
 
-    }
+                if (!file) return;
 
-}
-
-async function backupData() {
-
-    const snapshot = await getDocs(collection(db, "files"));
-
-    const data = [];
-
-    snapshot.forEach(docSnap => {
-        data.push({
-            id: docSnap.id,
-            ...docSnap.data()
-        });
-    });
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json"
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-
-    a.href = url;
-    a.download = `backup_arsip_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-
-}
-
-async function exportLogs() {
-
-    const snapshot = await getDocs(
-        query(collection(db, "activityLogs"), orderBy("timestamp", "desc"))
-    );
-
-    let csv = "Timestamp,User,Action,File,Status\n";
-
-    snapshot.forEach(doc => {
-
-        const log = doc.data();
-        const date = log.timestamp?.toDate
-            ? log.timestamp.toDate()
-            : null;
-
-        csv += `"${date?.toLocaleString("id-ID")}","${log.userEmail}","${log.action}","${log.fileName}","${log.status}"\n`;
-
-    });
-
-    const blob = new Blob([csv], { type: "text/csv" });
-
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "activity_logs.csv";
-    a.click();
-
-}
-
-window.exportLogs = exportLogs;
-
-window.backupData = backupData;
-
-// ===============================
-// EVENT LISTENERS WITH SAFETY CHECKS
-// ===============================
-const backupBtn = document.getElementById("backupBtn");
-if (backupBtn) {
-    backupBtn.addEventListener("click", () => {
-        backupData();
-    });
-}
-
-const nextPageBtn = document.getElementById("nextPageBtn");
-if (nextPageBtn) {
-    nextPageBtn.addEventListener("click", async () => {
-        currentPage++;
-        await loadArchiveData(currentFilters, false);
-    });
-}
-
-// ===============================
-// GLOBAL ERROR HANDLERS
-// ===============================
-window.addEventListener("error", (event) => {
-    console.error("Global error:", event.error);
-    hideLoading();
-});
-
-window.addEventListener("unhandledrejection", (event) => {
-    console.error("Promise error:", event.reason);
-    hideLoading();
-});
-
-// ===============================
-// EMERGENCY FALLBACK - AUTO HIDE OVERLAY
-// ===============================
-setTimeout(() => {
-    const loader = document.getElementById("loadingOverlay");
-    if (loader && !loader.classList.contains("hidden")) {
-        console.warn("Emergency fallback: Hiding loading overlay");
-        loader.classList.add("hidden");
-    }
-}, 4000);
-
-// ===============================
-// IMPORT CSV MASSAL
-// ===============================
-
-async function importCSV(file) {
-
-    try {
-
-        const text = await file.text();
-        const rows = text.trim().split(/\r?\n/);
-
-        for (let i = 1; i < rows.length; i++) {
-
-            const cols = rows[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-
-            if (!cols || cols.length < 4) continue;
-
-            const judul = cols[0]?.replace(/"/g, "").trim();
-            const tahun = cols[1]?.replace(/"/g, "").trim();
-            const kategori = cols[2]?.replace(/"/g, "").trim().toLowerCase();
-            const link = cols[3]?.replace(/"/g, "").trim();
-
-            if (!judul || !tahun || !kategori || !link) continue;
-
-            const payload = {
-
-                nama: judul,
-                kategori: kategori,
-                tanggal: tahun + "-01-01",
-                createdBy: auth.currentUser.uid,
-                allowedUsers: [auth.currentUser.uid],
-                createdAt: serverTimestamp(),
-
-                spreadsheetLink: link,
-                driveFileId: link,
-                sourceType: "link",
-
-                filePath: "",
-                fileName: "",
-                fileType: ""
-
-            };
-
-            await addDoc(collection(db, "files"), payload);
-
-            await addDoc(collection(db, "activityLogs"), {
-
-                uid: auth.currentUser.uid,
-                userEmail: auth.currentUser.email,
-                action: "import_csv",
-                fileName: judul,
-                status: "success",
-                timestamp: serverTimestamp()
+                await importCSV(file);
 
             });
 
         }
 
-        alert("Import CSV berhasil");
+        function showErrorModal(message) {
 
-        await loadArchiveData();
-        await loadDashboardStats();
+            const modal = document.getElementById("errorModal");
+            const text = document.getElementById("errorModalMessage");
 
-    } catch (err) {
+            text.innerText = message;
 
-        console.error("Import CSV error:", err);
-        alert("Import CSV gagal");
+            modal.classList.remove("hidden");
 
-    }
+        }
 
-}
+        // ===============================
+        // SESSION TIMEOUT (15 MENIT)
+        // ===============================
 
-// ===============================
-// EVENT IMPORT CSV
-// ===============================
+        let idleTimer;
+        let isSessionTimeoutShown = false;
 
-const importInput = document.getElementById("importCSVInput");
+        // 10 menit
+        const IDLE_LIMIT = 5 * 60 * 1000;
 
-if (importInput) {
+        function ensureSessionTimeoutModal() {
+            const existing = document.getElementById("sessionTimeoutModal");
+            if (existing) return existing;
 
-    importInput.addEventListener("change", async (e) => {
-
-        const file = e.target.files[0];
-
-        if (!file) return;
-
-        await importCSV(file);
-
-    });
-
-}
-
-function showErrorModal(message) {
-
-    const modal = document.getElementById("errorModal");
-    const text = document.getElementById("errorModalMessage");
-
-    text.innerText = message;
-
-    modal.classList.remove("hidden");
-
-}
-
-// ===============================
-// SESSION TIMEOUT (15 MENIT)
-// ===============================
-
-let idleTimer;
-let isSessionTimeoutShown = false;
-
-// 10 menit
-const IDLE_LIMIT = 1 * 60 * 1000;
-
-function ensureSessionTimeoutModal() {
-    const existing = document.getElementById("sessionTimeoutModal");
-    if (existing) return existing;
-
-    const modal = document.createElement("div");
-    modal.id = "sessionTimeoutModal";
-    modal.className = "hidden fixed inset-0 z-50 flex items-center justify-center";
-    modal.innerHTML = `
+            const modal = document.createElement("div");
+            modal.id = "sessionTimeoutModal";
+            modal.className = "hidden fixed inset-0 z-50 flex items-center justify-center";
+            modal.innerHTML = `
     <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
     <div class="relative z-10 w-full max-w-sm mx-4 overflow-hidden rounded-xl bg-white dark:bg-[#1a2634] shadow-2xl ring-1 ring-slate-900/5 transition-all border border-slate-200 dark:border-slate-700">
         <div class="p-6">
@@ -1893,49 +1909,49 @@ function ensureSessionTimeoutModal() {
     </div>
     `;
 
-    document.body.appendChild(modal);
+            document.body.appendChild(modal);
 
-    const confirmBtn = document.getElementById("sessionTimeoutConfirmBtn");
-    if (confirmBtn) {
-        confirmBtn.addEventListener("click", async () => {
-            try {
-                sessionStorage.removeItem("loginRecorded");
-                await signOut(auth);
-            } finally {
-                window.location.href = "../index.html";
+            const confirmBtn = document.getElementById("sessionTimeoutConfirmBtn");
+            if (confirmBtn) {
+                confirmBtn.addEventListener("click", async () => {
+                    try {
+                        sessionStorage.removeItem("loginRecorded");
+                        await signOut(auth);
+                    } finally {
+                        window.location.href = "../index.html";
+                    }
+                });
             }
+
+            return modal;
+        }
+
+        function showSessionTimeoutModal() {
+            const modal = ensureSessionTimeoutModal();
+            isSessionTimeoutShown = true;
+            modal.classList.remove("hidden");
+        }
+
+        function resetIdleTimer() {
+
+            if (isSessionTimeoutShown) return;
+
+            clearTimeout(idleTimer);
+
+            idleTimer = setTimeout(async () => {
+
+                showSessionTimeoutModal();
+
+            }, IDLE_LIMIT);
+
+        }
+
+        // aktivitas user yang dianggap aktif
+        ["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
+
+            document.addEventListener(event, resetIdleTimer);
+
         });
-    }
 
-    return modal;
-}
-
-function showSessionTimeoutModal() {
-    const modal = ensureSessionTimeoutModal();
-    isSessionTimeoutShown = true;
-    modal.classList.remove("hidden");
-}
-
-function resetIdleTimer() {
-
-    if (isSessionTimeoutShown) return;
-
-    clearTimeout(idleTimer);
-
-    idleTimer = setTimeout(async () => {
-
-        showSessionTimeoutModal();
-
-    }, IDLE_LIMIT);
-
-}
-
-// aktivitas user yang dianggap aktif
-["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
-
-    document.addEventListener(event, resetIdleTimer);
-
-});
-
-// mulai timer saat halaman dibuka
-resetIdleTimer();
+        // mulai timer saat halaman dibuka
+        resetIdleTimer();

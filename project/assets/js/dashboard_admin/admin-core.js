@@ -51,7 +51,7 @@ import { doc, getDoc }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { loadArchiveData } from "./archive-table.js";
-import { setupUpload } from "./upload-system.js";
+import { setupUpload, setupDeleteArchive } from "./upload-system.js";
 import { setupAccessSave } from "./access-system.js";
 import { loadActivityLogs } from "./logs-system.js";
 import { loadDashboardStats, generateFilterOptions } from "./dashboard-stats.js";
@@ -190,15 +190,19 @@ onAuthStateChanged(auth, async (user) => {
         // ===============================
         // LOAD DASHBOARD DATA
         // ===============================
-        await Promise.all([
+        await loadArchiveData();
 
-            loadArchiveData(),
-            loadDashboardStats(),
-            loadActivityLogs(),
-            generateFilterOptions()
+        setTimeout(() => {
+            loadDashboardStats();
+        }, 300);
 
-        ]);
+        setTimeout(() => {
+            loadActivityLogs();
+        }, 600);
 
+        setTimeout(() => {
+            generateFilterOptions();
+        }, 900);
 
         // ===============================
         // INIT MODULES
@@ -206,6 +210,7 @@ onAuthStateChanged(auth, async (user) => {
         setupUpload();
         setupAccessSave();
         setupUploadModal();
+        setupDeleteArchive();
 
         setupBackup();
         setupSearch();
@@ -270,8 +275,8 @@ function setupSearch() {
 // ===============================
 // BACKUP SYSTEM
 // ===============================
-import { getDocs, collection }
-    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getDocs, collection, query, limit }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 function setupBackup() {
 
@@ -283,7 +288,9 @@ function setupBackup() {
 
         try {
 
-            const snapshot = await getDocs(collection(db, "files"));
+            const snapshot = await getDocs(
+                query(collection(db, "files"), limit(500))
+            );
 
             let data = [];
 
@@ -383,9 +390,143 @@ document.getElementById("profileBtn")
 // CLOSE SUCCESS MODAL
 // ===============================
 document.getElementById("successModalCloseBtn")
-?.addEventListener("click", () => {
+    ?.addEventListener("click", () => {
 
-    document.getElementById("successModal")
-        ?.classList.add("hidden");
+        document.getElementById("successModal")
+            ?.classList.add("hidden");
 
-});
+    });
+
+// ===============================
+// UPDATE LAST ACTIVE
+// ===============================
+
+import { updateDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+async function updateLastActive() {
+
+    try {
+
+        const user = auth.currentUser;
+
+        if (!user) return;
+
+        await updateDoc(doc(db, "users", user.uid), {
+            lastActive: serverTimestamp()
+        });
+
+    } catch (err) {
+
+        console.error("Last active update error:", err);
+
+    }
+
+}
+
+// ===============================
+// SESSION TIMEOUT ADMIN
+// ===============================
+
+let idleTimer;
+let isSessionTimeoutShown = false;
+
+// admin timeout lebih cepat
+const IDLE_LIMIT = 10 * 60 * 1000;
+
+function ensureSessionTimeoutModal() {
+
+    const existing = document.getElementById("sessionTimeoutModal");
+    if (existing) return existing;
+
+    const modal = document.createElement("div");
+
+    modal.id = "sessionTimeoutModal";
+
+    modal.className = "hidden fixed inset-0 z-50 flex items-center justify-center";
+
+    modal.innerHTML = `
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+
+    <div class="relative z-10 bg-white rounded-xl p-6 w-[320px] text-center shadow-xl">
+
+        <h3 class="text-lg font-semibold mb-2">
+        Session Timeout
+        </h3>
+
+        <p class="text-sm text-slate-500 mb-5">
+        Tidak ada aktivitas selama 10 menit
+        </p>
+
+        <button id="sessionTimeoutConfirmBtn"
+        class="w-full py-2 bg-red-600 text-white rounded-lg">
+
+        Login Ulang
+
+        </button>
+
+    </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById("sessionTimeoutConfirmBtn")
+        ?.addEventListener("click", async () => {
+
+            await signOut(auth);
+
+            window.location.href = "../index.html";
+
+        });
+
+    return modal;
+
+}
+
+function showSessionTimeoutModal() {
+
+    const modal = ensureSessionTimeoutModal();
+
+    isSessionTimeoutShown = true;
+
+    modal.classList.remove("hidden");
+
+}
+
+function resetIdleTimer() {
+
+    if (isSessionTimeoutShown) return;
+
+    clearTimeout(idleTimer);
+
+    idleTimer = setTimeout(() => {
+
+        showSessionTimeoutModal();
+
+    }, IDLE_LIMIT);
+
+}
+
+["click", "mousemove", "keypress", "scroll", "touchstart"]
+    .forEach(event => {
+
+        document.addEventListener(event, () => {
+
+            resetIdleTimer();
+            updateLastActive();
+
+        });
+
+    });
+
+resetIdleTimer();
+
+// ===============================
+// HEARTBEAT
+// ===============================
+
+setInterval(() => {
+
+    updateLastActive();
+
+}, 5 * 60 * 1000);

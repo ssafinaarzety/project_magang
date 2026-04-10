@@ -347,17 +347,6 @@ export function renderList(data) {
 // ===============================
 // ACCESS USER RENDER
 // ===============================
-function renderAccessUsers(allowedUsers) {
-
-    if (!allowedUsers || allowedUsers.length === 0) {
-
-        return `<span class="text-gray-400 text-xs">Private</span>`;
-
-    }
-
-    return `<span class="text-indigo-600 text-xs">${allowedUsers.length} User</span>`;
-
-}
 
 function renderAccessProfiles(users = []) {
 
@@ -442,6 +431,7 @@ function setupRowEvents(row, item) {
         ?.addEventListener("click", () => {
 
             let url = "";
+            let driveUrl = "";
 
             // ================= SPREADSHEET LINK =================
             if (item.spreadsheetLink) {
@@ -452,6 +442,8 @@ function setupRowEvents(row, item) {
 
                 url = `https://docs.google.com/spreadsheets/d/${fileId}/edit`;
 
+                driveUrl = `https://docs.google.com/spreadsheets/d/${fileId}/edit`;
+
             }
 
             // ================= FILE UPLOAD =================
@@ -459,6 +451,8 @@ function setupRowEvents(row, item) {
 
                 const fileId = item.filePath;
                 const type = (item.fileType || "").toLowerCase();
+
+                driveUrl = `https://drive.google.com/file/d/${fileId}/view`;
 
                 // ===== PDF =====
                 if (type.includes("pdf")) {
@@ -508,6 +502,19 @@ function setupRowEvents(row, item) {
             const frame = document.getElementById("previewFrame");
 
             if (frame) frame.src = url;
+            const openBtn = document.getElementById("openDriveBtn");
+
+            if (openBtn) {
+
+                openBtn.onclick = () => {
+
+                    if (driveUrl) {
+                        window.open(driveUrl, "_blank");
+                    }
+
+                };
+
+            }
 
             document
                 .getElementById("previewModal")
@@ -611,32 +618,56 @@ function setupRowEvents(row, item) {
         });
 }
 
-let allArchives = [];
+window.allArchives = [];
 let currentView = "grid";
+let isLoadingArchives = false;
 
 export async function loadArchiveData() {
 
-    // LOAD USER CACHE
-    const userSnap = await getDocs(collection(db, "users"));
+    if (isLoadingArchives) return;
 
-    userSnap.forEach(doc => {
-        const data = doc.data();
-        userCache[doc.id] = data.email || "unknown";
-    });
+    isLoadingArchives = true;
 
-    const q = query(
-        collection(db, "files"),
-        orderBy("tanggal", "desc")
-    );
+    try {
 
-    const snapshot = await getDocs(q);
+        // LOAD USER CACHE (hanya sekali)
+        if (Object.keys(userCache).length === 0) {
 
-    allArchives = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    }));
+            const userSnap = await getDocs(collection(db, "users"));
 
-    renderTable(allArchives);
+            userSnap.forEach(doc => {
+
+                const data = doc.data();
+                userCache[doc.id] = data.email || "unknown";
+
+            });
+
+        }
+
+        const q = query(
+            collection(db, "files"),
+            orderBy("tanggal", "desc"),
+            limit(50)
+        );
+        const snapshot = await getDocs(q);
+
+        window.allArchives = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        renderTable(window.allArchives);
+
+    } catch (err) {
+
+        console.error("loadArchiveData error:", err);
+
+    } finally {
+
+        isLoadingArchives = false;
+
+    }
+
 }
 
 // ===============================
@@ -806,6 +837,9 @@ document.getElementById("editModalSaveBtn")
 
             // reload data dashboard
             loadArchiveData();
+            setTimeout(() => {
+                loadDashboardStats();
+            }, 300);
 
             // tampilkan notifikasi sukses
             showSuccess("Perubahan berhasil disimpan");
@@ -813,45 +847,6 @@ document.getElementById("editModalSaveBtn")
         } catch (error) {
 
             console.error("Update error:", error);
-
-        }
-
-    });
-
-// ===============================
-// DELETE ARCHIVE
-// ===============================
-
-document.getElementById("confirmDeleteBtn")
-    ?.addEventListener("click", async () => {
-
-        const id = document.getElementById("deleteFileId").value;
-        const filePath = document.getElementById("deleteFilePath").value;
-
-        try {
-
-            // HAPUS FILE DI GOOGLE DRIVE
-            await fetch(
-                "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec",
-                {
-                    method: "POST",
-                    body: new URLSearchParams({
-                        action: "delete",
-                        fileId: filePath
-                    })
-                }
-            );
-
-            // HAPUS DATA DI FIRESTORE
-            await deleteDoc(doc(db, "files", id));
-
-            document.getElementById("deleteModal").classList.add("hidden");
-
-            loadArchiveData();
-
-        } catch (err) {
-
-            console.error("Delete error:", err);
 
         }
 

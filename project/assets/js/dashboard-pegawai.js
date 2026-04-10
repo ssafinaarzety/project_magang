@@ -303,6 +303,76 @@ function getThumbnail(fileId) {
 
 }
 
+function renderAccessProfiles(users = []) {
+
+    if (!users || users.length === 0) {
+        return `
+        <span class="text-xs text-slate-400 font-medium">
+        Private
+        </span>
+        `;
+    }
+
+    const maxVisible = 3;
+
+    const colors = [
+        "bg-blue-500",
+        "bg-purple-500",
+        "bg-green-500",
+        "bg-pink-500",
+        "bg-orange-500"
+    ];
+
+    const avatars = users.slice(0, maxVisible).map((uid, i) => {
+
+        const user = usersCache[uid];
+        const email = user?.email || "unknown";
+        const initial = email.charAt(0).toUpperCase();
+
+        const color = colors[i % colors.length];
+
+        return `
+        <div class="relative group">
+
+            <div
+            title="${email}"
+            class="w-9 h-9 rounded-full ${color}
+            text-white text-sm font-semibold
+            flex items-center justify-center
+            border-2 border-white shadow
+            hover:scale-110 transition cursor-pointer">
+
+            ${initial}
+            </div>
+
+        </div>
+        `;
+
+    }).join("");
+
+    const extra =
+        users.length > maxVisible
+            ? `
+        <div
+        class="w-9 h-9 rounded-full bg-slate-200
+        text-slate-600 text-xs font-semibold
+        flex items-center justify-center
+        border-2 border-white">
+
+        +${users.length - maxVisible}
+
+        </div>
+        `
+            : "";
+
+    return `
+    <div class="flex items-center -space-x-2">
+        ${avatars}
+        ${extra}
+    </div>
+    `;
+}
+
 function renderArchiveGrid() {
 
     const container = document.getElementById("archiveContainer");
@@ -352,28 +422,14 @@ function renderArchiveGrid() {
         // ambil uploader dari users cache
         const users = item.allowedUsers || [];
 
-        const avatars = users.slice(0, 3).map(uid => {
+        const avatars = renderAccessProfiles(users);
 
-            const user = usersCache[uid];
-            const email = user?.email || "user";
-
-            return `
-            <div title="${email}"
-            class="w-10 h-10 rounded-full bg-primary text-white text-base flex items-center justify-center font-bold border-2 border-white shadow-sm">
-
-            ${email.charAt(0).toUpperCase()}
-
-            </div>
-            `;
-
-            }).join("");
-
-            const extra = users.length > 3 ? `
+        const extra = users.length > 3 ? `
             <div class="text-xs text-slate-500 ml-1">
             +${users.length - 3}
             </div>` : "";
 
-            const card = `
+        const card = `
 
                 <div class="glass-panel rounded-3xl border border-white/70 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col">
 
@@ -409,7 +465,6 @@ function renderArchiveGrid() {
                     <div class="flex items-center -space-x-2 ml-1">
                     ${avatars}
                     ${extra}
-
                     </div>
 
                     <button
@@ -425,11 +480,11 @@ function renderArchiveGrid() {
                 </div>
                 `;
 
-                    container.innerHTML += card;
+        container.innerHTML += card;
 
-                });
+    });
 
-            }
+}
 
 function renderArchiveList() {
 
@@ -464,22 +519,7 @@ function renderArchiveList() {
 
         const users = item.allowedUsers || [];
 
-        const avatars = users.slice(0, 3).map(uid => {
-
-            const user = usersCache[uid];
-
-            const email = user?.email || "user";
-
-            return `
-            <div title="${email}"
-            class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold border-2 border-white">
-
-            ${email.charAt(0).toUpperCase()}
-
-            </div>
-            `;
-
-        }).join("");
+        const avatars = renderAccessProfiles(users);
 
         const extra = users.length > 3 ? `
         <div class="text-xs text-slate-500 ml-1">
@@ -1043,7 +1083,7 @@ async function loadActivityLogs() {
         }
 
         // Limit to 10 most recent logs
-        const displayLogs = userLogs.slice(0, 5);
+        const displayLogs = userLogs.slice(0, 10);
 
         logsBody.innerHTML = "";
 

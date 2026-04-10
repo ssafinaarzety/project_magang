@@ -205,20 +205,6 @@
 
             </a>
 
-            <!-- SETTINGS -->
-            <a href="settings.html"
-                class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
-
-                <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
-                    settings
-                </span>
-
-                <span class="text-sm">
-                    Settings
-                </span>
-
-            </a>
-
         </nav>
         <div class="mt-auto px-8 pb-10">
 
@@ -293,12 +279,14 @@
                                                 for="kategori">Kategori</label>
                                             <select
                                                 class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
-                                                id="kategori">
+                                                id="kategori" required name="kategori" placeholder="Pilih kategori">
+
                                                 <option value="keuangan">Keuangan</option>
                                                 <option value="hrd">HRD</option>
                                                 <option value="logistik">Logistik</option>
                                                 <option value="legal">Legal</option>
                                                 <option value="marketing">Marketing</option>
+
                                             </select>
                                         </div>
                                     </div>
@@ -779,22 +767,33 @@
             <div
                 class="relative bg-white dark:bg-[#1a2634] w-[96vw] max-w-none h-[92vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
                 <!-- HEADER -->
-                <div
-                    class="flex justify-between items-center px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+             <div class="flex justify-between items-center px-4 py-3 border-b border-slate-200 dark:border-slate-700">
 
-                    <h3 class="font-semibold text-slate-900 dark:text-white">
-                        Preview Arsip
-                    </h3>
+    <h3 class="font-semibold text-slate-900 dark:text-white">
+        Preview Arsip
+    </h3>
 
-                    <button onclick="document.getElementById('previewModal').classList.add('hidden')"
-                        class="text-slate-500 hover:text-red-500 text-lg">
+    <div class="flex items-center gap-3">
 
-                        ✖
+        <!-- OPEN IN DRIVE -->
+        <button id="openDriveBtn"
+            class="px-3 py-1.5 text-xs font-semibold bg-slate-900 text-white rounded hover:bg-slate-700 transition">
 
-                    </button>
+            Open in Drive
 
-                </div>
+        </button>
 
+        <!-- CLOSE -->
+        <button onclick="document.getElementById('previewModal').classList.add('hidden')"
+            class="text-slate-500 hover:text-red-500 text-lg">
+
+            ✖
+
+        </button>
+
+    </div>
+
+</div>
                 <!-- CONTENT -->
                 <div class="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900">
 
@@ -837,13 +836,6 @@
                     class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
 
                     <span class="material-symbols-outlined">help</span>
-
-                </button>
-
-                <button onclick="window.location.href='settings.html'"
-                    class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
-
-                    <span class="material-symbols-outlined">settings</span>
 
                 </button>
 

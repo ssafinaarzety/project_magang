@@ -76,12 +76,12 @@ export async function loadActivityLogs() {
                 </div>
                 `;
 
-                let actionLabel = "Activity";
+            let actionLabel = "Activity";
 
-if (log.action === "login") actionLabel = "User login";
-if (log.action === "access") actionLabel = "Access file";
-if (log.action === "upload") actionLabel = "Upload file";
-if (log.action === "delete") actionLabel = "Delete file";
+            if (log.action === "login") actionLabel = "User login";
+            if (log.action === "access") actionLabel = "Access file";
+            if (log.action === "upload") actionLabel = "Upload file";
+            if (log.action === "delete") actionLabel = "Delete file";
 
             item.innerHTML = `
 
@@ -134,7 +134,8 @@ export async function exportLogs() {
         const snapshot = await getDocs(
             query(
                 collection(db, "activityLogs"),
-                orderBy("timestamp", "desc")
+                orderBy("timestamp", "desc"),
+                limit(500)
             )
         );
 

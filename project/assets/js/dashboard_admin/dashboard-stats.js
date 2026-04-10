@@ -18,7 +18,7 @@ export async function loadDashboardStats() {
 
         // total files
         const countSnapshot = await getCountFromServer(
-            query(collection(db, "files"))
+            query(collection(db, "files"), limit(500))
         );
 
         const totalFiles = countSnapshot.data().count;
@@ -49,7 +49,7 @@ export async function loadDashboardStats() {
 
         // top category
         const snapshot = await getDocs(
-            query(collection(db, "files"), limit(2000))
+            query(collection(db, "files"), limit(200))
         );
 
         const categoryMap = {};
@@ -96,29 +96,21 @@ export async function loadDashboardStats() {
 // ===============================
 // GENERATE FILTER OPTIONS
 // ===============================
-export async function generateFilterOptions() {
-
-    const snapshot = await getDocs(
-        query(collection(db, "files"), limit(200))
-    );
+export function generateFilterOptions() {
 
     const yearSet = new Set();
     const categorySet = new Set();
 
-    snapshot.forEach(doc => {
+    if (!window.allArchives) return;
 
-        const data = doc.data();
+    window.allArchives.forEach(data => {
 
         if (data.tanggal) {
-
             yearSet.add(data.tanggal.split("-")[0]);
-
         }
 
         if (data.kategori) {
-
             categorySet.add(data.kategori);
-
         }
 
     });

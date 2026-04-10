@@ -78,7 +78,16 @@ export function setupUpload() {
     const dropzone = document.getElementById("uploadFileDropzone");
     const fileInput = document.getElementById("uploadFileInput");
     const fileInfo = document.getElementById("uploadFileInfo");
+    const clearBtn = document.getElementById("uploadFileClearBtn");
 
+    clearBtn?.addEventListener("click", () => {
+
+        fileInput.value = "";
+
+        if (fileInfo)
+            fileInfo.textContent = "Belum ada file dipilih";
+
+    });
 
     // ===============================
     // DRAG & DROP
@@ -130,11 +139,26 @@ export function setupUpload() {
         try {
 
             const judul = document.getElementById("judul")?.value.trim();
-            const kategori = document.getElementById("kategori")?.value.trim();
+const kategori = document.getElementById("kategori")?.value;
+
+console.log("Kategori dipilih:", kategori);            
             const tahun = document.getElementById("tahun")?.value;
             const link = document.getElementById("link")?.value.trim();
 
+            console.log("LINK:", link);
+            console.log("VALID:", isValidSpreadsheetLink(link));
+
             const file = fileInput?.files[0];
+
+            if (!judul || !kategori || !tahun) {
+                showError("Judul, kategori, dan tahun wajib diisi");
+                return;
+            }
+
+            if (!link && !file) {
+                showError("Masukkan link spreadsheet atau upload file");
+                return;
+            }
 
             let driveFileId = "";
 
@@ -275,11 +299,11 @@ export function setupUpload() {
             if (fileInfo) fileInfo.textContent = "Belum ada file dipilih";
 
 
-            await Promise.all([
-                loadArchiveData(),
-                loadDashboardStats()
-            ]);
+            await loadArchiveData();
 
+            setTimeout(() => {
+                loadDashboardStats();
+            }, 500);
 
             showSuccess("Arsip berhasil diupload");
 
@@ -303,26 +327,59 @@ export function setupDeleteArchive() {
 
     const btn = document.getElementById("confirmDeleteBtn");
     if (!btn) return;
-
     btn.addEventListener("click", async () => {
+
+        const fileId = document.getElementById("deleteFileId")?.value;
+        const filePath = document.getElementById("deleteFilePath")?.value;
+
+        console.log("DELETE FIRESTORE ID:", fileId);
+        console.log("DELETE DRIVE FILE:", filePath);
+
+        if (!fileId) {
+            showError("File tidak ditemukan");
+            return;
+        }
 
         try {
 
-            const fileId = document.getElementById("deleteFileId")?.value;
+            // ===============================
+            // DELETE DRIVE FILE
+            // ===============================
+            if (filePath) {
 
-            if (!fileId) {
-                showError("File tidak ditemukan");
-                return;
+                const res = await fetch(DRIVE_API, {
+                    method: "POST",
+                    body: new URLSearchParams({
+                        action: "delete",
+                        fileId: filePath
+                    })
+                });
+
+                console.log("Drive delete response:", await res.text());
+
             }
 
-            await deleteDoc(doc(db, "files", fileId));
+            // ===============================
+            // DELETE FIRESTORE
+            // ===============================
+            const ref = doc(db, "files", fileId);
+            await deleteDoc(ref);
+            console.log("Firestore delete success:", fileId);
+            console.log("Firestore delete success");
 
+            // ===============================
+            // CLOSE MODAL
+            // ===============================
             document.getElementById("deleteModal")?.classList.add("hidden");
 
-            await Promise.all([
-                loadArchiveData(),
-                loadDashboardStats()
-            ]);
+            // ===============================
+            // RELOAD DATA
+            // ===============================
+            await loadArchiveData();
+
+            setTimeout(() => {
+                loadDashboardStats();
+            }, 300);
 
             showSuccess("Arsip berhasil dihapus");
 
@@ -334,27 +391,27 @@ export function setupDeleteArchive() {
         }
 
     });
-
-
 }
 
 // ===============================
 // OPEN DELETE MODAL
 // ===============================
-export function openDeleteModal(fileId, fileName) {
-
+export function openDeleteModal(fileId, fileName, filePath) {
 
     const modal = document.getElementById("deleteModal");
     const idInput = document.getElementById("deleteFileId");
+    const pathInput = document.getElementById("deleteFilePath");
     const nameEl = document.getElementById("deleteFileName");
 
     if (idInput) idInput.value = fileId;
+
+    if (pathInput) pathInput.value = filePath || "";
+
     if (nameEl) nameEl.innerText = fileName;
 
     if (modal) modal.classList.remove("hidden");
 
 }
-
 // ===============================
 // CONVERT FILE TO BASE64
 // ===============================

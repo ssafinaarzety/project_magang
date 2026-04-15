@@ -32,13 +32,16 @@ export async function loadDashboardStats() {
         const now = new Date();
 
         const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        startMonth.setHours(0, 0, 0, 0);
+
+        const endMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        endMonth.setHours(0, 0, 0, 0);
 
         const monthlySnapshot = await getCountFromServer(
             query(
                 collection(db, "files"),
-                where("tanggal", ">=", startMonth.toISOString().split("T")[0]),
-                where("tanggal", "<=", endMonth.toISOString().split("T")[0])
+                where("createdAt", ">=", startMonth),
+                where("createdAt", "<", endMonth)
             )
         );
 

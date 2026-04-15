@@ -3,14 +3,33 @@ import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc, collection, query, where, getDocs }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import { sendPasswordResetEmail }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import { updateDoc }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
 const pageRoot = document.body;
 const requiredRole = pageRoot.dataset.requiredRole;
 
 function setText(id, value) {
+
     const el = document.getElementById(id);
-    if (el) {
+
+    if (!el) return;
+
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+
+        el.value = value || "";
+
+    } else {
+
         el.textContent = value || "-";
+
     }
+
 }
 
 function getInitial(name = "Pegawai") {
@@ -27,25 +46,53 @@ function getInitial(name = "Pegawai") {
     ).toUpperCase();
 }
 
-function setAvatar(name) {
+function setAvatar(name, photoURL) {
+
     const avatar = document.getElementById("profileAvatar");
+
     if (avatar) {
-        const avatarImg = avatar.querySelector("img");
-        if (avatarImg) {
-            avatarImg.alt = `${name} profile picture`;
+
+        avatar.innerHTML = "";
+
+        if (photoURL) {
+
+            const img = document.createElement("img");
+
+            img.src = photoURL;
+            img.alt = name + " profile picture";
+            img.className = "w-full h-full object-cover";
+
+            avatar.appendChild(img);
+
         } else {
+
             avatar.textContent = getInitial(name);
+
         }
     }
 
     const sidebarAvatar = document.getElementById("profileAvatarSidebar");
+
     if (sidebarAvatar) {
-        const sidebarAvatarImg = sidebarAvatar.querySelector("img");
-        if (sidebarAvatarImg) {
-            sidebarAvatarImg.alt = `${name} profile picture`;
+
+        sidebarAvatar.innerHTML = "";
+
+        if (photoURL) {
+
+            const img = document.createElement("img");
+
+            img.src = photoURL;
+            img.alt = name + " profile picture";
+            img.className = "w-full h-full object-cover";
+
+            sidebarAvatar.appendChild(img);
+
         } else {
+
             sidebarAvatar.textContent = getInitial(name);
+
         }
+
     }
 }
 
@@ -169,6 +216,8 @@ onAuthStateChanged(auth, async (user) => {
         setText("profileLastLogin", lastLogin);
         setText("profileDepartment", userData.department || "Belum diisi");
         setText("profilePhone", userData.phone || "Belum diisi");
+        originalDepartment = userData.department || "";
+        originalPhone = userData.phone || "";
 
         // hitung jumlah file pegawai
         const q = query(
@@ -180,10 +229,126 @@ onAuthStateChanged(auth, async (user) => {
 
         setText("filesCount", snap.size);
 
-        setAvatar(displayName);
+        setAvatar(displayName, user.photoURL);
         setupActions(role);
     } catch (error) {
         console.error("Profile page error:", error);
         alert("Gagal memuat data profil.");
     }
 });
+
+const resetBtn = document.getElementById("resetPasswordBtn");
+
+resetBtn?.addEventListener("click", async () => {
+
+    try {
+
+        const email = auth.currentUser.email;
+
+        await sendPasswordResetEmail(auth, email);
+
+        openSuccessModal("Email reset password berhasil dikirim.");
+
+    } catch (err) {
+
+        console.error(err);
+        alert("Gagal mengirim email reset password");
+
+    }
+
+});
+
+document.getElementById("saveProfileBtn")?.addEventListener("click", async () => {
+    try {
+
+        const user = auth.currentUser;
+
+        await updateDoc(doc(db, "users", user.uid), {
+
+            department: document.getElementById("profileDepartment").value,
+            phone: document.getElementById("profilePhone").value
+
+        });
+
+        openSuccessModal("Profile berhasil diperbarui");
+
+    } catch (err) {
+
+        console.error(err);
+        openErrorModal("Gagal update profile");
+
+    }
+
+});
+
+const editBtn = document.getElementById("editProfileBtn");
+const saveBtn = document.getElementById("saveProfileBtn");
+
+const departmentInput = document.getElementById("profileDepartment");
+const phoneInput = document.getElementById("profilePhone");
+
+let originalDepartment = "";
+let originalPhone = "";
+
+editBtn?.addEventListener("click", () => {
+
+    departmentInput.disabled = false;
+    phoneInput.disabled = false;
+
+    departmentInput.focus();
+
+});
+
+function checkChanges() {
+
+    const changed =
+        departmentInput.value !== originalDepartment ||
+        phoneInput.value !== originalPhone;
+
+    if (changed) {
+
+        saveBtn.disabled = false;
+        saveBtn.classList.remove("bg-slate-300", "cursor-not-allowed");
+        saveBtn.classList.add("bg-primary");
+
+    } else {
+
+        saveBtn.disabled = true;
+        saveBtn.classList.add("bg-slate-300", "cursor-not-allowed");
+        saveBtn.classList.remove("bg-primary");
+
+    }
+
+}
+
+departmentInput?.addEventListener("input", checkChanges);
+phoneInput?.addEventListener("input", checkChanges);
+
+window.openSuccessModal = function (message) {
+
+    const modal = document.getElementById("successModal");
+    const text = document.getElementById("successMessage");
+
+    text.textContent = message;
+    modal.classList.remove("hidden");
+
+}
+
+window.closeSuccessModal = function () {
+
+    document.getElementById("successModal").classList.add("hidden");
+
+}
+
+window.openErrorModal = function (message) {
+
+    document.getElementById("errorMessage").textContent = message;
+    document.getElementById("errorModal").classList.remove("hidden");
+
+}
+
+window.closeErrorModal = function () {
+
+    document.getElementById("errorModal").classList.add("hidden");
+
+}

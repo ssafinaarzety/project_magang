@@ -307,10 +307,8 @@ export function renderList(data) {
             ${tahun}
         </div>
 
-        <div class="col-span-3 flex items-center -space-x-2">
-
+                <div class="flex -space-x-2 access-btn cursor-pointer hover:scale-105 transition">
             ${renderAccessProfiles(item.allowedUsers || [])}
-
         </div>  
 
         <div class="col-span-1 flex justify-end items-center gap-3">

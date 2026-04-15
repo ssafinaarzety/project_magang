@@ -1,66 +1,69 @@
-    import { db, auth } from "../firebase-config.js";
+import { db, auth } from "../firebase-config.js";
 
-    import {
-        collection,
-        getDocs,
-        doc,
-        updateDoc,
-        getDoc,
-        addDoc,
-        serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+    collection,
+    getDocs,
+    doc,
+    updateDoc,
+    getDoc,
+    addDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    import { loadArchiveData } from "./archive-table.js";
+import { loadArchiveData } from "./archive-table.js";
 
-    let selectedFileId = null;
-    let selectedAccessUsers = [];
+let selectedFileId = null;
+let selectedAccessUsers = [];
 
-    // ===============================
-    // OPEN ACCESS MODAL
-    // ===============================
-    export async function openAccessModal(fileId, allowedUsers = []) {
+// ===============================
+// OPEN ACCESS MODAL
+// ===============================
+export async function openAccessModal(fileId, allowedUsers = []) {
 
-        selectedFileId = fileId;
-        selectedAccessUsers = Array.isArray(allowedUsers) ? [...allowedUsers] : [];
+    selectedFileId = fileId;
+    selectedAccessUsers = Array.isArray(allowedUsers) ? [...allowedUsers] : [];
 
-        const listContainer = document.getElementById("accessUserList");
+    const listContainer = document.getElementById("accessUserList");
 
-        if (!listContainer) return;
+    if (!listContainer) return;
 
-        listContainer.innerHTML = `
+    listContainer.innerHTML = `
             <div class="text-center text-slate-400 py-4">
             Loading users...
             </div>
             `;
 
-        try {
+    try {
 
-            const snapshot = await getDocs(collection(db, "users"));
+        const snapshot = await getDocs(collection(db, "users"));
 
-            listContainer.innerHTML = "";
+        listContainer.innerHTML = "";
 
-            if (snapshot.empty) {
+        if (snapshot.empty) {
 
-                listContainer.innerHTML =
-                    "<div class='text-center text-slate-400 py-4'>Tidak ada user</div>";
+            listContainer.innerHTML =
+                "<div class='text-center text-slate-400 py-4'>Tidak ada user</div>";
 
-                return;
+            return;
 
-            }
+        }
 
-            snapshot.forEach(docSnap => {
+        snapshot.forEach(docSnap => {
 
-                const uid = docSnap.id;
-                const user = docSnap.data();
+            const uid = docSnap.id;
+            const user = docSnap.data();
 
-                const isActive = selectedAccessUsers.includes(uid);
+            const isActive = selectedAccessUsers.includes(uid);
 
-                const div = document.createElement("div");
+            const div = document.createElement("div");
 
-                div.className =
-                    "flex items-center justify-between p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition";
+            div.dataset.email = user.email || "";
+            div.dataset.name = user.name || "";
 
-                div.innerHTML = `
+            div.className =
+                "flex items-center justify-between p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition";
+
+            div.innerHTML = `
 
                 <div class="flex items-center justify-between w-full">
 
@@ -75,153 +78,185 @@
                     </div>
 
                     ${isActive
-                        ? `<button class="px-3 py-1 text-xs font-medium bg-red-50 text-red-600 rounded-lg">
+                    ? `<button class="px-3 py-1 text-xs font-medium bg-red-50 text-red-600 rounded-lg">
                             Remove
                         </button>`
-                        : `<button class="px-3 py-1 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-lg">
+                    : `<button class="px-3 py-1 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-lg">
                             Add
                         </button>`
-                    }
+                }
 
                 </div>
 
                 `;
 
-                div.addEventListener("click", () => {
+            div.addEventListener("click", () => {
 
-                    toggleUserAccess(uid);
+                toggleUserAccess(uid);
 
-                    openAccessModal(selectedFileId, selectedAccessUsers);
-
-                });
-
-                listContainer.appendChild(div);
+                openAccessModal(selectedFileId, selectedAccessUsers);
 
             });
 
-        } catch (err) {
+            listContainer.appendChild(div);
 
-            console.error("Load users error:", err);
+        });
 
-            listContainer.innerHTML =
-                "<div class='text-center text-red-500 py-4'>Gagal memuat user</div>";
+    } catch (err) {
 
-        }
+        console.error("Load users error:", err);
 
-        document
-            .getElementById("accessModal")
-            ?.classList.remove("hidden");
+        listContainer.innerHTML =
+            "<div class='text-center text-red-500 py-4'>Gagal memuat user</div>";
+
+    }
+    // ===============================
+    // SEARCH USER
+    // ===============================
+
+    const searchInput = document.getElementById("accessUserSearch");
+
+    if (searchInput) {
+
+        searchInput.oninput = () => {
+
+            const keyword = searchInput.value.toLowerCase();
+
+            const rows = document.querySelectorAll("#accessUserList > div");
+
+            rows.forEach(row => {
+
+                const email = row.dataset.email.toLowerCase();
+                const name = row.dataset.name.toLowerCase();
+
+                if (
+                    email.includes(keyword) ||
+                    name.includes(keyword)
+                ) {
+                    row.style.display = "flex";
+                } else {
+                    row.style.display = "none";
+                }
+
+            });
+
+        };
+
+    }
+    document
+        .getElementById("accessModal")
+        ?.classList.remove("hidden");
+
+}
+
+window.openAccessModal = openAccessModal;
+
+// ===============================
+// TOGGLE ACCESS USER
+// ===============================
+export function toggleUserAccess(uid) {
+
+    if (selectedAccessUsers.includes(uid)) {
+
+        selectedAccessUsers =
+            selectedAccessUsers.filter(id => id !== uid);
+
+    } else {
+
+        selectedAccessUsers.push(uid);
 
     }
 
-    window.openAccessModal = openAccessModal;
+}
 
-    // ===============================
-    // TOGGLE ACCESS USER
-    // ===============================
-    export function toggleUserAccess(uid) {
+// ===============================
+// SAVE ACCESS
+// ===============================
+export function setupAccessSave() {
 
-        if (selectedAccessUsers.includes(uid)) {
+    const btn = document.getElementById("accessModalSaveBtn");
 
-            selectedAccessUsers =
-                selectedAccessUsers.filter(id => id !== uid);
+    if (!btn) return;
 
-        } else {
+    // cegah event double
+    btn.replaceWith(btn.cloneNode(true));
 
-            selectedAccessUsers.push(uid);
+    const newBtn = document.getElementById("accessModalSaveBtn");
+
+    newBtn.addEventListener("click", async () => {
+
+        if (!selectedFileId) {
+
+            alert("File tidak ditemukan");
+
+            return;
 
         }
 
-    }
+        try {
 
-    // ===============================
-    // SAVE ACCESS
-    // ===============================
-    export function setupAccessSave() {
+            const user = auth.currentUser;
 
-        const btn = document.getElementById("accessModalSaveBtn");
+            if (!user) {
 
-        if (!btn) return;
-
-        // cegah event double
-        btn.replaceWith(btn.cloneNode(true));
-
-        const newBtn = document.getElementById("accessModalSaveBtn");
-
-        newBtn.addEventListener("click", async () => {
-
-            if (!selectedFileId) {
-
-                alert("File tidak ditemukan");
+                alert("User tidak ditemukan");
 
                 return;
 
             }
 
-            try {
+            const fileRef = doc(db, "files", selectedFileId);
 
-                const user = auth.currentUser;
-
-                if (!user) {
-
-                    alert("User tidak ditemukan");
-
-                    return;
-
-                }
-
-                const fileRef = doc(db, "files", selectedFileId);
-
-                await updateDoc(fileRef, {
-                    allowedUsers: selectedAccessUsers,
-                    updatedAt: serverTimestamp()
-                });
+            await updateDoc(fileRef, {
+                allowedUsers: selectedAccessUsers,
+                updatedAt: serverTimestamp()
+            });
 
 
-                // ambil nama file untuk log
-                const fileSnap = await getDoc(fileRef);
+            // ambil nama file untuk log
+            const fileSnap = await getDoc(fileRef);
 
-                const fileData = fileSnap.data();
-
-
-                // ===============================
-                // ACTIVITY LOG
-                // ===============================
-                await addDoc(collection(db, "activityLogs"), {
-                    
-                    uid: user.uid,
-                    userEmail: user.email,
-                    action: "manage_access",
-                    fileName: fileData?.nama || "-",
-                    fileId: selectedFileId,
-                    status: "success",
-                    timestamp: serverTimestamp()
-
-                });
+            const fileData = fileSnap.data();
 
 
-                // tutup modal
-                document
-                    .getElementById("accessModal")
-                    ?.classList.add("hidden");
+            // ===============================
+            // ACTIVITY LOG
+            // ===============================
+            await addDoc(collection(db, "activityLogs"), {
+
+                uid: user.uid,
+                userEmail: user.email,
+                action: "manage_access",
+                fileName: fileData?.nama || "-",
+                fileId: selectedFileId,
+                status: "success",
+                timestamp: serverTimestamp()
+
+            });
 
 
-                // reset state
-                selectedFileId = null;
-                selectedAccessUsers = [];
+            // tutup modal
+            document
+                .getElementById("accessModal")
+                ?.classList.add("hidden");
 
 
-                // reload table
-                await loadArchiveData();
+            // reset state
+            selectedFileId = null;
+            selectedAccessUsers = [];
 
-            } catch (err) {
 
-                console.error("Access update error:", err);
+            // reload table
+            await loadArchiveData();
 
-                alert("Gagal mengupdate hak akses");
+        } catch (err) {
 
-            }
+            console.error("Access update error:", err);
 
-        });
+            alert("Gagal mengupdate hak akses");
 
-    }
+        }
+
+    });
+
+}

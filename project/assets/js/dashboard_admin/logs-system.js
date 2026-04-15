@@ -10,6 +10,7 @@ import {
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
+
 // ===============================
 // LOAD ACTIVITY LOGS
 // ===============================
@@ -52,6 +53,8 @@ export async function loadActivityLogs() {
 
             const log = docSnap.data();
 
+            const userLabel = log.userEmail || log.uid || "unknown";
+
             let date = "-";
 
             if (log.timestamp) {
@@ -72,7 +75,7 @@ export async function loadActivityLogs() {
 
             const avatar = `
                 <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
-                ${((log.userEmail || log.uid || "U")[0]).toUpperCase()}
+                ${(userLabel[0] || "U").toUpperCase()}
                 </div>
                 `;
 
@@ -82,6 +85,9 @@ export async function loadActivityLogs() {
             if (log.action === "access") actionLabel = "Access file";
             if (log.action === "upload") actionLabel = "Upload file";
             if (log.action === "delete") actionLabel = "Delete file";
+            if (log.action === "edit") actionLabel = "Edit file";
+            if (log.action === "manage_access") actionLabel = "Manage access";
+            if (log.action === "remove_access") actionLabel = "Remove access";
 
             item.innerHTML = `
 
@@ -97,7 +103,7 @@ export async function loadActivityLogs() {
                 </div>
 
                 <div class="text-xs text-slate-500">
-                ${log.userEmail || log.uid || "-"} • ${date}
+                ${userLabel} • ${date}
                 </div>
 
                 </div>

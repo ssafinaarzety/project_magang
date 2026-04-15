@@ -136,12 +136,15 @@ export function setupUpload() {
     // ===============================
     newBtn.addEventListener("click", async () => {
 
+        const progressBox = document.getElementById("uploadProgressBox");
+        progressBox?.classList.remove("hidden");
+
         try {
 
             const judul = document.getElementById("judul")?.value.trim();
-const kategori = document.getElementById("kategori")?.value;
+            const kategori = document.getElementById("kategori")?.value;
 
-console.log("Kategori dipilih:", kategori);            
+            console.log("Kategori dipilih:", kategori);
             const tahun = document.getElementById("tahun")?.value;
             const link = document.getElementById("link")?.value.trim();
 
@@ -151,6 +154,7 @@ console.log("Kategori dipilih:", kategori);
             const file = fileInput?.files[0];
 
             if (!judul || !kategori || !tahun) {
+                progressBox?.classList.add("hidden");
                 showError("Judul, kategori, dan tahun wajib diisi");
                 return;
             }
@@ -251,7 +255,7 @@ console.log("Kategori dipilih:", kategori);
             // ===============================
             // SAVE FIRESTORE
             // ===============================
-            await addDoc(collection(db, "files"), {
+            const docRef = await addDoc(collection(db, "files"), {
 
                 nama: judul,
                 kategori: kategori.toLowerCase(),
@@ -279,13 +283,15 @@ console.log("Kategori dipilih:", kategori);
 
                 uid: user.uid,
                 userEmail: user.email,
+
                 action: "upload",
                 fileName: judul,
+                fileId: docRef.id,
+
                 status: "success",
                 timestamp: serverTimestamp()
 
             });
-
 
             // ===============================
             // RESET FORM
@@ -305,6 +311,7 @@ console.log("Kategori dipilih:", kategori);
                 loadDashboardStats();
             }, 500);
 
+            progressBox?.classList.add("hidden");
             showSuccess("Arsip berhasil diupload");
 
 
@@ -312,6 +319,7 @@ console.log("Kategori dipilih:", kategori);
 
             console.error("Upload error:", err);
             showError("Upload gagal");
+            progressBox?.classList.add("hidden");
 
         }
 
@@ -364,6 +372,23 @@ export function setupDeleteArchive() {
             // ===============================
             const ref = doc(db, "files", fileId);
             await deleteDoc(ref);
+
+            // ACTIVITY LOG DELETE
+            const user = auth.currentUser;
+
+            await addDoc(collection(db, "activityLogs"), {
+
+                uid: user.uid,
+                userEmail: user.email,
+
+                action: "delete",
+                fileName: document.getElementById("deleteFileName")?.innerText || "-",
+                fileId: fileId,
+
+                status: "success",
+                timestamp: serverTimestamp()
+
+            });
             console.log("Firestore delete success:", fileId);
             console.log("Firestore delete success");
 

@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Profile Pegawai - AUTORA</title>
+    <title>Settings - AUTORA</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
@@ -148,7 +148,7 @@
             </a>
 
             <!-- SETTINGS -->
-            <a href="settings.html"
+            <a href="profile-pegawai.html"
                 class="nav-item flex items-center gap-4 px-8 py-3 text-slate-700 hover:bg-white/40 rounded-r-full transition">
 
                 <span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">
@@ -197,16 +197,13 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 ml-4">
-                <button onclick="alert('Hubungi admin IT untuk bantuan')"
+                <button onclick="document.getElementById('helpModal').classList.remove('hidden')"
                     class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
                     <span class="material-symbols-outlined">help</span>
                 </button>
-                <button onclick="window.location.href='settings.html'"
+                <button onclick="window.location.href='profile-pegawai.html'"
                     class="p-2.5 rounded-full hover:bg-white/40 transition-colors text-slate-600">
                     <span class="material-symbols-outlined">settings</span>
-                </button>
-                <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
-                    class="fixed right-8 bottom-8 w-16 h-16 bg-primary-container text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 md:hidden">
                 </button>
                 <div class="ml-2 w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm">
                     <div id="profileBtn"
@@ -219,7 +216,7 @@
         <div class="max-w-[1400px] mx-auto px-10 py-12">
             <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 class="text-4xl md:text-5xl font-black tracking-tight text-on-surface mb-2">Profil Pegawai</h2>
+                    <h2 class="text-4xl md:text-5xl font-black tracking-tight text-on-surface mb-2">Settings</h2>
                     <p class="text-on-surface-variant max-w-lg leading-relaxed">
                         Lihat dan kelola informasi akun pegawai Anda pada sistem arsip AUTORA.
                     </p>
@@ -279,19 +276,6 @@
                                 class="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-6">
                             </div>
 
-                            <!-- Stats -->
-                            <div class="w-full grid grid-cols-2 gap-4 mt-auto pt-4">
-                                <div
-                                    class="p-3 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors">
-                                    <p class="text-xs text-slate-500 font-semibold mb-1">Files Saya</p>
-                                    <p id="filesCount" class="text-lg font-bold text-primary">0</p>
-                                </div>
-                                <div
-                                    class="p-3 rounded-lg bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-colors">
-                                    <p class="text-xs text-slate-500 font-semibold mb-1">Activity Score</p>
-                                    <p class="text-lg font-bold text-secondary">100%</p>
-                                </div>
-                            </div>
 
                         </div>
 
@@ -355,6 +339,7 @@
                                 </div>
                             </div>
 
+
                             <div
                                 class="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-secondary/5 to-transparent border border-secondary/10 hover:border-secondary/20 transition-all duration-300 hover:shadow-md">
                                 <span
@@ -362,7 +347,8 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
                                         Departemen</p>
-                                    <p id="profileDepartment" class="font-semibold text-on-surface">-</p>
+                                    <input id="profileDepartment" disabled
+                                        class="w-full bg-transparent border-b border-slate-300 outline-none disabled:text-slate-500">
                                 </div>
                             </div>
 
@@ -373,17 +359,108 @@
                                 <div class="flex-1">
                                     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Telepon
                                     </p>
-                                    <p id="profilePhone" class="font-semibold text-on-surface">-</p>
+                                    <input id="profilePhone" disabled
+                                        class="w-full bg-transparent border-b border-slate-300 outline-none disabled:text-slate-500">
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- SAVE PROFILE -->
+                        <div class="mt-6 flex justify-end gap-3">
+
+                            <button id="editProfileBtn"
+                                class="px-5 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-100 transition">
+                                Edit
+                            </button>
+
+                            <button id="saveProfileBtn" disabled
+                                class="px-6 py-3 bg-slate-300 text-white rounded-lg font-semibold cursor-not-allowed">
+                                Simpan Perubahan
+                            </button>
+
+                        </div>
+
+                        <hr class="my-8">
+
+                        <!-- SECURITY -->
+                        <h4 class="text-xl font-bold mb-4">Security</h4>
+
+                        <div
+                            class="flex items-center justify-between bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+
+                            <div>
+                                <p class="font-semibold">Reset Password</p>
+                                <p class="text-sm text-slate-500">
+                                    Kirim email untuk mengganti password akun.
+                                </p>
+                            </div>
+
+                            <button id="resetPasswordBtn"
+                                class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition">
+                                Send Email
+                            </button>
+
+                        </div>
+
+                        <hr class="my-8">
+
+                        <!-- SUCCESS MODAL -->
+                        <div id="successModal"
+                            class="hidden fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50">
+
+                            <div class="bg-white rounded-xl p-6 w-[320px] text-center shadow-xl">
+
+                                <div class="mb-3 flex justify-center">
+                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-green-600">check</span>
+                                    </div>
+                                </div>
+
+                                <h3 class="text-lg font-bold mb-2">Berhasil</h3>
+
+                                <p id="successMessage" class="text-sm text-gray-500 mb-5">
+                                    Aksi berhasil dilakukan
+                                </p>
+
+                                <button onclick="closeSuccessModal()"
+                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90">
+                                    OK
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <!-- ERROR MODAL -->
+                        <div id="errorModal"
+                            class="hidden fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50">
+
+                            <div class="bg-white rounded-xl p-6 w-[320px] text-center shadow-xl">
+
+                                <div class="mb-3 flex justify-center">
+                                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-red-600">close</span>
+                                    </div>
+                                </div>
+
+                                <h3 class="text-lg font-bold mb-2">Gagal</h3>
+
+                                <p id="errorMessage" class="text-sm text-gray-500 mb-5">
+                                    Terjadi kesalahan
+                                </p>
+
+                                <button onclick="closeErrorModal()"
+                                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                    OK
+                                </button>
+
                             </div>
 
                         </div>
 
                     </div>
-
                 </div>
 
-            </div>
     </main>
     <!-- BottomNavBar (Mobile Only) -->
     <nav
@@ -425,6 +502,50 @@
 
         </div>
 
+    </div>
+    <!-- HELP MODAL -->
+    <div id="helpModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur flex items-center justify-center z-50">
+
+        <div class="bg-white rounded-[2rem] w-[420px] shadow-xl">
+
+            <div class="flex justify-between items-center px-8 py-6 border-b">
+
+                <h3 class="text-xl font-semibold text-slate-800">
+                    Bantuan Penggunaan Sistem
+                </h3>
+
+                <button onclick="document.getElementById('helpModal').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600 text-xl">
+                    ✕
+                </button>
+
+            </div>
+
+            <div class="px-8 py-6 space-y-5 text-sm text-slate-600">
+
+                <div>
+                    <p class="font-semibold text-slate-800">Mengubah Profil</p>
+                    <p>Klik tombol edit untuk mengubah departemen atau nomor telepon.</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-slate-800">Reset Password</p>
+                    <p>Klik tombol send email untuk menerima link reset password.</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-slate-800">Simpan Perubahan</p>
+                    <p>Tombol simpan hanya aktif jika ada perubahan data.</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-slate-800">Butuh Bantuan?</p>
+                    <p>Hubungi admin sistem jika mengalami kendala.</p>
+                </div>
+
+            </div>
+
+        </div>
     </div>
     <script type="module" src="../assets/js/profile.js"></script>
 </body>

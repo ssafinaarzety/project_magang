@@ -6,7 +6,6 @@ import {
     query,
     orderBy,
     limit,
-    startAfter,
     doc,
     getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -24,7 +23,7 @@ let allLogs = [];
 let filteredLogs = [];
 let currentPage = 1;
 const PAGE_SIZE = 15;
-const FETCH_SIZE = 200;
+
 
 let currentUserUID = null;
 let currentUserRole = null;
@@ -111,7 +110,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-
 // ===============================
 // LOAD LOGS FROM FIRESTORE
 // ===============================
@@ -130,48 +128,30 @@ async function loadAllLogs() {
     try {
 
         const fetchedLogs = [];
-        let cursorDoc = null;
 
-        // Fetch all activity logs in chunks, newest first.
-        while (true) {
-            const constraints = [
-                orderBy("timestamp", "desc"),
-                limit(FETCH_SIZE)
-            ];
+        const q = query(
+            collection(db, "activityLogs"),
+            orderBy("timestamp", "desc"),
+            limit(100)
+        );
 
-            if (cursorDoc) {
-                constraints.push(startAfter(cursorDoc));
-            }
+        const snapshot = await getDocs(q);
 
-            const q = query(collection(db, "activityLogs"), ...constraints);
-            const snapshot = await getDocs(q);
+        snapshot.forEach((docSnap) => {
+            const log = docSnap.data();
 
-            if (snapshot.empty) {
-                break;
-            }
+            if (log.userEmail && log.action) {
 
-            snapshot.forEach((docSnap) => {
-                const log = docSnap.data();
-
-                // Filter based on user role
-                // Admin: see all logs | Pegawai: see only their own logs
-                if (log.userEmail && log.action) {
-                    if (currentUserRole === "pegawai") {
-                        if (log.uid === currentUserUID) {
-                            fetchedLogs.push(log);
-                        }
-                    } else {
+                if (currentUserRole === "pegawai") {
+                    if (log.uid === currentUserUID) {
                         fetchedLogs.push(log);
                     }
+                } else {
+                    fetchedLogs.push(log);
                 }
-            });
 
-            cursorDoc = snapshot.docs[snapshot.docs.length - 1] || null;
-
-            if (snapshot.size < FETCH_SIZE) {
-                break;
             }
-        }
+        });
 
         allLogs = fetchedLogs;
         applyCurrentFilter(true);
@@ -191,8 +171,6 @@ async function loadAllLogs() {
     }
 
 }
-
-
 // ===============================
 // RENDER TABLE
 // ===============================

@@ -19,6 +19,7 @@ import {
     limit,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { loadActivityChart } from "./dashboard_pegawai/loadActivityChart.js";
 
 // ===============================
 // LOADING OVERLAY FUNCTIONS
@@ -71,7 +72,7 @@ let allActivityLogs = [];    // semua activity logs user
 let lastAccessedArchive = null;  // archive yang terakhir diakses
 let viewMode = "grid";
 
-let currentUserUID = null;
+export let currentUserUID = null;
 
 let currentPage = 1;
 const rowsPerPage = 10;
@@ -1195,14 +1196,15 @@ function handleArchiveAccess(fileId, fileName) {
 
         }
 
-        // EXCEL
+        // EXCEL (🔥 GANTI TOTAL DI SINI)
         else if (
             type.includes("xls") ||
             type.includes("xlsx") ||
             type.includes("csv")
         ) {
 
-            url = `https://drive.google.com/file/d/${fileId}/preview`;
+            // 🔥 PALING MIRIP GOOGLE SHEETS
+            url = `https://docs.google.com/gview?embedded=true&url=https://drive.google.com/uc?id=${fileId}`;
 
         }
 
@@ -1226,7 +1228,8 @@ function handleArchiveAccess(fileId, fileName) {
             .split("/d/")[1]
             ?.split("/")[0];
 
-        url = `https://docs.google.com/spreadsheets/d/${sheetId}/edit?rm=minimal`;
+        // 🔥 FULL seperti gambar kamu
+        url = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
 
     }
 
@@ -1268,156 +1271,6 @@ function openLastAccessedArchive() {
         window.open(archive.spreadsheetLink, "_blank");
 
     }
-}
-
-// ===============================
-// LOAD ACTIVITY CHART
-// ===============================
-
-async function loadActivityChart() {
-
-    try {
-
-        const q = query(
-            collection(db, "activityLogs"),
-            where("uid", "==", currentUserUID),
-            orderBy("timestamp", "desc"),
-            limit(30)
-        );
-
-        const snapshot = await getDocs(q);
-
-        const activityPerDay = {};
-
-        // buat 7 hari terakhir
-        for (let i = 6; i >= 0; i--) {
-
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-
-            const key = d.toISOString().split("T")[0];
-
-            activityPerDay[key] = 0;
-
-        }
-
-        snapshot.forEach(docSnap => {
-
-            const data = docSnap.data();
-
-            if (!data.timestamp) return;
-
-            const date = data.timestamp.toDate();
-
-            const key = date.toISOString().split("T")[0];
-
-            if (activityPerDay[key] !== undefined) {
-
-                activityPerDay[key]++;
-
-            }
-
-        });
-
-        const labels = Object.keys(activityPerDay).map(d => {
-
-            const date = new Date(d);
-
-            return date.toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "short"
-            });
-
-        });
-
-        const values = Object.values(activityPerDay);
-
-        renderActivityChart(labels, values);
-
-    } catch (err) {
-
-        console.error("Activity chart error:", err);
-
-    }
-
-}
-
-// ===============================
-// RENDER ACTIVITY CHART
-// ===============================
-
-function renderActivityChart(labels, data) {
-
-    const canvas = document.getElementById("activityChart");
-
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-
-    gradient.addColorStop(0, "rgba(59,130,246,0.4)");
-    gradient.addColorStop(1, "rgba(59,130,246,0)");
-
-    new Chart(ctx, {
-
-        type: "line",
-
-        data: {
-
-            labels: labels,
-
-            datasets: [{
-
-                label: "Aktivitas",
-
-                data: data,
-
-                borderColor: "#3b82f6",
-
-                backgroundColor: gradient,
-
-                borderWidth: 3,
-
-                tension: 0.4,
-
-                fill: true,
-
-                pointBackgroundColor: "#3b82f6",
-
-                pointRadius: 4,
-
-                pointHoverRadius: 6
-
-            }]
-
-        },
-
-        options: {
-
-            responsive: true,
-
-            plugins: {
-                legend: { display: false }
-            },
-
-            scales: {
-
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                },
-
-                x: {
-                    grid: { display: false }
-                }
-
-            }
-
-        }
-
-    });
-
 }
 
 // ===============================

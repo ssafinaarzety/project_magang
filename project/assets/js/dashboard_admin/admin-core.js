@@ -1,9 +1,16 @@
 import { auth, db } from "../firebase-config.js";
 
+window.DRIVE_API = "https://script.google.com/macros/s/AKfycbwix7V7l8YFdNPOCMOIf5B8utj0fJuwoMuR9AdksFZQu9KAbmZrmTPIpQbvzT2PirKO/exec";
+
 import {
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// ===============================
+// GLOBAL CONFIG
+// ===============================
+window.IS_TEST_MODE = true; 
 
 // ===============================
 // LOGOUT SYSTEM
@@ -47,7 +54,16 @@ cancelLogoutBtn?.addEventListener("click", () => {
 
 });
 
-import { doc, getDoc }
+import { 
+    doc, 
+    getDoc, 
+    getDocs, 
+    collection,
+    query,
+    limit,
+    updateDoc,
+    serverTimestamp
+}
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { loadArchiveData } from "./archive-table.js";
@@ -106,6 +122,30 @@ function setupUploadModal() {
     });
 
 
+}
+
+// ===============================
+// LOAD FOLDER OPTIONS
+// ===============================
+async function loadFolderOptions() {
+
+    const select = document.getElementById("folderSelect");
+
+    if (!select) return;
+
+    const snap = await getDocs(collection(db, "folders"));
+
+    select.innerHTML = `<option value="">Pilih Folder</option>`;
+
+    snap.forEach(doc => {
+        const data = doc.data();
+
+        select.innerHTML += `
+            <option value="${doc.id}">
+                ${data.name}
+            </option>
+        `;
+    });
 }
 
 // ===============================
@@ -212,6 +252,8 @@ onAuthStateChanged(auth, async (user) => {
         setupUploadModal();
         setupDeleteArchive();
 
+        loadFolderOptions();
+
         setupBackup();
         setupSearch();
 
@@ -275,9 +317,6 @@ function setupSearch() {
 // ===============================
 // BACKUP SYSTEM
 // ===============================
-import { getDocs, collection, query, limit }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
 function setupBackup() {
 
     const backupBtn = document.getElementById("backupBtn");
@@ -400,10 +439,6 @@ document.getElementById("successModalCloseBtn")
 // ===============================
 // UPDATE LAST ACTIVE
 // ===============================
-
-import { updateDoc, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
 async function updateLastActive() {
 
     try {

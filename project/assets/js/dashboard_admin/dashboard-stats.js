@@ -1,4 +1,5 @@
 import { db } from "../firebase-config.js";
+import { renderTable } from "./archive-table.js";
 
 import {
     collection,
@@ -18,7 +19,7 @@ export async function loadDashboardStats() {
 
         // total files
         const countSnapshot = await getCountFromServer(
-            query(collection(db, "files"), limit(500))
+            collection(db, "files")
         );
 
         const totalFiles = countSnapshot.data().count;
@@ -52,9 +53,9 @@ export async function loadDashboardStats() {
 
         // top category
         const snapshot = await getDocs(
-            query(collection(db, "files"), limit(200))
+            query(collection(db, "files"), limit(50))
         );
-
+        
         const categoryMap = {};
 
         snapshot.forEach(doc => {

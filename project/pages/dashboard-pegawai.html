@@ -158,8 +158,6 @@
             </span>
 
         </a>
-
-        </nav>
         <div class="mt-auto px-8 pb-10">
 
             <div class="bg-red-50 backdrop-blur-md border border-red-200 rounded-2xl p-4">
@@ -236,7 +234,7 @@
 
         </header>
 
-        <div class="p-8 space-y-10 custom-scrollbar overflow-y-auto max-w-[1600px] mx-auto">
+        <div class="p-8 space-y-10 custom-scrollbar overflow-y-auto w-full">
             <!-- STATS -->
             <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
@@ -312,67 +310,78 @@
             </section>
 
 
+            <!-- ========================= -->
             <!-- TOOLBAR -->
-            <section class="flex items-center justify-between flex-wrap gap-4">
+            <!-- ========================= -->
+            <section class="mb-6">
 
-                <!-- LEFT SIDE -->
-                <div class="flex items-center gap-4">
+                <div class="flex items-center justify-between flex-wrap gap-4">
 
-                    <h3
-                        class="text-2xl font-black bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                        My Files
-                    </h3>
+                    <!-- LEFT -->
+                    <div class="flex items-center gap-4">
 
-                    <!-- GRID / LIST SWITCH -->
-                    <div
-                        class="flex items-center bg-white/40 backdrop-blur-md p-1.5 rounded-2xl border border-white/50 shadow-md">
+                        <!-- TITLE -->
+                        <h3
+                            class="text-2xl font-black bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                            My Files
+                        </h3>
 
-                        <button id="gridViewBtn"
-                            class="px-4 py-2 bg-white shadow-lg rounded-xl text-xs font-bold text-primary flex items-center gap-2 transition-all">
+                        <!-- GRID / LIST -->
+                        <div
+                            class="relative flex items-center bg-white/40 backdrop-blur-md p-1 rounded-xl border border-white/50 shadow-sm w-[150px]">
+                            <div id="viewSlider"
+                                class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-lg shadow transition-all duration-300">
+                            </div>
 
-                            <span class="material-symbols-outlined text-[18px]"
-                                style="font-variation-settings:'FILL' 1">
-                                grid_view
-                            </span>
+                            <button id="gridBtn" onclick="setGridView()"
+                                class="relative z-10 flex items-center justify-center gap-1 w-[70px] py-1.5 text-xs font-bold text-primary">
 
-                            Grid
-                        </button>
+                                <span class="material-symbols-outlined text-[18px]"
+                                    style="font-variation-settings:'FILL' 1">
+                                    grid_view
+                                </span>
 
-                        <button id="listViewBtn"
-                            class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 flex items-center gap-2 hover:bg-white/30 transition-all">
+                                Grid
+                            </button>
 
-                            <span class="material-symbols-outlined text-[18px]">
-                                format_list_bulleted
-                            </span>
+                            <button id="listBtn" onclick="setListView()"
+                                class="relative z-10 flex items-center justify-center gap-1 w-[70px] py-1.5 text-xs font-bold text-slate-600">
 
-                            List
-                        </button>
+                                <span class="material-symbols-outlined text-[18px]">
+                                    format_list_bulleted
+                                </span>
+
+                                List
+                            </button>
+
+                        </div>
+
+                        <div id="breadcrumb"
+                            class="flex items-center gap-2 ml-2 text-sm font-semibold text-slate-600 whitespace-nowrap">
+                        </div>
+
+                    </div>
+
+                    <!-- RIGHT (FILTER) -->
+                    <div class="flex items-center gap-3">
+
+                        <select id="yearSelect"
+                            class="text-xs font-semibold text-slate-600 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-4 py-2.5 hover:bg-white/60 transition-all cursor-pointer">
+                            <option value="all">Semua Tahun</option>
+                        </select>
+
+                        <select id="categorySelect"
+                            class="text-xs font-semibold text-slate-600 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-4 py-2.5 hover:bg-white/60 transition-all cursor-pointer">
+                            <option value="all">Semua Kategori</option>
+                        </select>
 
                     </div>
 
                 </div>
 
-                <!-- RIGHT SIDE -->
-                <div class="flex items-center gap-3">
-
-                    <select id="yearSelect"
-                        class="text-xs font-semibold text-slate-600 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-4 py-2.5 hover:bg-white/60 transition-all cursor-pointer">
-
-                        <option value="">Semua Tahun</option>
-
-                    </select>
-
-                    <select id="categorySelect"
-                        class="text-xs font-semibold text-slate-600 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-4 py-2.5 hover:bg-white/60 transition-all cursor-pointer">
-
-                        <option value="">Semua Kategori</option>
-
-                    </select>
-
-                </div>
+                <div id="folderButtons" class="mt-4 flex flex-wrap gap-3"></div>
 
             </section>
-
 
             <!-- FILE GRID -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
@@ -619,7 +628,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-    <script type="module" src="../assets/js/dashboard-pegawai.js"></script>
+    <script type="module">
+        import { initPegawai } from "../assets/js/dashboard_pegawai/pegawai-core.js";
+
+        console.log("SCRIPT KELOAD");
+        initPegawai();
+    </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </body>

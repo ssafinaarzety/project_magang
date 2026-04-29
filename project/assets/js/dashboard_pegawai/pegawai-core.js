@@ -73,16 +73,16 @@ export function initPegawai() {
 
             const userData = userSnap.data();
 
-if (userData.role === "admin") {
-    window.location.href = "dashboard-admin.html";
-    return;
-}
+            if (userData.role === "admin") {
+                window.location.href = "dashboard-admin.html";
+                return;
+            }
 
-if (userData.role !== "pegawai") {
-    console.error("User tidak diizinkan:", userData.role);
-    hideLoading();
-    return;
-}
+            if (userData.role !== "pegawai") {
+                console.error("User tidak diizinkan:", userData.role);
+                hideLoading();
+                return;
+            }
 
             currentUserUID = user.uid;
             let lastLoginLog = 0;

@@ -27,6 +27,7 @@ let userCache = {};
 window.currentFolderId = null;
 window.folderPath = [];
 window.selectedFiles = new Set();
+window.selectedFilesData = {};
 let isDeleteMode = false;
 
 // ===============================
@@ -172,6 +173,8 @@ export function renderTable(data) {
     }
 
     data.forEach(item => {
+
+        window.selectedFilesData[item.id] = item;
 
         let thumbnail = null;
 
@@ -355,6 +358,8 @@ export function renderList(data) {
     `;
 
     data.forEach(item => {
+
+        window.selectedFilesData[item.id] = item;
 
         const thumbnail = getThumbnail(item.filePath);
 
@@ -679,7 +684,7 @@ function setupRowEvents(row, item) {
 
             document.getElementById("deleteFilePath").value = item.filePath || "";
 
-            document.getElementById("deleteModal")?.classList.remove("hidden");
+            document.getElementById("confirmDeleteBtn")?.click();
         };
     }
 
@@ -693,18 +698,22 @@ function setupRowEvents(row, item) {
 
             const idInput = document.getElementById("editFileId");
             const judulInput = document.getElementById("editJudul");
-            const kategoriInput = document.getElementById("editKategori");
+            const kategoriDisplay = document.getElementById("editKategoriDisplay");
             const tahunInput = document.getElementById("editTahun");
             const linkInput = document.getElementById("editLink");
 
-            if (!idInput || !judulInput || !kategoriInput || !tahunInput) {
+            if (!idInput || !judulInput || !tahunInput) {
                 alert("Form edit belum lengkap (cek ID input)");
                 return;
             }
 
             idInput.value = item.id;
             judulInput.value = item.nama || "";
-            kategoriInput.value = (item.kategori || "").toLowerCase();
+
+            if (kategoriDisplay) {
+                kategoriDisplay.value = item.kategori || "";
+            }
+
             linkInput.value = item.spreadsheetLink || "";
             tahunInput.value = item.tanggal?.split("-")[0] || "";
 
@@ -740,13 +749,21 @@ export async function loadArchiveData(isLoadMore = false) {
     }
 
     try {
-        // LOAD USER CACHE (hanya sekali)
+
         if (Object.keys(userCache).length === 0) {
-            const userSnap = await getDocs(collection(db, "users"));
+
+            const userSnap = await getDocs(
+                query(
+                    collection(db, "users"),
+                    limit(50)
+                )
+            );
+
             userSnap.forEach(doc => {
                 const data = doc.data();
                 userCache[doc.id] = data.email || "unknown";
             });
+
         }
 
         // Siapkan constraints untuk query
@@ -986,80 +1003,6 @@ window.moveSlider = function (mode) {
 
 }
 
-document.getElementById("editModalSaveBtn")
-    ?.addEventListener("click", async () => {
-
-        if (window.isSaving) return;
-        window.isSaving = true;
-
-        const id = document.getElementById("editFileId").value;
-
-        const nama = document.getElementById("editJudul").value;
-        const kategori = document.getElementById("editKategori").value;
-        const link = document.getElementById("editLink").value;
-        const tahun = document.getElementById("editTahun").value;
-
-        try {
-
-            const folderIdRaw = document.getElementById("editFolder")?.value;
-
-            const fileSnap = await getDoc(doc(db, "files", id));
-            const oldData = fileSnap.data();
-
-            const folderId = folderIdRaw || oldData.folderId;
-
-            // ================= MOVE DRIVE =================
-            if (oldData.folderId !== folderId) {
-
-                const folderSnap = await getDoc(doc(db, "folders", folderId));
-                const folderData = folderSnap.data();
-
-                const driveFolderId = folderData?.driveFolderId;
-
-                if (oldData.filePath && driveFolderId) {
-                    await fetch(window.DRIVE_API, {
-                        method: "POST",
-                        body: new URLSearchParams({
-                            action: "move",
-                            fileId: oldData.filePath,
-                            folderId: driveFolderId
-                        })
-                    });
-                }
-            }
-
-            // ================= UPDATE FIRESTORE =================
-            await queueWrite(() =>
-                updateDoc(doc(db, "files", id), {
-                    nama: nama,
-                    kategori: kategori.toLowerCase(),
-                    spreadsheetLink: link,
-                    tanggal: tahun + "-01-01",
-                    folderId: folderId
-                })
-            );
-
-            document.getElementById("editModal").classList.add("hidden");
-
-            safeReload();
-
-            setTimeout(() => {
-                loadDashboardStats();
-            }, 300);
-
-            showSuccess("Perubahan berhasil disimpan");
-
-        } catch (error) {
-            console.error("Update error:", error);
-        } finally {
-
-            setTimeout(() => {
-                window.isSaving = false;
-            }, 1500);
-        }
-
-    });
-
 async function loadFolderButtons() {
 
     const container = document.getElementById("folderButtons");
@@ -1068,7 +1011,6 @@ async function loadFolderButtons() {
 
     const isActiveRoot = currentFolderId === null;
 
-    // pakai buffer langsung rander biar gak flicker pas load data
     let html = `
     <div class="flex flex-wrap gap-3 items-center">
     `;
@@ -1242,8 +1184,12 @@ window.handleDrop = async function (e, targetFolderId) {
 
     try {
 
-        const fileSnap = await getDoc(doc(db, "files", fileId));
-        const fileData = fileSnap.data();
+        const fileData = window.selectedFilesData?.[fileId];
+
+        if (!fileData) {
+            console.warn("Data tidak ada di cache:", fileId);
+            return;
+        }
 
         const folderSnap = await getDoc(doc(db, "folders", targetFolderId));
         const folderData = folderSnap.data();
@@ -1324,168 +1270,132 @@ export async function loadFolderDropdown() {
     const folderSelect = document.getElementById("folderSelect");
     if (!folderSelect) return;
 
-    // RESET (INI PENTING BANGET)
     folderSelect.innerHTML = '<option value="">Pilih Folder</option>';
 
     try {
 
-        const snapshot = await getDocs(collection(db, "folders"));
+        const snapshot = await getDocs(
+            query(collection(db, "folders"))
+        );
 
-        const usedNames = new Set();
+        const seen = new Set();
 
         snapshot.forEach(docSnap => {
 
             const data = docSnap.data();
 
-
-
-            //  ANTI DUPLIKAT
-            if (usedNames.has(data.name)) return;
-            usedNames.add(data.name);
+            if (seen.has(docSnap.id)) return;
+            seen.add(docSnap.id);
 
             const option = document.createElement("option");
+
             option.value = docSnap.id;
-            option.textContent = data.name;
+
+            const prefix = data.parentId ? "↳ " : "";
+
+            option.textContent = prefix + data.name;
 
             folderSelect.appendChild(option);
-
         });
+
+        if (window.currentFolderId) {
+            folderSelect.value = window.currentFolderId;
+        }
 
     } catch (err) {
         console.error("Dropdown error:", err);
     }
 }
 
-document.getElementById("deleteSelectedBtn")
-    ?.addEventListener("click", async () => {
+    document.getElementById("bulkDeleteToggle")
+        ?.addEventListener("click", () => {
 
-        if (selectedFiles.size === 0) {
-            alert("Tidak ada file dipilih");
-            return;
-        }
+            isDeleteMode = !isDeleteMode;
 
-        if (!confirm("Yakin mau hapus semua file ini?")) return;
+            // ===============================
+            // SHOW / HIDE CHECKBOX
+            // ===============================
+            document.querySelectorAll(".select-checkbox")
+                .forEach(cb => {
+                    cb.classList.toggle("hidden", !isDeleteMode);
+                });
 
-        const batch = writeBatch(db);
+            // ===============================
+            // SHOW / HIDE ICON DELETE
+            // ===============================
+            document.querySelectorAll(".delete-btn")
+                .forEach(btn => {
+                    btn.classList.toggle("hidden");
+                });
 
-        for (const id of selectedFiles) {
-            try {
-                const fileSnap = await getDoc(doc(db, "files", id));
-                const fileData = fileSnap.data();
+            document.querySelectorAll(".folder-delete-btn")
+                .forEach(btn => {
+                    btn.classList.toggle("hidden", !isDeleteMode);
+                });
 
-                // delete di drive (boleh satu-satu)
-                if (fileData?.filePath) {
-                    await fetch(DRIVE_API, {
-                        method: "POST",
-                        body: new URLSearchParams({
-                            action: "delete",
-                            fileId: fileData.filePath
-                        })
-                    });
-                }
+            // ===============================
+            // SHOW / HIDE BUTTON DELETE SELECTED
+            // ===============================
+            document.getElementById("deleteSelectedBtn")
+                ?.classList.toggle("hidden", !isDeleteMode);
 
-                batch.delete(doc(db, "files", id));
+            // ===============================
+            // RESET SAAT KELUAR MODE
+            // ===============================
+            if (!isDeleteMode) {
+                selectedFiles.clear();
 
-            } catch (err) {
-                console.error("Gagal hapus:", id);
+                document.querySelectorAll("[data-id]").forEach(card => {
+                    card.classList.remove("ring-2", "ring-blue-400");
+
+                    const cb = card.querySelector(".select-checkbox");
+                    if (cb) cb.checked = false;
+                });
             }
+
+        });
+
+    // Fungsi ini yang akan "terbang" ke Firestore mencari data di seluruh database
+    async function searchArchiveFromServer(keyword) {
+        const container = document.getElementById("archiveContainer");
+        if (!container) return;
+
+        // Tampilkan loading skeleton
+        showArchiveSkeleton();
+
+        try {
+            const archivesRef = collection(db, "files");
+
+            // Query sakti: Mencari yang berawalan dengan keyword
+            const q = query(
+                archivesRef,
+                where("nama", ">=", keyword),
+                where("nama", "<=", keyword + "\uf8ff"),
+                limit(40) // Kita ambil 40 hasil terbaik
+            );
+
+            const snapshot = await getDocs(q);
+            const results = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Sembunyikan tombol Load More saat hasil cari muncul
+            const loadMoreBtn = document.getElementById("loadMoreContainer");
+            if (loadMoreBtn) loadMoreBtn.style.display = "none";
+
+            // Tampilkan ke layar
+            if (currentView === "grid") {
+                renderTable(results);
+            } else {
+                renderList(results);
+            }
+
+            if (results.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400">Data "${keyword}" tidak ditemukan.</div>`;
+            }
+
+        } catch (err) {
+            console.error("Gagal cari data:", err);
         }
-
-        await batch.commit();
-
-        selectedFiles.clear();
-        safeReload();
-    });
-
-document.getElementById("bulkDeleteToggle")
-    ?.addEventListener("click", () => {
-
-        isDeleteMode = !isDeleteMode;
-
-        // ===============================
-        // SHOW / HIDE CHECKBOX
-        // ===============================
-        document.querySelectorAll(".select-checkbox")
-            .forEach(cb => {
-                cb.classList.toggle("hidden", !isDeleteMode);
-            });
-
-        // ===============================
-        // SHOW / HIDE ICON DELETE
-        // ===============================
-        document.querySelectorAll(".delete-btn")
-            .forEach(btn => {
-                btn.classList.toggle("hidden", !isDeleteMode);
-            });
-
-        document.querySelectorAll(".folder-delete-btn")
-            .forEach(btn => {
-                btn.classList.toggle("hidden", !isDeleteMode);
-            });
-
-        // ===============================
-        // SHOW / HIDE BUTTON DELETE SELECTED
-        // ===============================
-        document.getElementById("deleteSelectedBtn")
-            ?.classList.toggle("hidden", !isDeleteMode);
-
-        // ===============================
-        // RESET SAAT KELUAR MODE
-        // ===============================
-        if (!isDeleteMode) {
-            selectedFiles.clear();
-
-            document.querySelectorAll("[data-id]").forEach(card => {
-                card.classList.remove("ring-2", "ring-blue-400");
-
-                const cb = card.querySelector(".select-checkbox");
-                if (cb) cb.checked = false;
-            });
-        }
-
-    });
-
-// Fungsi ini yang akan "terbang" ke Firestore mencari data di seluruh database
-async function searchArchiveFromServer(keyword) {
-    const container = document.getElementById("archiveContainer");
-    if (!container) return;
-
-    // Tampilkan loading skeleton
-    showArchiveSkeleton();
-
-    try {
-        const archivesRef = collection(db, "files");
-
-        // Query sakti: Mencari yang berawalan dengan keyword
-        const q = query(
-            archivesRef,
-            where("nama", ">=", keyword),
-            where("nama", "<=", keyword + "\uf8ff"),
-            limit(40) // Kita ambil 40 hasil terbaik
-        );
-
-        const snapshot = await getDocs(q);
-        const results = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-
-        // Sembunyikan tombol Load More saat hasil cari muncul
-        const loadMoreBtn = document.getElementById("loadMoreContainer");
-        if (loadMoreBtn) loadMoreBtn.style.display = "none";
-
-        // Tampilkan ke layar
-        if (currentView === "grid") {
-            renderTable(results);
-        } else {
-            renderList(results);
-        }
-
-        if (results.length === 0) {
-            container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400">Data "${keyword}" tidak ditemukan.</div>`;
-        }
-
-    } catch (err) {
-        console.error("Gagal cari data:", err);
     }
-}

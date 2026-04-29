@@ -23,6 +23,9 @@ let allLogs = [];
 let filteredLogs = [];
 let currentPage = 1;
 const PAGE_SIZE = 15;
+let isLoadingLogs = false;
+let logsCache = null;
+let lastFetchTime = 0;
 
 
 let currentUserUID = null;
@@ -115,7 +118,22 @@ onAuthStateChanged(auth, async (user) => {
 // ===============================
 async function loadAllLogs() {
 
-    if (!table) return;
+    if (isLoadingLogs) return;
+    isLoadingLogs = true;
+
+    if (!table) {
+        isLoadingLogs = false;
+        return;
+    }
+
+    const now = Date.now();
+
+    if (logsCache && (now - lastFetchTime < 10000)) {
+        allLogs = logsCache;
+        applyCurrentFilter(true);
+        isLoadingLogs = false;
+        return;
+    }
 
     table.innerHTML = `
         <tr>
@@ -132,28 +150,60 @@ async function loadAllLogs() {
         const q = query(
             collection(db, "activityLogs"),
             orderBy("timestamp", "desc"),
-            limit(100)
+            limit(50)
         );
 
         const snapshot = await getDocs(q);
 
         snapshot.forEach((docSnap) => {
-            const log = docSnap.data();
 
-            if (log.userEmail && log.action) {
+            const raw = docSnap.data();
+
+            if (raw.logs && Array.isArray(raw.logs)) {
+
+                raw.logs.forEach(l => {
+
+                    const formatted = {
+                        ...l,
+                        timestamp: raw.createdAt || l.timestamp
+                    };
+
+                    if (currentUserRole === "pegawai") {
+                        if (formatted.uid === currentUserUID) {
+                            fetchedLogs.push(formatted);
+                        }
+                    } else {
+                        fetchedLogs.push(formatted);
+                    }
+
+                });
+
+                return;
+            }
+
+            if (raw.action) {
 
                 if (currentUserRole === "pegawai") {
-                    if (log.uid === currentUserUID) {
-                        fetchedLogs.push(log);
+                    if (raw.uid === currentUserUID) {
+                        fetchedLogs.push(raw);
                     }
                 } else {
-                    fetchedLogs.push(log);
+                    fetchedLogs.push(raw);
                 }
 
             }
+
         });
 
         allLogs = fetchedLogs;
+        logsCache = [...fetchedLogs];
+        lastFetchTime = Date.now();
+        allLogs.sort((a, b) => {
+            const ta = a.timestamp?.toDate?.() || 0;
+            const tb = b.timestamp?.toDate?.() || 0;
+            return tb - ta;
+        });
+
         applyCurrentFilter(true);
 
     } catch (err) {
@@ -161,13 +211,15 @@ async function loadAllLogs() {
         console.error("Error loading logs:", err);
 
         table.innerHTML = `
-            <tr>
-                <td colspan="${getTableColspan()}" class="text-center py-6 text-red-500">
-                    Gagal memuat activity logs
-                </td>
-            </tr>
-        `;
+        <tr>
+            <td colspan="${getTableColspan()}" class="text-center py-6 text-red-500">
+                Gagal memuat activity logs
+            </td>
+        </tr>
+    `;
 
+    } finally {
+        isLoadingLogs = false;
     }
 
 }

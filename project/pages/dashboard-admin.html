@@ -313,19 +313,14 @@
                                         </div>
                                         <div>
                                             <label
-                                                class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1"
-                                                for="kategori">Kategori</label>
-                                            <select
-                                                class="block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-slate-800 dark:ring-slate-700 dark:text-white sm:text-sm sm:leading-6"
-                                                id="kategori" required name="kategori" placeholder="Pilih kategori">
+                                                class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-1">
+                                                Kategori
+                                            </label>
 
-                                                <option value="keuangan">Keuangan</option>
-                                                <option value="hrd">HRD</option>
-                                                <option value="logistik">Logistik</option>
-                                                <option value="legal">Legal</option>
-                                                <option value="marketing">Marketing</option>
-
-                                            </select>
+                                            <input type="text" id="kategoriDisplay" readonly
+                                                placeholder="Otomatis dari folder"
+                                                class="block w-full rounded-lg py-2.5 bg-gray-100 text-gray-600 cursor-not-allowed
+                                                ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:ring-slate-700 sm:text-sm" />
                                             <!-- TAMBAHAN FOLDER -->
                                             <div>
                                                 <label class="block text-sm font-medium mb-1">
@@ -633,20 +628,13 @@
                                                 class="w-full rounded-lg py-2.5 border ring-1 ring-slate-300 focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500" />
                                         </div>
 
-                                        <!-- KATEGORI -->
+                                        <!-- KATEGORI (AUTO DARI FOLDER) -->
                                         <div>
                                             <label class="block text-sm font-medium mb-1">Kategori</label>
-                                            <select id="editKategori"
-                                                class="w-full rounded-lg py-2.5 border ring-1 ring-slate-300 focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500">
-                                                <option value="umum">Umum</option>
-                                                <option value="keuangan">Keuangan</option>
-                                                <option value="hrd">HRD</option>
-                                                <option value="logistik">Logistik</option>
-                                                <option value="legal">Legal</option>
-                                                <option value="marketing">Marketing</option>
-                                            </select>
+                                            <input type="text" id="editKategoriDisplay" readonly
+                                                placeholder="Otomatis dari folder" class="w-full rounded-lg py-2.5 bg-gray-100 text-gray-600 cursor-not-allowed 
+                                                    ring-1 ring-slate-300" />
                                         </div>
-
                                         <!-- FOLDER (FULL WIDTH) -->
                                         <div class="col-span-2">
                                             <label class="block text-sm font-medium mb-1">Folder</label>

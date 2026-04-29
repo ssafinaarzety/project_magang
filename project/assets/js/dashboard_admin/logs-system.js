@@ -9,16 +9,21 @@ import {
 }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-
+let isLoadingLogs = false;
 
 // ===============================
 // LOAD ACTIVITY LOGS
 // ===============================
 export async function loadActivityLogs() {
 
-    const tableBody = document.querySelector("#activityLogBody");
+    if (isLoadingLogs) return;
+    isLoadingLogs = true;
 
-    if (!tableBody) return;
+    const tableBody = document.querySelector("#activityLogBody");
+    if (!tableBody) {
+        isLoadingLogs = false;
+        return;
+    }
 
     tableBody.innerHTML = `
         <tr>
@@ -26,7 +31,7 @@ export async function loadActivityLogs() {
         Loading activity...
         </td>
         </tr>
-        `;
+    `;
 
     try {
 
@@ -41,12 +46,9 @@ export async function loadActivityLogs() {
         tableBody.innerHTML = "";
 
         if (snapshot.empty) {
-
             tableBody.innerHTML =
                 "<tr><td colspan='5' class='text-center text-slate-400 py-4'>Belum ada aktivitas</td></tr>";
-
             return;
-
         }
 
         snapshot.forEach(docSnap => {
@@ -56,63 +58,38 @@ export async function loadActivityLogs() {
             const userLabel = log.userEmail || log.uid || "unknown";
 
             let date = "-";
-
-            if (log.timestamp) {
+            if (log.timestamp && log.timestamp.toDate) {
                 date = log.timestamp.toDate().toLocaleString("id-ID");
             }
 
             const item = document.createElement("div");
 
             item.className = `
-                flex items-center gap-4
-                p-4
-                bg-white/60
-                rounded-xl
-                border border-slate-200
-                hover:shadow-sm
-                transition
-                `;
+                flex items-center gap-4 p-4
+                bg-white/60 rounded-xl border border-slate-200
+            `;
 
-            const avatar = `
+            item.innerHTML = `
                 <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
                 ${(userLabel[0] || "U").toUpperCase()}
                 </div>
-                `;
-
-            let actionLabel = "Activity";
-
-            if (log.action === "login") actionLabel = "User login";
-            if (log.action === "access") actionLabel = "Access file";
-            if (log.action === "upload") actionLabel = "Upload file";
-            if (log.action === "delete") actionLabel = "Delete file";
-            if (log.action === "edit") actionLabel = "Edit file";
-            if (log.action === "manage_access") actionLabel = "Manage access";
-            if (log.action === "remove_access") actionLabel = "Remove access";
-
-            item.innerHTML = `
-
-                ${avatar}
 
                 <div class="flex-1">
-                <div class="text-sm font-semibold text-slate-700">
-                ${actionLabel}
-                </div>
-
-                <div class="text-sm text-slate-600">
-                ${log.fileName || ""}
-                </div>
-
-                <div class="text-xs text-slate-500">
-                ${userLabel} • ${date}
-                </div>
-
+                    <div class="text-sm font-semibold text-slate-700">
+                        ${log.action || "Activity"}
+                    </div>
+                    <div class="text-sm text-slate-600">
+                        ${log.fileName || ""}
+                    </div>
+                    <div class="text-xs text-slate-500">
+                        ${userLabel} • ${date}
+                    </div>
                 </div>
 
                 <div class="text-xs font-semibold text-green-600">
-                ${log.status || "success"}
+                    ${log.status || "success"}
                 </div>
-
-                `;
+            `;
 
             tableBody.appendChild(item);
 
@@ -125,8 +102,9 @@ export async function loadActivityLogs() {
         tableBody.innerHTML =
             "<tr><td colspan='5' class='text-center text-red-500 py-4'>Gagal memuat aktivitas</td></tr>";
 
+    } finally {
+        isLoadingLogs = false;
     }
-
 }
 
 
@@ -153,7 +131,7 @@ export async function exportLogs() {
 
             let date = "-";
 
-            if (log.timestamp) {
+            if (log.timestamp && log.timestamp.toDate) {
 
                 try {
                     date = log.timestamp.toDate().toLocaleString("id-ID");

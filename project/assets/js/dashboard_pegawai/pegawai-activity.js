@@ -15,7 +15,36 @@ import { renderActivityChart } from "./renderActivityChart.js";
 // STATE
 // ===============================
 let lastAccessedArchive = null;
-let activityCache = null;
+let activityCache = {};
+
+async function fetchActivityOnce(uid) {
+
+    if (activityCache[uid]) {
+        console.log("pakai cache:", uid);
+        return activityCache[uid];
+    }
+
+    console.log("fetch firestore:", uid);
+
+    const snapshot = await getDocs(
+        query(
+            collection(db, "activityLogs"),
+            where("uid", "==", uid),
+            orderBy("timestamp", "desc"),
+            limit(50)
+        )
+    );
+
+    const data = [];
+
+    snapshot.forEach(docSnap => {
+        data.push(docSnap.data());
+    });
+
+    activityCache[uid] = data;
+
+    return data;
+}
 
 // ===============================
 // LOAD ACTIVITY LOGS (TABLE)
@@ -27,20 +56,7 @@ export async function loadActivityLogs(uid) {
         const logsBody = document.getElementById("activityLogsBody");
         if (!logsBody) return;
 
-        const q = query(
-            collection(db, "activityLogs"),
-            where("uid", "==", uid),
-            orderBy("timestamp", "desc"),
-            limit(50)
-        );
-
-        const snapshot = await getDocs(q);
-
-        const userLogs = [];
-
-        snapshot.forEach(docSnap => {
-            userLogs.push(docSnap.data());
-        });
+        const userLogs = await fetchActivityOnce(uid);
 
         renderRecentActivity(userLogs);
 
@@ -126,40 +142,31 @@ function renderRecentActivity(userLogs) {
 // RECENT FILES
 // ===============================
 export async function loadRecentFiles(uid) {
-
     try {
 
-        const q = query(
-            collection(db, "activityLogs"),
-            where("uid", "==", uid),
-            where("action", "==", "access"),
-            orderBy("timestamp", "desc"),
-            limit(5)
-        );
+        const logs = await fetchActivityOnce(uid);
 
-        const snapshot = await getDocs(q);
+        const recent = logs
+            .filter(l => l.action === "access")
+            .slice(0, 5);
 
         const container = document.getElementById("recentFiles");
         if (!container) return;
 
         container.innerHTML = "";
 
-        if (snapshot.empty) {
+        if (recent.length === 0) {
             container.innerHTML = `<p>No recent files</p>`;
             return;
         }
 
-        snapshot.forEach(docSnap => {
-
-            const data = docSnap.data();
-
+        recent.forEach(data => {
             container.innerHTML += `
             <div class="flex justify-between py-2 border-b">
                 <span>${data.fileName || "Untitled"}</span>
                 <span class="text-xs">Opened</span>
             </div>
             `;
-
         });
 
     } catch (err) {
@@ -174,77 +181,28 @@ export async function loadActivitySummary(uid) {
 
     try {
 
+        const logs = await fetchActivityOnce(uid);
+
         let todayCount = 0;
-        let totalLogs = 0;
+        let totalLogs = logs.length;
         let lastAccess = "-";
 
         const today = new Date().toISOString().split("T")[0];
 
-        // ===============================
-        // CACHE
-        // ===============================
-        if (activityCache) {
+        logs.forEach(data => {
 
-            console.log("pakai cache activity");
+            if (!data.timestamp) return;
 
-            activityCache.forEach(docSnap => {
+            if (lastAccess === "-" && data.fileName) {
+                lastAccess = data.fileName;
+            }
 
-                const data = docSnap.data();
-                if (!data.timestamp) return;
+            const date = data.timestamp.toDate();
+            const key = date.toISOString().split("T")[0];
 
-                if (lastAccess === "-" && data.fileName) {
-                    lastAccess = data.fileName;
-                }
+            if (key === today) todayCount++;
+        });
 
-                const date = data.timestamp?.toDate
-                    ? data.timestamp.toDate()
-                    : new Date();
-
-                const key = date.toISOString().split("T")[0];
-
-                totalLogs++;
-                if (key === today) todayCount++;
-            });
-
-        } else {
-
-            // ===============================
-            // FETCH (1x saja)
-            // ===============================
-            const snapshot = await getDocs(
-                query(
-                    collection(db, "activityLogs"),
-                    where("uid", "==", uid),
-                    orderBy("timestamp", "desc"),
-                    limit(20)
-                )
-            );
-
-            activityCache = snapshot;
-
-            snapshot.forEach(docSnap => {
-
-                const data = docSnap.data();
-                if (!data.timestamp) return;
-
-                if (lastAccess === "-" && data.fileName) {
-                    lastAccess = data.fileName;
-                }
-
-                const date = data.timestamp?.toDate
-                    ? data.timestamp.toDate()
-                    : new Date();
-
-                const key = date.toISOString().split("T")[0];
-
-                totalLogs++;
-                if (key === today) todayCount++;
-            });
-        }
-
-        // ===============================
-        // UPDATE UI
-        // ===============================
         const todayEl = document.getElementById("todayActivity");
         const totalEl = document.getElementById("totalLogs");
         const lastEl = document.getElementById("lastAccessedStat");
@@ -257,7 +215,6 @@ export async function loadActivitySummary(uid) {
         console.error("Summary error:", err);
     }
 }
-
 // ===============================
 // STATISTICS
 // ===============================
@@ -274,7 +231,7 @@ export function calculateStatistics(allArchives) {
     const categoryCount = {};
 
     allArchives.forEach(item => {
-const cat = item.category || item.kategori || "Lainnya";
+        const cat = item.category || item.kategori || "Lainnya";
         categoryCount[cat] = (categoryCount[cat] || 0) + 1;
     });
 
@@ -296,27 +253,18 @@ export async function loadActivityChart(uid) {
 
     try {
 
-        const snapshot = await getDocs(
-            query(
-                collection(db, "activityLogs"),
-                where("uid", "==", uid),
-                orderBy("timestamp", "desc"),
-                limit(30)
-            )
-        );
+        const logs = await fetchActivityOnce(uid);
 
         const activityPerDay = {};
 
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
-            const key = d.toISOString().split("T")[0];
-            activityPerDay[key] = 0;
+            activityPerDay[d.toISOString().split("T")[0]] = 0;
         }
 
-        snapshot.forEach(docSnap => {
+        logs.forEach(data => {
 
-            const data = docSnap.data();
             if (!data.timestamp) return;
 
             const date = data.timestamp.toDate();
@@ -328,14 +276,7 @@ export async function loadActivityChart(uid) {
 
         });
 
-        const labels = Object.keys(activityPerDay).map(d => {
-            const date = new Date(d);
-            return date.toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "short"
-            });
-        });
-
+        const labels = Object.keys(activityPerDay);
         const values = Object.values(activityPerDay);
 
         renderActivityChart(labels, values);

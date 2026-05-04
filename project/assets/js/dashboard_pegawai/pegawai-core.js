@@ -236,3 +236,141 @@ export function setupLogout() {
     });
 
 }
+
+// ===============================
+// SESSION TIMEOUT PEGAWAI (SAFE VERSION)
+// ===============================
+
+let idleTimer;
+let isSessionTimeoutShown = false;
+
+const IDLE_LIMIT = 15 * 60 * 1000; // 15 menit
+
+function ensureSessionTimeoutModal() {
+
+    const existing = document.getElementById("sessionTimeoutModal");
+    if (existing) return existing;
+
+    const modal = document.createElement("div");
+
+    modal.id = "sessionTimeoutModal";
+
+    modal.className = "hidden fixed inset-0 z-50 flex items-center justify-center";
+
+    modal.innerHTML = `
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+
+    <div class="relative z-10 bg-white rounded-xl p-6 w-[320px] text-center shadow-xl">
+
+        <h3 class="text-lg font-semibold mb-2">
+        Session Timeout
+        </h3>
+
+        <p class="text-sm text-slate-500 mb-5">
+        Tidak ada aktivitas selama 15 menit
+        </p>
+
+        <button id="sessionTimeoutConfirmBtn"
+        class="w-full py-2 bg-red-600 text-white rounded-lg">
+
+        Login Ulang
+
+        </button>
+
+    </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById("sessionTimeoutConfirmBtn")
+        ?.addEventListener("click", async () => {
+
+            sessionStorage.removeItem("loginRecorded");
+
+            await signOut(auth);
+
+            window.location.href = "../index.html";
+
+        });
+
+    return modal;
+}
+
+function showSessionTimeoutModal() {
+
+    const modal = ensureSessionTimeoutModal();
+
+    isSessionTimeoutShown = true;
+
+    modal.classList.remove("hidden");
+
+}
+
+function resetIdleTimer() {
+
+    if (isSessionTimeoutShown) return;
+
+    clearTimeout(idleTimer);
+
+    idleTimer = setTimeout(() => {
+
+        showSessionTimeoutModal();
+
+    }, IDLE_LIMIT);
+
+}
+
+// ===============================
+// OPTIONAL: SAFE LAST ACTIVE (ANTI LIMIT)
+// ===============================
+
+let lastUpdate = 0;
+
+async function updateLastActiveSafe() {
+
+    const now = Date.now();
+
+    if (now - lastUpdate < 5 * 60 * 1000) return;
+
+    lastUpdate = now;
+
+    try {
+
+        const user = auth.currentUser;
+
+        if (!user) return;
+
+        await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+            .then(({ updateDoc, doc, serverTimestamp }) => {
+
+                return updateDoc(doc(db, "users", user.uid), {
+                    lastActive: serverTimestamp()
+                });
+
+            });
+
+    } catch (err) {
+
+        console.error("Last active error:", err);
+
+    }
+
+}
+
+// ===============================
+// EVENT LISTENER (AMAN)
+// ===============================
+
+["click", "mousemove", "keypress", "scroll", "touchstart"]
+    .forEach(event => {
+
+        document.addEventListener(event, () => {
+
+            resetIdleTimer();          
+            updateLastActiveSafe();    
+
+        });
+
+    });
+
+resetIdleTimer();

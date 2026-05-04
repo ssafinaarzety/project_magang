@@ -192,7 +192,11 @@ function renderArchiveGrid() {
     container.innerHTML = "";
 
     if (filteredArchives.length === 0) {
-        container.innerHTML = `<p class="text-slate-400">Tidak ada arsip</p>`;
+        container.innerHTML = `
+<div class="col-span-full flex items-center justify-center h-[300px] text-slate-400 font-medium">
+    Tidak ada arsip
+</div>
+`;
         return;
     }
 
@@ -433,7 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===============================
-// PAGINATION
+// PAGINATION (SAFE - NO FIRESTORE HIT)
 // ===============================
 function renderPagination() {
 
@@ -444,11 +448,45 @@ function renderPagination() {
 
     const totalPages = Math.ceil(filteredArchives.length / rowsPerPage);
 
+    if (totalPages <= 1) return;
+
+    // ===============================
+    // PREV BUTTON
+    // ===============================
+    const prev = document.createElement("button");
+    prev.innerHTML = "‹";
+    prev.className = `
+        px-3 py-1 rounded-lg text-sm font-semibold
+        ${currentPage === 1
+            ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+            : "bg-white text-slate-700 hover:bg-slate-100 shadow"}
+    `;
+    prev.disabled = currentPage === 1;
+
+    prev.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderArchiveGrid();
+            renderPagination();
+        }
+    };
+
+    container.appendChild(prev);
+
+    // ===============================
+    // NUMBER BUTTONS
+    // ===============================
     for (let i = 1; i <= totalPages; i++) {
 
         const btn = document.createElement("button");
-
         btn.textContent = i;
+
+        btn.className = `
+            px-3 py-1 rounded-lg text-sm font-semibold transition
+            ${i === currentPage
+                ? "bg-blue-600 text-white shadow"
+                : "bg-white text-slate-600 hover:bg-slate-100 shadow"}
+        `;
 
         btn.onclick = () => {
             currentPage = i;
@@ -457,8 +495,30 @@ function renderPagination() {
         };
 
         container.appendChild(btn);
-
     }
+
+    // ===============================
+    // NEXT BUTTON
+    // ===============================
+    const next = document.createElement("button");
+    next.innerHTML = "›";
+    next.className = `
+        px-3 py-1 rounded-lg text-sm font-semibold
+        ${currentPage === totalPages
+            ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+            : "bg-white text-slate-700 hover:bg-slate-100 shadow"}
+    `;
+    next.disabled = currentPage === totalPages;
+
+    next.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderArchiveGrid();
+            renderPagination();
+        }
+    };
+
+    container.appendChild(next);
 }
 
 // ===============================

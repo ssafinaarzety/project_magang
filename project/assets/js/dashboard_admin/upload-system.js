@@ -838,10 +838,30 @@ export function setupDeleteArchive() {
 
                         card.appendChild(label);
                     }
-
                     if (statusEl) {
-                        statusEl.textContent = "menunggu undo (5 detik)";
+
+                        let countdown = 5;
+
                         statusEl.classList.replace("text-blue-500", "text-yellow-500");
+
+                        const interval = setInterval(() => {
+
+                            statusEl.innerHTML = `
+                                <span class="w-3 h-3 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></span>
+                                menghapus dalam ${countdown}s...
+                                `;
+
+                            countdown--;
+
+                            if (countdown < 0) {
+                                clearInterval(interval);
+
+                                statusEl.innerHTML = `
+                                    <span class="text-green-500 text-xs">diproses...</span>
+                                    `;
+                            }
+
+                        }, 1000);
                     }
 
                 } catch (err) {

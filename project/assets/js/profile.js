@@ -240,22 +240,23 @@ onAuthStateChanged(auth, async (user) => {
 const resetBtn = document.getElementById("resetPasswordBtn");
 
 resetBtn?.addEventListener("click", async () => {
-
     try {
+        const user = auth.currentUser;
 
-        const email = auth.currentUser.email;
+        if (!user) {
+            alert("User belum login!");
+            return;
+        }
 
-        await sendPasswordResetEmail(auth, email);
+        console.log("Email tujuan:", user.email);
+
+        await sendPasswordResetEmail(auth, user.email);
 
         openSuccessModal("Email reset password berhasil dikirim.");
-
     } catch (err) {
-
-        console.error(err);
-        alert("Gagal mengirim email reset password");
-
+        console.error("RESET ERROR:", err.code, err.message);
+        alert(err.message);
     }
-
 });
 
 document.getElementById("saveProfileBtn")?.addEventListener("click", async () => {

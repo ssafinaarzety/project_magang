@@ -20,7 +20,7 @@ import {
 import { openAccessModal, setupAccessSave } from "./access-system.js";
 
 import { loadDashboardStats } from "./dashboard-stats.js";
-import { queueWrite } from "./upload-system.js";
+import { queueWrite, syncDriveSafe } from "./upload-system.js";
 
 const PAGE_SIZE = 10;
 let userCache = {};
@@ -58,6 +58,11 @@ function getThumbnail(fileId) {
 function getFileIcon(type = "") {
 
     type = type.toLowerCase();
+
+    // GOOGLE SPREADSHEET
+    if (type.includes("google-apps.spreadsheet")) {
+        return { icon: "table_chart", color: "text-green-500" };
+    }
 
     if (type.includes("pdf")) {
         return { icon: "picture_as_pdf", color: "text-red-500" };
@@ -224,16 +229,22 @@ export function renderTable(data) {
         <input type="checkbox" class="select-checkbox hidden absolute top-3 left-3 z-10">
         <div class="h-32 bg-slate-100 relative overflow-hidden flex items-center justify-center">
 
-        ${thumbnail ? `
+        ${thumbnail && !item.fileType?.includes("google-apps.spreadsheet") ? `
         <img
         src="${thumbnail}"
         loading="lazy"
         class="w-full h-full object-cover"
         />
         ` : `
-        <span class="material-symbols-outlined text-6xl ${iconData.color}">
-        ${iconData.icon}
-        </span>
+        <div class="flex flex-col items-center justify-center">
+            <span class="material-symbols-outlined text-6xl ${iconData.color}">
+                ${iconData.icon}
+            </span>
+
+            <span class="text-xs text-slate-400 mt-2">
+                Google Spreadsheet
+            </span>
+        </div>
         `}
 
         <span class="absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 bg-white/90 rounded-full shadow">
@@ -573,12 +584,10 @@ function setupRowEvents(row, item) {
 
                 // ===== IMAGE =====
                 else if (
-                    type.includes("png") ||
-                    type.includes("jpg") ||
-                    type.includes("jpeg")
+                    type.includes("image")
                 ) {
 
-                    url = `https://drive.google.com/uc?id=${fileId}`;
+                    url = `https://drive.google.com/file/d/${fileId}/preview`;
 
                 }
 
@@ -902,9 +911,29 @@ window.addEventListener("DOMContentLoaded", () => {
         }
 
         searchTimeout = setTimeout(() => {
-            if (keyword.length < 3) return; // FIX
-            searchArchiveFromServer(keyword);
-        }, 500);
+
+            if (keyword.length < 1) {
+                safeReload();
+                return;
+            }
+
+            const filtered = window.allArchives.filter(file => {
+
+                return (
+                    (file.nama || "").toLowerCase().includes(keyword) ||
+                    (file.kategori || "").toLowerCase().includes(keyword) ||
+                    (file.fileName || "").toLowerCase().includes(keyword)
+                );
+
+            });
+
+            if (currentView === "grid") {
+                renderTable(filtered);
+            } else {
+                renderList(filtered);
+            }
+
+        }, 300);
     };
 });
 
@@ -965,6 +994,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
     yearFilter?.addEventListener("change", applyFilters);
     categoryFilter?.addEventListener("change", applyFilters);
+
+    // ===============================
+    // SYNC BUTTON
+    // ===============================
+    document.getElementById("syncDriveBtn")
+        ?.addEventListener("click", async (e) => {
+
+            if (!window.currentFolderId) {
+                alert("Pilih folder dulu");
+                return;
+            }
+
+            const btn = e.currentTarget;
+
+            btn.innerHTML = `
+        <span class="material-symbols-outlined animate-spin text-[18px]">
+            autorenew
+        </span>
+        Syncing...
+    `;
+
+            btn.disabled = true;
+
+            await syncDriveSafe(window.currentFolderId);
+
+            btn.innerHTML = `
+        <span class="material-symbols-outlined text-[18px]">
+            check
+        </span>
+        Done
+    `;
+
+            setTimeout(() => {
+                btn.innerHTML = `
+            <span class="material-symbols-outlined text-[18px]">
+                sync
+            </span>
+            Sync Drive
+        `;
+                btn.disabled = false;
+            }, 1500);
+
+            await safeReload();
+        });
 
 });
 
@@ -1244,7 +1317,8 @@ window.handleDrop = async function (e, targetFolderId) {
 
         await queueWrite(() =>
             updateDoc(doc(db, "files", fileId), {
-                folderId: targetFolderId
+                folderId: targetFolderId,
+                kategori: folderData.name.toLowerCase()
             })
         );
 
@@ -1416,7 +1490,7 @@ async function searchArchiveFromServer(keyword) {
             archivesRef,
             where("nama", ">=", keyword),
             where("nama", "<=", keyword + "\uf8ff"),
-            limit(40) // Kita ambil 40 hasil terbaik
+            limit(40)
         );
 
         const snapshot = await getDocs(q);

@@ -740,7 +740,9 @@
                         <!-- ICON -->
                         <div
                             class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-                            <span class="material-icons-outlined text-red-600 text-2xl">delete</span>
+                            <span class="material-symbols-outlined text-red-600 text-2xl">
+                                delete
+                            </span>
                         </div>
 
                         <!-- TITLE -->
@@ -1057,9 +1059,24 @@
 
                     <!-- RIGHT SIDE (FILTER) -->
                     <div class="flex items-center gap-2">
+
+                        <!-- SYNC BUTTON  -->
+                        <button id="syncDriveBtn" class="flex items-center gap-2 px-4 py-2 
+                                    bg-gradient-to-r from-blue-600 to-indigo-600 
+                                    text-white text-sm font-semibold rounded-lg 
+                                    shadow hover:scale-[1.03] active:scale-95 transition">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                sync
+                            </span>
+
+                            Sync Drive
+                        </button>
+
                         <button id="deleteSelectedBtn" class="hidden px-4 py-2 bg-red-600 text-white rounded-lg">
                             Hapus Terpilih
                         </button>
+
                         <button id="bulkDeleteToggle" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm">
                             Delete
                         </button>

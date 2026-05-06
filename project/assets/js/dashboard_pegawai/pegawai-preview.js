@@ -62,11 +62,9 @@ export function handleArchiveAccess(fileId, fileName) {
             url = `https://docs.google.com/viewer?embedded=true&url=https://drive.google.com/uc?id=${id}`;
         }
         else if (
-            type.includes("png") ||
-            type.includes("jpg") ||
-            type.includes("jpeg")
+            type.includes("image")
         ) {
-            url = `https://drive.google.com/uc?id=${id}`;
+            url = `https://drive.google.com/file/d/${id}/preview`;
         }
         else if (
             type.includes("xls") ||

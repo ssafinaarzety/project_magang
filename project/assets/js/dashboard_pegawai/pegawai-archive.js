@@ -219,12 +219,18 @@ function renderArchiveGrid() {
 
         <div class="h-40 bg-slate-100 relative flex items-center justify-center rounded-t-3xl overflow-hidden">
 
-            ${thumbnail ? `
+            ${thumbnail && !item.fileType?.includes("google-apps.spreadsheet") ? `
                 <img src="${thumbnail}" class="w-full h-full object-cover"/>
             ` : `
-                <span class="text-4xl font-bold text-slate-400">
-                    ${fileTypeInfo.label}
-                </span>
+                <div class="flex flex-col items-center justify-center">
+                    <span class="material-symbols-outlined text-6xl text-green-500">
+                        table_chart
+                    </span>
+
+                    <span class="text-xs text-slate-400 mt-2">
+                        Google Spreadsheet
+                    </span>
+                </div>
             `}
 
             <div class="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full bg-white text-slate-700 shadow">
@@ -380,7 +386,10 @@ function applyFilters() {
 
     filteredArchives = allArchives.filter(item => {
 
-        const matchSearch = (item.nama || "").toLowerCase().includes(search);
+        const matchSearch =
+            (item.nama || "").toLowerCase().includes(search) ||
+            (item.kategori || "").toLowerCase().includes(search) ||
+            (item.fileName || "").toLowerCase().includes(search);
         const fileYear = item.tanggal?.split("-")[0];
 
         const matchYear = year === "all" || fileYear == year;
@@ -539,7 +548,7 @@ function getFileTypeInfo(fileType) {
 
     if (fileType.includes("pdf")) return { label: "PDF" };
     if (fileType.includes("xls")) return { label: "XLS" };
-    if (fileType.includes("img")) return { label: "IMG" };
+    if (fileType.includes("image")) return { label: "IMG" };
 
     return { label: "FILE" };
 }

@@ -8,7 +8,10 @@ import {
     deleteDoc,
     getDoc,
     updateDoc,
-    writeBatch
+    writeBatch,
+    query,
+    where,
+    getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 //import { safeReload } from "./archive-table.js";
@@ -330,7 +333,7 @@ async function uploadHandler() {
         let selectedFolderId =
             window.currentFolderId ||
             document.getElementById("folderSelect")?.value ||
-            "1uVhMkEfUQSdThilW6QDJeR2mqdLhkysy";
+            "13CN-h06AflPn56bIbel4Zo84WD2VT6QX";
 
         if (!selectedFolderId) {
             showError("Pilih folder dulu!");
@@ -613,7 +616,7 @@ async function handleAutoUpload(files) {
             return;
         }
 
-        let selectedFolderId = window.currentFolderId || document.getElementById("folderSelect")?.value || "1uVhMkEfUQSdThilW6QDJeR2mqdLhkysy";
+        let selectedFolderId = window.currentFolderId || document.getElementById("folderSelect")?.value || "13CN-h06AflPn56bIbel4Zo84WD2VT6QX";
 
         let folderData;
 
@@ -1020,7 +1023,7 @@ async function safeDriveDelete(fileId) {
 
 export async function createFolder(name, parentId) {
     try {
-        const ROOT_FOLDER_ID = "1uVhMkEfUQSdThilW6QDJeR2mqdLhkysy";
+        const ROOT_FOLDER_ID = "13CN-h06AflPn56bIbel4Zo84WD2VT6QX";
 
         let parentDriveId = ROOT_FOLDER_ID;
 
@@ -1189,4 +1192,202 @@ export function setupEditArchive() {
         }
 
     });
+}
+
+// ===============================
+// SYNC DRIVE 
+// ===============================
+export async function syncDriveSafe(folderId) {
+
+    if (!folderId) {
+        showError("Folder tidak valid");
+        return;
+    }
+
+    try {
+
+        showSuccess("Mulai sinkronisasi...");
+
+        const folderSnap = await getDoc(doc(db, "folders", folderId));
+
+        if (!folderSnap.exists()) {
+            showError("Folder tidak ditemukan");
+            return;
+        }
+
+        const folderData = folderSnap.data();
+        const rootPath = folderData.path || folderData.name;
+
+        if (!folderData.driveFolderId) {
+            showError("Folder belum terhubung ke Drive");
+            return;
+        }
+
+        const res = await fetch(`${DRIVE_API}?action=listFiles&folderId=${folderData.driveFolderId}`);
+        const data = await res.json();
+
+        if (!data.success) {
+            showError("Gagal ambil data Drive");
+            return;
+        }
+
+        let count = 0;
+        const MAX_SYNC = 150;
+
+        for (const file of data.files) {
+
+            // ===============================
+            // SYNC FOLDER
+            // ===============================
+            if (file.type === "folder") {
+
+                const folderQuery = query(
+                    collection(db, "folders"),
+                    where("driveFolderId", "==", file.id)
+                );
+
+                const folderSnap = await getDocs(folderQuery);
+
+                if (!folderSnap.empty) {
+                    continue;
+                }
+
+                if (count >= MAX_SYNC) break;
+
+                // ===============================
+                // DETECT PARENT FOLDER
+                // ===============================
+                let detectedParentId = null;
+
+                {
+
+                    const currentPath = file.path || "";
+
+                    const parentPath = currentPath;
+
+                    // ===============================
+                    // ROOT CHILD
+                    // ===============================
+                    if (
+                        !parentPath ||
+                        parentPath === rootPath
+                    ) {
+                        detectedParentId = folderId;
+                    }
+
+                    // ===============================
+                    // SUB FOLDER
+                    // ===============================
+                    else {
+
+                        const parentQuery = query(
+                            collection(db, "folders"),
+                            where("path", "==", parentPath)
+                        );
+
+                        const parentSnap = await getDocs(parentQuery);
+
+                        if (!parentSnap.empty) {
+                            detectedParentId = parentSnap.docs[0].id;
+                        }
+
+                        else {
+                            detectedParentId = folderId;
+                        }
+
+                    }
+                }
+
+                await queueWrite(() =>
+                    safeWrite(() =>
+                        addDoc(collection(db, "folders"), {
+                            name: file.name,
+                            driveFolderId: file.id,
+                            path: file.path
+                                ? `${file.path}/${file.name}`
+                                : file.name,
+                            parentId: detectedParentId,
+                            createdAt: serverTimestamp(),
+                            sourceType: "drive-sync"
+                        })
+                    )
+                );
+
+                count++;
+
+                await new Promise(res => setTimeout(res, 700));
+
+                continue;
+            }
+
+            // ===============================
+            // ANTI DUPLIKAT (WAJIB)
+            // ===============================
+            const q = query(
+                collection(db, "files"),
+                where("filePath", "==", file.id)
+            );
+
+            const snap = await getDocs(q);
+
+            if (!snap.empty) continue;
+
+            // ===============================
+            // BATASI AGAR TIDAK KENA LIMIT
+            // ===============================
+            if (count >= MAX_SYNC) break;
+
+            // ===============================
+            // DETECT FILE PARENT FOLDER
+            // ===============================
+            let detectedFileFolderId = folderId;
+
+            if (file.path) {
+
+                const folderQuery = query(
+                    collection(db, "folders"),
+                    where("path", "==", file.path)
+                );
+
+                const folderSnap = await getDocs(folderQuery);
+
+                if (!folderSnap.empty) {
+                    detectedFileFolderId = folderSnap.docs[0].id;
+                }
+            }
+
+            await queueWrite(() =>
+                safeWrite(() =>
+                    addDoc(collection(db, "files"), {
+                        nama: file.name,
+                        kategori: folderData.name.toLowerCase(),
+                        tanggal: new Date(file.createdTime).toISOString(),
+                        folderId: detectedFileFolderId,
+                        createdBy: "system",
+                        allowedUsers: [],
+                        createdAt: serverTimestamp(),
+                        spreadsheetLink: "",
+                        sourceType: "drive-sync",
+                        filePath: file.id,
+                        fileName: file.name,
+                        fileType: file.mimeType,
+                        path: file.path || ""
+                    })
+                )
+            );
+
+            count++;
+
+            // ===============================
+            // DELAY TAMBAHAN (ANTI BURST)
+            // ===============================
+            await new Promise(res => setTimeout(res, 400));
+        }
+
+        showSuccess(`Sync selesai (${count} item)`);
+
+    } catch (err) {
+        console.error("Sync error:", err);
+        showError("Sinkronisasi gagal");
+    }
 }

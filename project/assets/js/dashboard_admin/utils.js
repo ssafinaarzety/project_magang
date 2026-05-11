@@ -100,3 +100,68 @@ export function getFileIcon(type = "") {
     return "description";
 
 }
+
+// ===============================
+// GLOBAL LOADING OVERLAY
+// ===============================
+
+window.showGlobalLoading = function(message = "Loading...") {
+
+    const overlay = document.getElementById("globalLoadingOverlay");
+
+    if (!overlay) return;
+
+    overlay.classList.remove("hidden");
+
+    const text = overlay.querySelector(".loading-text");
+
+    if (text) {
+        text.innerText = message;
+    }
+
+    clearTimeout(window.loadingTimeout);
+
+    window.loadingTimeout = setTimeout(() => {
+        window.hideGlobalLoading();
+    }, 30000);
+};
+
+window.hideGlobalLoading = function() {
+
+    const overlay = document.getElementById("globalLoadingOverlay");
+
+    if (!overlay) return;
+
+    overlay.classList.add("hidden");
+};
+
+
+// ===============================
+// GLOBAL ERROR RECOVERY
+// ===============================
+
+window.addEventListener("unhandledrejection", () => {
+    window.hideGlobalLoading();
+});
+
+window.addEventListener("error", () => {
+    window.hideGlobalLoading();
+});
+
+
+// ===============================
+// ESC RECOVERY
+// ===============================
+
+document.addEventListener("keydown", (e) => {
+
+    if (e.key === "Escape") {
+
+        window.hideGlobalLoading();
+
+        document.querySelectorAll('[role="dialog"]')
+            .forEach(modal => {
+                modal.classList.add("hidden");
+            });
+    }
+});

@@ -26,6 +26,8 @@ let logQueue = [];
 let logTimeout = null;
 let lastWriteTime = 0;
 let isCreatingFolder = false;
+let isSyncing = false;
+let lastSyncTime = 0;
 let folderCache = {};
 window.localFilesCache = window.localFilesCache || [];
 
@@ -297,7 +299,8 @@ async function uploadHandler() {
     if (btn) btn.disabled = true;
 
     const progressBox = document.getElementById("uploadProgressBox");
-    progressBox?.classList.remove("hidden");
+
+    showGlobalLoading("Mengupload arsip...");
 
     if (progressBox) {
         progressBox.innerHTML = `
@@ -336,47 +339,72 @@ async function uploadHandler() {
             "13CN-h06AflPn56bIbel4Zo84WD2VT6QX";
 
         if (!selectedFolderId) {
-            showError("Pilih folder dulu!");
-            return;
-        }
 
-        if (!selectedFolderId) {
             showError("Pilih folder dulu!");
-            progressBox?.classList.add("hidden");
+
+            hideGlobalLoading();
+
             return;
         }
 
         const files = document.getElementById("uploadFileInput")?.files;
 
         if (files && files.length > 3) {
+
             showError("Max 3 file (mode aman)");
+
             progressBox?.classList.add("hidden");
+
+            hideGlobalLoading();
+
             return;
         }
 
         if (files && files.length > 0) {
+
         } else if (!link) {
+
             showError("Masukkan link spreadsheet atau upload file");
+
             progressBox?.classList.add("hidden");
+
+            hideGlobalLoading();
+
             return;
         }
 
         if (tahun < 1900 || tahun > 2100) {
+
             showError("Tahun tidak valid");
+
             progressBox?.classList.add("hidden");
+
+            hideGlobalLoading();
+
             return;
         }
 
         if (link && !isValidSpreadsheetLink(link)) {
+
             showError("Link spreadsheet tidak valid");
+
             progressBox?.classList.add("hidden");
+
+            hideGlobalLoading();
+
             return;
         }
 
         const user = auth.currentUser;
+
         if (!user) {
+
             showError("User tidak ditemukan");
+
             progressBox?.classList.add("hidden");
+
+            hideGlobalLoading();
+
             return;
         }
 
@@ -392,7 +420,11 @@ async function uploadHandler() {
             } else {
                 const snap = await getDoc(doc(db, "folders", selectedFolderId));
                 if (!snap.exists()) {
+
                     showError("Folder tidak ditemukan");
+
+                    hideGlobalLoading();
+
                     return;
                 }
                 folderData = snap.data();
@@ -400,7 +432,11 @@ async function uploadHandler() {
             }
 
             if (!folderData.driveFolderId) {
+
                 showError("Folder belum terhubung ke Drive");
+
+                hideGlobalLoading();
+
                 return;
             }
 
@@ -425,7 +461,7 @@ async function uploadHandler() {
 
                     let data = null;
 
-                    for (let attempt = 0; attempt < 3; attempt++) {
+                    for (let attempt = 0; attempt < 2; attempt++) {
                         try {
 
                             const res = await fetch(DRIVE_API, {
@@ -490,6 +526,10 @@ async function uploadHandler() {
                         fileName: file.name,
                         fileType: file.type
                     });
+
+                    if (window.localFilesCache.length > 500) {
+                        window.localFilesCache.pop();
+                    }
 
                 } catch (err) {
                     console.error("Error file:", file.name, err);
@@ -562,11 +602,17 @@ async function uploadHandler() {
         // }, 500);
 
         if (window.renderArchiveGrid) {
-            window.renderArchiveGrid(window.localFilesCache);
+
+            window.renderArchiveGrid(
+                window.localFilesCache.slice(0, 200)
+            );
         }
 
         if (window.calculateStatistics) {
-            window.calculateStatistics(window.localFilesCache);
+
+            window.calculateStatistics(
+                window.localFilesCache.slice(0, 500)
+            );
         }
 
         setTimeout(() => {
@@ -579,32 +625,42 @@ async function uploadHandler() {
 
     } catch (err) {
         console.error("Upload error:", err);
+
         showError("Upload gagal");
+
         progressBox?.classList.add("hidden");
 
+        hideGlobalLoading();
+
     } finally {
+
+        hideGlobalLoading();
+
         window.isUploading = false;
+
         if (btn) btn.disabled = false;
     }
 }
 
 async function handleAutoUpload(files) {
+
     if (files.length > 3) {
         showError("Max upload 3 file sekali upload");
         return;
     }
 
     try {
-        showSuccess(`Upload ${files.length} file dimulai...`);
-        const progressBox = document.getElementById("multiUploadProgress");
-        if (progressBox) {
-            progressBox.innerHTML = "";
-            progressBox.classList.remove("hidden");
-        }
 
         if (window.isUploading) {
             console.log("Upload masih jalan, tunggu...");
             return;
+        }
+
+        showGlobalLoading(`Mengupload ${files.length} file...`);
+        const progressBox = document.getElementById("multiUploadProgress");
+        if (progressBox) {
+            progressBox.innerHTML = "";
+            progressBox.classList.remove("hidden");
         }
 
         window.isUploading = true;
@@ -645,12 +701,12 @@ async function handleAutoUpload(files) {
             const item = document.createElement("div");
             item.className = "flex justify-between text-sm bg-slate-100 px-3 py-2 rounded";
             item.innerHTML = `
-    <span class="truncate">${file.name}</span>
-    <span class="status text-xs text-blue-500 flex items-center gap-1">
-        <span class="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
-        uploading...
-    </span>
-`;
+                <span class="truncate">${file.name}</span>
+                <span class="status text-xs text-blue-500 flex items-center gap-1">
+                    <span class="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+                    uploading...
+                </span>
+            `;
 
             progressBox?.appendChild(item);
             const statusEl = item.querySelector(".status");
@@ -770,7 +826,11 @@ async function handleAutoUpload(files) {
     } catch (err) {
         console.error(err);
         showError("Upload gagal");
+
     } finally {
+
+        hideGlobalLoading();
+
         window.isUploading = false;
     }
 }
@@ -785,7 +845,10 @@ export function setupDeleteArchive() {
     const newBtn = document.getElementById("confirmDeleteBtn");
 
     newBtn.addEventListener("click", async () => {
+
         if (isDeleting) return;
+
+        showGlobalLoading("Menghapus file...");
 
         deleteQueue = [];
         clearTimeout(deleteTimeout);
@@ -950,6 +1013,9 @@ export function setupDeleteArchive() {
                     console.error(err);
                     showError("Gagal hapus file");
                 } finally {
+
+                    hideGlobalLoading();
+
                     isDeleting = false;
                 }
 
@@ -1022,7 +1088,11 @@ async function safeDriveDelete(fileId) {
 }
 
 export async function createFolder(name, parentId) {
+
     try {
+
+        showGlobalLoading("Membuat folder...");
+
         const ROOT_FOLDER_ID = "13CN-h06AflPn56bIbel4Zo84WD2VT6QX";
 
         let parentDriveId = ROOT_FOLDER_ID;
@@ -1070,8 +1140,14 @@ export async function createFolder(name, parentId) {
         window.openFolder(window.currentFolderId);
 
     } catch (err) {
+
         console.error("Create folder error:", err);
+
         showError("Gagal membuat folder");
+
+    } finally {
+
+        hideGlobalLoading();
     }
 }
 
@@ -1199,14 +1275,30 @@ export function setupEditArchive() {
 // ===============================
 export async function syncDriveSafe(folderId) {
 
+    if (isSyncing) {
+        showError("Sinkronisasi masih berjalan...");
+        return;
+    }
+
+    if (Date.now() - lastSyncTime < 10000) {
+
+        showError("Tunggu 10 detik sebelum sync lagi");
+
+        return;
+    }
+
+    lastSyncTime = Date.now();
+
     if (!folderId) {
         showError("Folder tidak valid");
         return;
     }
 
+    isSyncing = true;
+
     try {
 
-        showSuccess("Mulai sinkronisasi...");
+        showGlobalLoading("Sinkronisasi Drive berjalan...");
 
         const folderSnap = await getDoc(doc(db, "folders", folderId));
 
@@ -1223,7 +1315,20 @@ export async function syncDriveSafe(folderId) {
             return;
         }
 
-        const res = await fetch(`${DRIVE_API}?action=listFiles&folderId=${folderData.driveFolderId}`);
+        const controller = new AbortController();
+
+        const timeout = setTimeout(() => {
+            controller.abort();
+        }, 15000);
+
+        const res = await fetch(
+            `${DRIVE_API}?action=listFiles&folderId=${folderData.driveFolderId}`,
+            {
+                signal: controller.signal
+            }
+        );
+
+        clearTimeout(timeout);
         const data = await res.json();
 
         if (!data.success) {
@@ -1232,7 +1337,7 @@ export async function syncDriveSafe(folderId) {
         }
 
         let count = 0;
-        const MAX_SYNC = 150;
+        const MAX_SYNC = 50;
 
         for (const file of data.files) {
 
@@ -1387,7 +1492,19 @@ export async function syncDriveSafe(folderId) {
         showSuccess(`Sync selesai (${count} item)`);
 
     } catch (err) {
+
         console.error("Sync error:", err);
-        showError("Sinkronisasi gagal");
+
+        if (err.name === "AbortError") {
+            showError("Sinkronisasi timeout");
+        } else {
+            showError("Sinkronisasi gagal");
+        }
+
+    } finally {
+
+        hideGlobalLoading();
+
+        isSyncing = false;
     }
 }
